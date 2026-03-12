@@ -66,14 +66,14 @@ export default function TenantSignupPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
       
       {/* Brand Header */}
-      <div className="mb-8 text-center flex flex-col items-center">
-        <div className="size-12 rounded-xl bg-primary flex items-center justify-center mb-4 shadow-lg">
+      <div className="mb-5 text-center flex justify-center items-center gap-2">
+        <div className="size-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
           <Sparkles className="size-6 text-primary-foreground" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight">AgentsFactory HRM</h1>
       </div>
 
-      <Card className="w-full max-w-lg border border-border bg-card shadow-xl overflow-hidden">
+      <Card className="py-2 w-full max-w-lg border border-border bg-card shadow-xl overflow-hidden">
         <CardHeader className="space-y-3 pb-8 pt-8 px-8 border-b border-border bg-muted/30">
           <CardTitle className="text-3xl font-bold tracking-tight text-card-foreground">
             Create your workspace
@@ -83,7 +83,7 @@ export default function TenantSignupPage() {
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="p-8">
+        <CardContent className="px-8 py-5">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -161,7 +161,7 @@ export default function TenantSignupPage() {
             {/* Backend Error Handling */}
             {onboardMutation.isError && (
               <div className="p-4 rounded-lg bg-destructive/10 border border-destructive text-destructive text-sm font-medium flex items-start gap-3">
-                 <div className="mt-0.5 font-bold">!</div>
+                 <div className="font-bold">!</div>
                  <p>{(onboardMutation.error as any)?.response?.data?.detail || "An error occurred during onboarding. Please try again."}</p>
               </div>
             )}
@@ -169,7 +169,7 @@ export default function TenantSignupPage() {
             <Button 
               type="submit" 
               size="lg"
-              className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground mt-2"
+              className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground mt-0 group"
               disabled={form.state.isSubmitting || onboardMutation.isPending}
             >
               {form.state.isSubmitting || onboardMutation.isPending ? (
@@ -178,13 +178,16 @@ export default function TenantSignupPage() {
                   Signing up...
                 </>
               ) : (
-                "Sign up"
+                <>
+                  Sign Up
+                  <ArrowRight className="ml-2 size-4 opacity-70 group-hover:translate-x-1 transition-transform" />
+                </>
               )}
             </Button>
           </form>
         </CardContent>
         
-        <CardFooter className="flex justify-center border-t border-border py-6 bg-muted/10">
+        <CardFooter className="flex justify-center border-t border-border py-3 bg-muted/10">
           <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="text-primary hover:underline hover:cursor-pointer font-semibold">

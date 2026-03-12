@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
-import { Mail, Lock, Loader2, Briefcase, ArrowRight } from "lucide-react";
+import { Mail, Lock, Loader2, Briefcase, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
@@ -17,6 +17,7 @@ import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/valid
 export default function LoginPage() {
   const router = useRouter();
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   
   const loginMutation = useLoginAuthLoginPost();
 
@@ -51,15 +52,15 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
       
       {/* Brand Header */}
-      <div className="mb-8 text-center flex flex-col items-center">
-        <div className="size-12 rounded-xl bg-primary flex items-center justify-center mb-4 shadow-lg cursor-pointer" onClick={() => router.push("/")}>
+      <div className="mb-5 text-center flex justify-center items-center gap-2">
+        <div className="size-12 rounded-xl bg-primary flex items-center justify-center shadow-lg cursor-pointer" onClick={() => router.push("/")}>
           <Briefcase className="size-6 text-primary-foreground" />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight">HireFlow ATS</h1>
+        <h1 className="text-2xl font-bold tracking-tight">AgentsFactory HRM</h1>
       </div>
 
-      <Card className="w-full max-w-lg border border-border bg-card shadow-xl overflow-hidden">
-        <CardHeader className="space-y-3 pb-8 pt-8 px-8 border-b border-border bg-muted/30">
+      <Card className="py-2 w-full max-w-lg border border-border bg-card shadow-xl overflow-hidden">
+        <CardHeader className="space-y-3 pb-8 pt-5 px-8 border-b border-border bg-muted/30">
           <CardTitle className="text-3xl font-bold tracking-tight text-card-foreground">
             Welcome back
           </CardTitle>
@@ -68,7 +69,7 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="p-8">
+        <CardContent className="px-8 py-5">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -136,13 +137,20 @@ export default function LoginPage() {
                     <Input
                       id={field.name}
                       name={field.name}
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                       placeholder="••••••••"
                       className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring transition-shadow"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                    </button>
                   </div>
                   <div className="h-5">
                     {field.state.meta.errors.length > 0 && (
@@ -161,7 +169,7 @@ export default function LoginPage() {
               className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground mt-0 group"
               disabled={form.state.isSubmitting || loginMutation.isPending}
             >
-              {form.state.isSubmitting ? (
+              {form.state.isSubmitting || loginMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 size-5 animate-spin" />
                   Signing in...
@@ -176,7 +184,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
         
-        <CardFooter className="flex justify-center border-t border-border py-6 bg-muted/10">
+        <CardFooter className="flex justify-center border-t border-border py-3 bg-muted/10">
           <p className="text-sm text-muted-foreground">
             Don't have a workspace yet?{" "}
             <Link href="/signup" className="text-primary hover:underline hover:cursor-pointer font-semibold">
