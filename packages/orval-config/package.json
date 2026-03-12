@@ -1,0 +1,16 @@
+{
+	"name": "@repo/orval-config",
+	"version": "1.0.0",
+	"private": true,
+	"main": "index.js",
+	"scripts": {
+		"generate": "orval --config ./orval.config.ts"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"devDependencies": {
+		"orval": "^7.13.2"
+	}
+}

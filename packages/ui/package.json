@@ -4,6 +4,7 @@
 	"private": true,
 	"exports": {
 		"./global.css": "./src/global.css",
+		"./lib/validators": "./src/lib/validators.ts",
 		"./lib/utils": "./src/lib/utils.ts",
 		"./components/ui/*": "./src/components/ui/*.tsx",
 		"./*": "./src/*.tsx"
