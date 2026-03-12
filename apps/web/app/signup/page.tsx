@@ -51,7 +51,7 @@ export default function TenantSignupPage() {
                 </CardDescription>
               </div>
               <Link href="/login" className="w-full mt-4">
-                <Button size="xl" className="w-full hover:cursor-pointer bg-primary text-primary-foreground">
+                <Button size="lg" className="w-full hover:cursor-pointer bg-primary text-primary-foreground">
                   Go to Login <ArrowRight className="m-2 size-4" />
                 </Button>
               </Link>
