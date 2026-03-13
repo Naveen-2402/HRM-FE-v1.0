@@ -10,6 +10,7 @@ import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { Label } from "@repo/ui/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
+import { useAuthStore } from "@/store/useAuthStore";
 
 import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
@@ -18,6 +19,8 @@ export default function LoginPage() {
   const router = useRouter();
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  const setToken = useAuthStore((state) => state.setToken);
   
   const loginMutation = useLoginAuthLoginPost();
 
@@ -37,7 +40,7 @@ export default function LoginPage() {
         })
 
         const token = (response.data as any).access_token;
-        localStorage.setItem("token", token);        
+        setToken(token);      
         
         router.push("/dashboard");
       } catch (error: any) {

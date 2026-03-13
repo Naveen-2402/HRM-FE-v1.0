@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import axios from "axios";
+import { setupAxiosInterceptors } from "@/lib/axios-setup"
 
-axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+setupAxiosInterceptors()
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
