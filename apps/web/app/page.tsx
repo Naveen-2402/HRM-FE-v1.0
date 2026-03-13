@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { motion, Variants} from "framer-motion";
+import dynamic from "next/dynamic";
+import { useInView } from "react-intersection-observer";
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@repo/ui/components/ui/card";
 import { 
-  Users, Calendar, BarChart3, ArrowRight, CheckCircle2, 
+  Users, Calendar, ArrowRight, CheckCircle2, 
   XCircle, Briefcase, FileText, MessageSquare, LayoutDashboard, 
   Mail, Video, Slack, Linkedin 
 } from "lucide-react";
 import { ModeToggle } from "../components/theme-toggle";
+import { SectionErrorBoundary } from "../components/section-error-boundary";
 
 // Reusable animation variants
 const fadeInUp: Variants = {
@@ -25,7 +28,21 @@ const staggerContainer: Variants = {
   }
 };
 
+const SectionLoader = () => (
+  <div className="w-full py-32 flex items-center justify-center bg-background">
+    <div className="w-full max-w-5xl h-64 bg-muted animate-pulse rounded-2xl border border-border" />
+  </div>
+);
+
+const ProductVisual = dynamic(() => import('./sections/productVisualsSection'), { loading: () => <SectionLoader /> });
+const PricingSection = dynamic(() => import('./sections/pricingSection'), { loading: () => <SectionLoader /> });
+
 export default function MarketingPage() {
+  const { ref, inView } = useInView({ 
+    triggerOnce: true, 
+    rootMargin: "200px 0px" 
+  });
+
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     const element = document.getElementById(id);
@@ -96,44 +113,9 @@ export default function MarketingPage() {
         </section>
 
         {/* 3. Product Visual (Moved up slightly for impact) */}
-        <section className="container mx-auto px-4 pb-16 flex justify-center">
-          <motion.div 
-            initial={{ opacity: 0, y: 60 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-            className="w-full max-w-5xl rounded-xl border bg-card p-4 shadow-2xl"
-          >
-            {/* Mockup of a Kanban Board */}
-            <div className="rounded-lg bg-background border border-border/50 p-6 flex flex-col gap-6">
-              <div className="flex justify-between items-center border-b pb-4">
-                <h3 className="font-semibold text-lg flex items-center gap-2"><LayoutDashboard className="size-5 text-primary"/> Senior Frontend Engineer</h3>
-                <div className="flex gap-2">
-                  <div className="h-8 w-8 rounded-full bg-primary/20"></div>
-                  <div className="h-8 w-8 rounded-full bg-primary/40"></div>
-                  <Button size="sm">Add Candidate</Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Column 1 */}
-                <div className="bg-muted/30 rounded-lg p-4 min-h-[300px]">
-                  <h4 className="font-medium mb-4 text-sm text-muted-foreground flex justify-between">Applied <span className="bg-muted px-2 rounded text-xs">12</span></h4>
-                  <Card className="mb-3 shadow-sm"><CardHeader className="p-4"><CardTitle className="text-sm">Sarah Jenkins</CardTitle><CardDescription className="text-xs">Stripe • 4y exp</CardDescription></CardHeader></Card>
-                  <Card className="mb-3 shadow-sm"><CardHeader className="p-4"><CardTitle className="text-sm">David Chen</CardTitle><CardDescription className="text-xs">Google • 6y exp</CardDescription></CardHeader></Card>
-                </div>
-                {/* Column 2 */}
-                <div className="bg-muted/30 rounded-lg p-4 min-h-[300px]">
-                  <h4 className="font-medium mb-4 text-sm text-muted-foreground flex justify-between">Interviewing <span className="bg-muted px-2 rounded text-xs">4</span></h4>
-                  <Card className="mb-3 shadow-sm border-primary/50"><CardHeader className="p-4"><CardTitle className="text-sm">Emily Rodriguez</CardTitle><CardDescription className="text-xs">Technical Round at 2 PM</CardDescription></CardHeader></Card>
-                </div>
-                {/* Column 3 */}
-                <div className="bg-muted/30 rounded-lg p-4 min-h-[300px]">
-                  <h4 className="font-medium mb-4 text-sm text-muted-foreground flex justify-between">Offer Extended <span className="bg-muted px-2 rounded text-xs">1</span></h4>
-                  <Card className="mb-3 shadow-sm bg-primary/5"><CardHeader className="p-4"><CardTitle className="text-sm">Marcus Johnson</CardTitle><CardDescription className="text-xs text-primary font-medium">Offer sent yesterday</CardDescription></CardHeader></Card>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </section>
+        <SectionErrorBoundary sectionName="Product Visual">
+          <ProductVisual />
+        </SectionErrorBoundary>
 
         {/* 4. Trusted By */}
         <section className="border-y bg-muted/20 py-10">
@@ -190,44 +172,44 @@ export default function MarketingPage() {
 
         {/* 7. Key Features Section */}
         <section id="features" className="bg-muted/30 py-24 overflow-hidden">
-          <div className="container mx-auto px-4">
-            <motion.div 
-              initial="hidden" 
-              whileInView="visible" 
-              viewport={{ once: true, margin: "-100px" }}
-              variants={staggerContainer}
-            >
-              <div className="text-center mb-16">
-                <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-bold mb-4">Everything you need to scale your team</motion.h2>
-                <motion.p variants={fadeInUp} className="text-muted-foreground max-w-2xl mx-auto text-lg">
-                  Powerful features designed specifically to streamline your recruitment lifecycle from sourcing to onboarding.
-                </motion.p>
+              <div className="container mx-auto px-4">
+                <motion.div 
+                  initial="hidden" 
+                  whileInView="visible" 
+                  viewport={{ once: true, margin: "-100px" }}
+                  variants={staggerContainer}
+                >
+                  <div className="text-center mb-16">
+                    <motion.h2 variants={fadeInUp} className="text-3xl md:text-4xl font-bold mb-4">Everything you need to scale your team</motion.h2>
+                    <motion.p variants={fadeInUp} className="text-muted-foreground max-w-2xl mx-auto text-lg">
+                      Powerful features designed specifically to streamline your recruitment lifecycle from sourcing to onboarding.
+                    </motion.p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[
+                      { title: "Candidate Pipeline", icon: LayoutDashboard, desc: "Visual drag-and-drop Kanban boards to track candidates across custom hiring stages." },
+                      { title: "Interview Scheduling", icon: Calendar, desc: "Two-way calendar sync to find availability and book interviews without the back-and-forth." },
+                      { title: "Resume Parsing", icon: FileText, desc: "Automatically extract key skills, experience, and contact info from uploaded resumes." },
+                      { title: "Team Collaboration", icon: MessageSquare, desc: "Leave private notes, scorecards, and @mention teammates directly on candidate profiles." }
+                    ].map((feature, index) => (
+                      <motion.div key={index} variants={fadeInUp}>
+                        <Card className="h-full hover:shadow-md transition-shadow">
+                          <CardHeader>
+                            <feature.icon className="size-10 text-primary mb-4" />
+                            <CardTitle>{feature.title}</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <CardDescription className="text-base">
+                              {feature.desc}
+                            </CardDescription>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { title: "Candidate Pipeline", icon: LayoutDashboard, desc: "Visual drag-and-drop Kanban boards to track candidates across custom hiring stages." },
-                  { title: "Interview Scheduling", icon: Calendar, desc: "Two-way calendar sync to find availability and book interviews without the back-and-forth." },
-                  { title: "Resume Parsing", icon: FileText, desc: "Automatically extract key skills, experience, and contact info from uploaded resumes." },
-                  { title: "Team Collaboration", icon: MessageSquare, desc: "Leave private notes, scorecards, and @mention teammates directly on candidate profiles." }
-                ].map((feature, index) => (
-                  <motion.div key={index} variants={fadeInUp}>
-                    <Card className="h-full hover:shadow-md transition-shadow">
-                      <CardHeader>
-                        <feature.icon className="size-10 text-primary mb-4" />
-                        <CardTitle>{feature.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <CardDescription className="text-base">
-                          {feature.desc}
-                        </CardDescription>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
         </section>
 
         {/* 8. Integrations Section */}
@@ -264,59 +246,14 @@ export default function MarketingPage() {
         </section>
 
         {/* 9. Pricing Preview */}
-        <section id="pricing" className="bg-muted/30 py-24">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, transparent pricing</h2>
-              <p className="text-muted-foreground text-lg">Start for free, upgrade when you need more power.</p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-center mt-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Starter</CardTitle>
-                  <CardDescription>Perfect for small teams</CardDescription>
-                  <div className="text-4xl font-bold pt-4">$0<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Up to 3 active jobs</p>
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Basic pipeline management</p>
-                </CardContent>
-                <CardFooter><Button variant="outline" className="w-full">Get Started</Button></CardFooter>
-              </Card>
-
-              <Card className="border-primary relative shadow-xl md:scale-105 z-10 bg-background">
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-full whitespace-nowrap uppercase tracking-wider">
-                  Most Popular
-                </div>
-                <CardHeader>
-                  <CardTitle>Growth</CardTitle>
-                  <CardDescription>For scaling companies</CardDescription>
-                  <div className="text-4xl font-bold pt-4">$99<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Unlimited active jobs</p>
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Automated scheduling</p>
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Custom pipelines</p>
-                </CardContent>
-                <CardFooter><Button className="w-full">Start Free Trial</Button></CardFooter>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Enterprise</CardTitle>
-                  <CardDescription>Advanced needs & security</CardDescription>
-                  <div className="text-4xl font-bold pt-4">Custom</div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> SSO & Advanced Security</p>
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Dedicated Account Manager</p>
-                </CardContent>
-                <CardFooter><Button variant="outline" className="w-full">Contact Sales</Button></CardFooter>
-              </Card>
-            </div>
-          </div>
-        </section>
+        <div ref={ref} className="min-h-[600px]">
+          {inView && (
+            <SectionErrorBoundary sectionName="Pricing">
+              <PricingSection />
+            </SectionErrorBoundary>
+          )}
+        </div>
+        
 
         {/* 10. Final CTA Section */}
         <section className="container mx-auto px-4 py-24">
