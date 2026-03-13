@@ -14,10 +14,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   useEffect(() => {
     const verifyAndFetchUser = async () => {
       // 1. Check if token exists in local storage/Zustand
-      if (!isAuthenticated || !token) {
-        router.push("/login");
-        return;
-      }
+      // if (!isAuthenticated || !token) {
+      //   router.push("/login");
+      //   return;
+      // }
 
       // // 2. If authenticated but user data isn't in Zustand yet, fetch it
       // if (!user) {
