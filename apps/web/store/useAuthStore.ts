@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 
 interface UserProfile {
   sub: string; // Keycloak user ID
+  first_name: string;
   email: string;
   preferred_username: string;
   realm_access?: { roles: string[] };
