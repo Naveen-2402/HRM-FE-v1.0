@@ -41,7 +41,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div className="size-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
               <Briefcase className="size-4 text-sidebar-primary-foreground" />
             </div>
-            <span className="font-bold text-lg text-sidebar-foreground tracking-tight">HireFlow</span>
+            <span className="font-bold text-lg text-sidebar-foreground tracking-tight">HRM</span>
           </Link>
         </div>
 
@@ -101,7 +101,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <div className="size-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
                   <Briefcase className="size-4 text-sidebar-primary-foreground" />
                 </div>
-                <span className="font-bold text-lg text-sidebar-foreground">HireFlow</span>
+                <span className="font-bold text-lg text-sidebar-foreground">HRM</span>
               </div>
               <button 
                 onClick={() => setIsMobileMenuOpen(false)}

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "../components/theme-provider";
 import { Providers } from "./providers";
 import { ToastContainer } from 'react-toastify';
+import { AuthGuard } from "@/components/auth-guard";
 
 export const metadata: Metadata = {
   title: "HRM Platform",
@@ -24,7 +25,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
-            {children}
+            <AuthGuard>
+              {children}
+            </AuthGuard>
             <ToastContainer 
               position="bottom-right" 
               theme="colored" 
