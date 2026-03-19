@@ -33,7 +33,7 @@ import type {
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
-      type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
+type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 
 
@@ -42,310 +42,314 @@ type AwaitedInput<T> = PromiseLike<T> | T;
  * @summary Onboard Tenant
  */
 export const onboardTenantTenantsOnboardPost = (
-    tenantRequest: TenantRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
-    
-    
-    return axios.post(
-      `/tenants/onboard`,
-      tenantRequest,options
-    );
-  }
+  tenantRequest: TenantRequest, options?: AxiosRequestConfig
+): Promise<AxiosResponse<unknown>> => {
+
+
+  return axios.post(
+    `/tenants/onboard`,
+    tenantRequest, options
+  );
+}
 
 
 
 export const getOnboardTenantTenantsOnboardPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>, TError,{data: TenantRequest}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>, TError,{data: TenantRequest}, TContext> => {
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>, TError, { data: TenantRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationOptions<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>, TError, { data: TenantRequest }, TContext> => {
 
-const mutationKey = ['onboardTenantTenantsOnboardPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+  const mutationKey = ['onboardTenantTenantsOnboardPost'];
+  const { mutation: mutationOptions, axios: axiosOptions } = options ?
+    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
-
-      
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey, }, axios: undefined };
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>, {data: TenantRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  onboardTenantTenantsOnboardPost(data,axiosOptions)
-        }
-
-        
 
 
-  return  { mutationFn, ...mutationOptions }}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>, { data: TenantRequest }> = (props) => {
+    const { data } = props ?? {};
 
-    export type OnboardTenantTenantsOnboardPostMutationResult = NonNullable<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>>
-    export type OnboardTenantTenantsOnboardPostMutationBody = TenantRequest
-    export type OnboardTenantTenantsOnboardPostMutationError = AxiosError<HTTPValidationError>
-
-    /**
- * @summary Onboard Tenant
- */
-export const useOnboardTenantTenantsOnboardPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>, TError,{data: TenantRequest}, TContext>, axios?: AxiosRequestConfig}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>,
-        TError,
-        {data: TenantRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getOnboardTenantTenantsOnboardPostMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    /**
- * @summary Setup Tenant Sso
- */
-export const setupTenantSsoTenantsSsoSetupPost = (
-    sSOConfigRequest: SSOConfigRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
-    
-    
-    return axios.post(
-      `/tenants/sso/setup`,
-      sSOConfigRequest,options
-    );
+    return onboardTenantTenantsOnboardPost(data, axiosOptions)
   }
+
+
+
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type OnboardTenantTenantsOnboardPostMutationResult = NonNullable<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>>
+export type OnboardTenantTenantsOnboardPostMutationBody = TenantRequest
+export type OnboardTenantTenantsOnboardPostMutationError = AxiosError<HTTPValidationError>
+
+/**
+* @summary Onboard Tenant
+*/
+export const useOnboardTenantTenantsOnboardPost = <TError = AxiosError<HTTPValidationError>,
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>, TError, { data: TenantRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationResult<
+    Awaited<ReturnType<typeof onboardTenantTenantsOnboardPost>>,
+    TError,
+    { data: TenantRequest },
+    TContext
+  > => {
+
+  const mutationOptions = getOnboardTenantTenantsOnboardPostMutationOptions(options);
+
+  return useMutation(mutationOptions);
+}
+/**
+* @summary Setup Tenant Sso
+*/
+export const setupTenantSsoTenantsSsoSetupPost = (
+  sSOConfigRequest: SSOConfigRequest, options?: AxiosRequestConfig
+): Promise<AxiosResponse<unknown>> => {
+
+
+  return axios.post(
+    `/tenants/sso/setup`,
+    sSOConfigRequest, options
+  );
+}
 
 
 
 export const getSetupTenantSsoTenantsSsoSetupPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>, TError,{data: SSOConfigRequest}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>, TError,{data: SSOConfigRequest}, TContext> => {
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>, TError, { data: SSOConfigRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>, TError, { data: SSOConfigRequest }, TContext> => {
 
-const mutationKey = ['setupTenantSsoTenantsSsoSetupPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+  const mutationKey = ['setupTenantSsoTenantsSsoSetupPost'];
+  const { mutation: mutationOptions, axios: axiosOptions } = options ?
+    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
-
-      
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey, }, axios: undefined };
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>, {data: SSOConfigRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  setupTenantSsoTenantsSsoSetupPost(data,axiosOptions)
-        }
-
-        
 
 
-  return  { mutationFn, ...mutationOptions }}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>, { data: SSOConfigRequest }> = (props) => {
+    const { data } = props ?? {};
 
-    export type SetupTenantSsoTenantsSsoSetupPostMutationResult = NonNullable<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>>
-    export type SetupTenantSsoTenantsSsoSetupPostMutationBody = SSOConfigRequest
-    export type SetupTenantSsoTenantsSsoSetupPostMutationError = AxiosError<HTTPValidationError>
-
-    /**
- * @summary Setup Tenant Sso
- */
-export const useSetupTenantSsoTenantsSsoSetupPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>, TError,{data: SSOConfigRequest}, TContext>, axios?: AxiosRequestConfig}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>,
-        TError,
-        {data: SSOConfigRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getSetupTenantSsoTenantsSsoSetupPostMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    /**
- * @summary Bulk Onboard Employees
- */
-export const bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost = (
-    bulkEmployeeRequest: BulkEmployeeRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
-    
-    
-    return axios.post(
-      `/tenants/employees/bulk-onboard`,
-      bulkEmployeeRequest,options
-    );
+    return setupTenantSsoTenantsSsoSetupPost(data, axiosOptions)
   }
+
+
+
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SetupTenantSsoTenantsSsoSetupPostMutationResult = NonNullable<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>>
+export type SetupTenantSsoTenantsSsoSetupPostMutationBody = SSOConfigRequest
+export type SetupTenantSsoTenantsSsoSetupPostMutationError = AxiosError<HTTPValidationError>
+
+/**
+* @summary Setup Tenant Sso
+*/
+export const useSetupTenantSsoTenantsSsoSetupPost = <TError = AxiosError<HTTPValidationError>,
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>, TError, { data: SSOConfigRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationResult<
+    Awaited<ReturnType<typeof setupTenantSsoTenantsSsoSetupPost>>,
+    TError,
+    { data: SSOConfigRequest },
+    TContext
+  > => {
+
+  const mutationOptions = getSetupTenantSsoTenantsSsoSetupPostMutationOptions(options);
+
+  return useMutation(mutationOptions);
+}
+/**
+* @summary Bulk Onboard Employees
+*/
+export const bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost = (
+  bulkEmployeeRequest: BulkEmployeeRequest, options?: AxiosRequestConfig
+): Promise<AxiosResponse<unknown>> => {
+
+
+  return axios.post(
+    `/employees`,
+    bulkEmployeeRequest, options
+  );
+}
 
 
 
 export const getBulkOnboardEmployeesTenantsEmployeesBulkOnboardPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>, TError,{data: BulkEmployeeRequest}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>, TError,{data: BulkEmployeeRequest}, TContext> => {
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>, TError, { data: BulkEmployeeRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationOptions<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>, TError, { data: BulkEmployeeRequest }, TContext> => {
 
-const mutationKey = ['bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+  const mutationKey = ['bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost'];
+  const { mutation: mutationOptions, axios: axiosOptions } = options ?
+    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
-
-      
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey, }, axios: undefined };
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>, {data: BulkEmployeeRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost(data,axiosOptions)
-        }
-
-        
 
 
-  return  { mutationFn, ...mutationOptions }}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>, { data: BulkEmployeeRequest }> = (props) => {
+    const { data } = props ?? {};
 
-    export type BulkOnboardEmployeesTenantsEmployeesBulkOnboardPostMutationResult = NonNullable<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>>
-    export type BulkOnboardEmployeesTenantsEmployeesBulkOnboardPostMutationBody = BulkEmployeeRequest
-    export type BulkOnboardEmployeesTenantsEmployeesBulkOnboardPostMutationError = AxiosError<HTTPValidationError>
+    return bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost(data, axiosOptions)
+  }
 
-    /**
- * @summary Bulk Onboard Employees
- */
+
+
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type BulkOnboardEmployeesTenantsEmployeesBulkOnboardPostMutationResult = NonNullable<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>>
+export type BulkOnboardEmployeesTenantsEmployeesBulkOnboardPostMutationBody = BulkEmployeeRequest
+export type BulkOnboardEmployeesTenantsEmployeesBulkOnboardPostMutationError = AxiosError<HTTPValidationError>
+
+/**
+* @summary Bulk Onboard Employees
+*/
 export const useBulkOnboardEmployeesTenantsEmployeesBulkOnboardPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>, TError,{data: BulkEmployeeRequest}, TContext>, axios?: AxiosRequestConfig}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>,
-        TError,
-        {data: BulkEmployeeRequest},
-        TContext
-      > => {
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>, TError, { data: BulkEmployeeRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationResult<
+    Awaited<ReturnType<typeof bulkOnboardEmployeesTenantsEmployeesBulkOnboardPost>>,
+    TError,
+    { data: BulkEmployeeRequest },
+    TContext
+  > => {
 
-      const mutationOptions = getBulkOnboardEmployeesTenantsEmployeesBulkOnboardPostMutationOptions(options);
+  const mutationOptions = getBulkOnboardEmployeesTenantsEmployeesBulkOnboardPostMutationOptions(options);
 
-      return useMutation(mutationOptions);
-    }
-    /**
- * Assign one or more Keycloak **realm roles** to a user.
+  return useMutation(mutationOptions);
+}
+/**
+* Assign one or more Keycloak **realm roles** to a user.
 
 - **user_id** – the Keycloak UUID of the target user
 - **roles**   – list of role names to assign (e.g. `["tenant-admin"]`)
- * @summary Assign realm roles to a user
- */
+* @summary Assign realm roles to a user
+*/
 export const assignRoleToUserTenantsUsersUserIdRolesPost = (
-    userId: string,
-    assignRoleRequest: AssignRoleRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<AssignRoleResponse>> => {
-    
-    
-    return axios.post(
-      `/tenants/users/${userId}/roles`,
-      assignRoleRequest,options
-    );
-  }
+  userId: string,
+  assignRoleRequest: AssignRoleRequest, options?: AxiosRequestConfig
+): Promise<AxiosResponse<AssignRoleResponse>> => {
+
+
+  return axios.post(
+    `/tenants/users/${userId}/roles`,
+    assignRoleRequest, options
+  );
+}
 
 
 
 export const getAssignRoleToUserTenantsUsersUserIdRolesPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>, TError,{userId: string;data: AssignRoleRequest}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>, TError,{userId: string;data: AssignRoleRequest}, TContext> => {
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>, TError, { userId: string; data: AssignRoleRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>, TError, { userId: string; data: AssignRoleRequest }, TContext> => {
 
-const mutationKey = ['assignRoleToUserTenantsUsersUserIdRolesPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+  const mutationKey = ['assignRoleToUserTenantsUsersUserIdRolesPost'];
+  const { mutation: mutationOptions, axios: axiosOptions } = options ?
+    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
-
-      
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey, }, axios: undefined };
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>, {userId: string;data: AssignRoleRequest}> = (props) => {
-          const {userId,data} = props ?? {};
-
-          return  assignRoleToUserTenantsUsersUserIdRolesPost(userId,data,axiosOptions)
-        }
-
-        
 
 
-  return  { mutationFn, ...mutationOptions }}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>, { userId: string; data: AssignRoleRequest }> = (props) => {
+    const { userId, data } = props ?? {};
 
-    export type AssignRoleToUserTenantsUsersUserIdRolesPostMutationResult = NonNullable<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>>
-    export type AssignRoleToUserTenantsUsersUserIdRolesPostMutationBody = AssignRoleRequest
-    export type AssignRoleToUserTenantsUsersUserIdRolesPostMutationError = AxiosError<HTTPValidationError>
-
-    /**
- * @summary Assign realm roles to a user
- */
-export const useAssignRoleToUserTenantsUsersUserIdRolesPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>, TError,{userId: string;data: AssignRoleRequest}, TContext>, axios?: AxiosRequestConfig}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>,
-        TError,
-        {userId: string;data: AssignRoleRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getAssignRoleToUserTenantsUsersUserIdRolesPostMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    /**
- * @summary Login
- */
-export const loginAuthLoginPost = (
-    loginRequest: LoginRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
-    
-    
-    return axios.post(
-      `/auth/login`,
-      loginRequest,options
-    );
+    return assignRoleToUserTenantsUsersUserIdRolesPost(userId, data, axiosOptions)
   }
 
 
 
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type AssignRoleToUserTenantsUsersUserIdRolesPostMutationResult = NonNullable<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>>
+export type AssignRoleToUserTenantsUsersUserIdRolesPostMutationBody = AssignRoleRequest
+export type AssignRoleToUserTenantsUsersUserIdRolesPostMutationError = AxiosError<HTTPValidationError>
+
+/**
+* @summary Assign realm roles to a user
+*/
+export const useAssignRoleToUserTenantsUsersUserIdRolesPost = <TError = AxiosError<HTTPValidationError>,
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>, TError, { userId: string; data: AssignRoleRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationResult<
+    Awaited<ReturnType<typeof assignRoleToUserTenantsUsersUserIdRolesPost>>,
+    TError,
+    { userId: string; data: AssignRoleRequest },
+    TContext
+  > => {
+
+  const mutationOptions = getAssignRoleToUserTenantsUsersUserIdRolesPostMutationOptions(options);
+
+  return useMutation(mutationOptions);
+}
+/**
+* @summary Login
+*/
+export const loginAuthLoginPost = (
+  loginRequest: LoginRequest, options?: AxiosRequestConfig
+): Promise<AxiosResponse<unknown>> => {
+
+
+  return axios.post(
+    `/auth/login`,
+    loginRequest, options
+  );
+}
+
+
+
 export const getLoginAuthLoginPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, axios?: AxiosRequestConfig}
-): UseMutationOptions<Awaited<ReturnType<typeof loginAuthLoginPost>>, TError,{data: LoginRequest}, TContext> => {
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof loginAuthLoginPost>>, TError, { data: LoginRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationOptions<Awaited<ReturnType<typeof loginAuthLoginPost>>, TError, { data: LoginRequest }, TContext> => {
 
-const mutationKey = ['loginAuthLoginPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+  const mutationKey = ['loginAuthLoginPost'];
+  const { mutation: mutationOptions, axios: axiosOptions } = options ?
+    options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
-
-      
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey, }, axios: undefined };
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginAuthLoginPost>>, {data: LoginRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  loginAuthLoginPost(data,axiosOptions)
-        }
-
-        
 
 
-  return  { mutationFn, ...mutationOptions }}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginAuthLoginPost>>, { data: LoginRequest }> = (props) => {
+    const { data } = props ?? {};
 
-    export type LoginAuthLoginPostMutationResult = NonNullable<Awaited<ReturnType<typeof loginAuthLoginPost>>>
-    export type LoginAuthLoginPostMutationBody = LoginRequest
-    export type LoginAuthLoginPostMutationError = AxiosError<HTTPValidationError>
+    return loginAuthLoginPost(data, axiosOptions)
+  }
 
-    /**
- * @summary Login
- */
+
+
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type LoginAuthLoginPostMutationResult = NonNullable<Awaited<ReturnType<typeof loginAuthLoginPost>>>
+export type LoginAuthLoginPostMutationBody = LoginRequest
+export type LoginAuthLoginPostMutationError = AxiosError<HTTPValidationError>
+
+/**
+* @summary Login
+*/
 export const useLoginAuthLoginPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginAuthLoginPost>>, TError,{data: LoginRequest}, TContext>, axios?: AxiosRequestConfig}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof loginAuthLoginPost>>,
-        TError,
-        {data: LoginRequest},
-        TContext
-      > => {
+  TContext = unknown>(options?: { mutation?: UseMutationOptions<Awaited<ReturnType<typeof loginAuthLoginPost>>, TError, { data: LoginRequest }, TContext>, axios?: AxiosRequestConfig }
+  ): UseMutationResult<
+    Awaited<ReturnType<typeof loginAuthLoginPost>>,
+    TError,
+    { data: LoginRequest },
+    TContext
+  > => {
 
-      const mutationOptions = getLoginAuthLoginPostMutationOptions(options);
+  const mutationOptions = getLoginAuthLoginPostMutationOptions(options);
 
-      return useMutation(mutationOptions);
-    }
-    
+  return useMutation(mutationOptions);
+}

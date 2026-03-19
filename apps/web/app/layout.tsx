@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "../components/theme-provider";
 import { Providers } from "./providers";
+import { ToastContainer } from 'react-toastify';
 
 export const metadata: Metadata = {
   title: "HRM Platform",
@@ -24,6 +25,11 @@ export default function RootLayout({
         >
           <Providers>
             {children}
+            <ToastContainer 
+              position="bottom-right" 
+              theme="colored" 
+              autoClose={3000} 
+            />
           </Providers>
         </ThemeProvider>
       </body>

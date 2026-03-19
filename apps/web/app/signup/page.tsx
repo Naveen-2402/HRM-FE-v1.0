@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
-import { Building2, Mail, ArrowRight, CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { Building2, Mail, ArrowRight, CheckCircle2, Loader2, Sparkles, AtSign } from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
@@ -26,9 +26,11 @@ export default function TenantSignupPage() {
     defaultValues: {
       tenant_name: "",
       email: "",
+      contact_email: "",
     },
     onSubmit: async ({ value }) => {
-      await onboardMutation.mutateAsync({ data: value });
+      // The backend now accepts contact_email as part of the TenantRequest payload
+      await onboardMutation.mutateAsync({ data: value as any }); 
     },
   });
 
@@ -37,7 +39,6 @@ export default function TenantSignupPage() {
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
         <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
           <Card className="border border-border bg-card shadow-2xl text-center py-10 px-6 relative overflow-hidden">
-            {/* Decorative background element */}
             <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
             
             <CardContent className="flex flex-col items-center gap-6 p-0">
@@ -47,12 +48,12 @@ export default function TenantSignupPage() {
               <div className="space-y-2">
                 <CardTitle className="text-3xl font-bold tracking-tight text-card-foreground">Workspace Created!</CardTitle>
                 <CardDescription className="text-base text-muted-foreground max-w-sm mx-auto">
-                  We've sent an admin setup email to your inbox. Click the link inside to set your password and access your dashboard.
+                  We've sent an admin setup email to your <strong>contact email</strong> address. Click the link inside to set your password and access your dashboard.
                 </CardDescription>
               </div>
               <Link href="/login" className="w-full mt-4">
                 <Button size="lg" className="w-full hover:cursor-pointer bg-primary text-primary-foreground">
-                  Go to Login <ArrowRight className="m-2 size-4" />
+                  Go to Login <ArrowRight className="ml-2 size-4" />
                 </Button>
               </Link>
             </CardContent>
@@ -113,7 +114,6 @@ export default function TenantSignupPage() {
                       className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring transition-shadow"
                     />
                   </div>
-                  {/* Fixed height container to prevent layout shift */}
                   <div className="h-5">
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm font-medium text-destructive animate-in slide-in-from-top-1">
@@ -125,14 +125,46 @@ export default function TenantSignupPage() {
               )}
             />
 
-            {/* Email Field */}
+            {/* Login Account / Username Field */}
             <form.Field
               name="email"
               validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
               children={(field) => (
                 <div className="space-y-2 relative">
                   <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
-                    Work Email
+                    User Account (Login ID)
+                  </Label>
+                  <div className="relative">
+                    <AtSign className="absolute left-3 top-3 size-5 text-muted-foreground" />
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      placeholder="admin@acmecorp.com (e.g., Azure AD UPN)"
+                      className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring transition-shadow"
+                    />
+                  </div>
+                  <div className="h-5">
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-sm font-medium text-destructive animate-in slide-in-from-top-1">
+                        {field.state.meta.errors.join(", ")}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            />
+
+            {/* Contact Email Field */}
+            <form.Field
+              name="contact_email"
+              validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
+              children={(field) => (
+                <div className="space-y-2 relative">
+                  <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
+                    Contact Email (For notifications)
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 size-5 text-muted-foreground" />
@@ -142,11 +174,10 @@ export default function TenantSignupPage() {
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="admin@acmecorp.com"
+                      placeholder="personal.email@gmail.com"
                       className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring transition-shadow"
                     />
                   </div>
-                  {/* Fixed height container to prevent layout shift */}
                   <div className="h-5">
                     {field.state.meta.errors.length > 0 && (
                       <p className="text-sm font-medium text-destructive animate-in slide-in-from-top-1">
@@ -175,11 +206,11 @@ export default function TenantSignupPage() {
               {form.state.isSubmitting || onboardMutation.isPending ? (
                 <>
                   <Loader2 className="mr-2 size-5 animate-spin" />
-                  Signing up...
+                  Creating Workspace...
                 </>
               ) : (
                 <>
-                  Sign Up
+                  Complete Setup
                   <ArrowRight className="ml-2 size-4 opacity-70 group-hover:translate-x-1 transition-transform" />
                 </>
               )}

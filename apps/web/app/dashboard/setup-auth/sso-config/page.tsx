@@ -13,6 +13,7 @@ import { Label } from "@repo/ui/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@repo/ui/components/ui/card";
 
 import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "react-toastify";
 import { useSetupTenantSsoTenantsSsoSetupPost } from "@repo/orval-config/src/api/default/default";
 
 // Manual validation helpers
@@ -29,14 +30,6 @@ export default function SSOSetupPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedIdp, setSelectedIdp] = useState<IdpType>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
-  
-  // Extract user data from Zustand store to get org ID and tenant alias
-  const user = useAuthStore((state) => state.user);
-  
-  // Extracting org ID and alias safely from Keycloak token claims
-  const orgClaim = user?.organization || {};
-  const orgId = Object.keys(orgClaim)[0] || ""; 
-  const tenantAlias = orgClaim[orgId]?.alias || "default-alias"; // Adjust based on exact token structure
 
   const ssoMutation = useSetupTenantSsoTenantsSsoSetupPost();
 
@@ -51,8 +44,6 @@ export default function SSOSetupPage() {
       
       try {
         let ssoPayload = {
-          organization_id: orgId,
-          tenant_alias: tenantAlias,
           sso_client_id: value.client_id,
           sso_client_secret: value.client_secret,
           sso_issuer_url: "",
@@ -75,6 +66,8 @@ export default function SSOSetupPage() {
         // Note: You can add `else if (selectedIdp === "google")` mapping logic here later
 
         await ssoMutation.mutateAsync({ data: ssoPayload });
+
+        toast.success("SSO Configured Successfully!");
         
         // Success! Route to the bulk employee upload page
         router.push("/dashboard/employees/invite");
@@ -210,7 +203,7 @@ export default function SSOSetupPage() {
                     {/* Organization ID (Read Only Visual) */}
                     <div className="space-y-2">
                       <Label className="text-muted-foreground">Organization ID (Auto-detected)</Label>
-                      <Input disabled value={orgId} className="h-9 bg-muted text-muted-foreground border-input" />
+                      <Input disabled value="***********" className="h-9 bg-muted text-muted-foreground border-input" />
                     </div>
 
                     {/* Microsoft Specific: Tenant ID */}

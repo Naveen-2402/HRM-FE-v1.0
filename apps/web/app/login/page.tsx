@@ -14,6 +14,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,12 +41,14 @@ export default function LoginPage() {
         })
 
         const token = (response.data as any).access_token;
-        setToken(token);      
+        setToken(token);
+        
+        toast.success("Login successfull");
         
         router.push("/dashboard");
       } catch (error: any) {
         setGlobalError(
-          error?.response?.data?.detail || "Invalid email or password. Please try again."
+          error?.response?.data?.detail?.error_description || "Invalid email or password. Please try again."
         );
       }
     },

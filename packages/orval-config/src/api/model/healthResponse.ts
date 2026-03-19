@@ -7,10 +7,11 @@
  */
 
 /**
- * Response after assigning roles.
+ * Health check response model.
  */
-export interface AssignRoleResponse {
-  user_id: string;
-  assigned_roles: string[];
-  message: string;
+export interface HealthResponse {
+  status: string;
+  timestamp: string;
+  version: string;
+  environment: string;
 }

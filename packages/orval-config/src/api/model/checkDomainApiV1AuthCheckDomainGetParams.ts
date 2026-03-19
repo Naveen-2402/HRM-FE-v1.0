@@ -6,11 +6,6 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * Response after assigning roles.
- */
-export interface AssignRoleResponse {
-  user_id: string;
-  assigned_roles: string[];
-  message: string;
-}
+export type CheckDomainApiV1AuthCheckDomainGetParams = {
+email: string;
+};

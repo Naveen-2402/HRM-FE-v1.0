@@ -7,10 +7,9 @@
  */
 
 /**
- * Response after assigning roles.
+ * Standard error response format.
  */
-export interface AssignRoleResponse {
-  user_id: string;
-  assigned_roles: string[];
-  message: string;
+export interface ErrorResponse {
+  /** Human-readable error description (security-safe, no internals leaked) */
+  detail: string;
 }

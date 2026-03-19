@@ -7,10 +7,6 @@
  */
 
 /**
- * Response after assigning roles.
+ * Human-readable error reason if status is 'failed'
  */
-export interface AssignRoleResponse {
-  user_id: string;
-  assigned_roles: string[];
-  message: string;
-}
+export type BulkEmployeeResultError = string | null;

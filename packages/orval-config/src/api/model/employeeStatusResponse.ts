@@ -5,12 +5,14 @@
  * Production-ready multi-tenant HRM/ATS backend with Keycloak SSO
  * OpenAPI spec version: 1.0.0
  */
+import type { UserStatus } from './userStatus';
 
 /**
- * Response after assigning roles.
+ * Response after modifying employee status (disable/activate).
  */
-export interface AssignRoleResponse {
-  user_id: string;
-  assigned_roles: string[];
+export interface EmployeeStatusResponse {
+  id: string;
+  email: string;
+  status: UserStatus;
   message: string;
 }

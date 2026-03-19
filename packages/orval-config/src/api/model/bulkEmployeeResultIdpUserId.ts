@@ -7,10 +7,6 @@
  */
 
 /**
- * Response after assigning roles.
+ * Keycloak user ID if the user was created successfully
  */
-export interface AssignRoleResponse {
-  user_id: string;
-  assigned_roles: string[];
-  message: string;
-}
+export type BulkEmployeeResultIdpUserId = string | null;
