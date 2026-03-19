@@ -51,7 +51,7 @@ export default function TenantSignupPage() {
                   We've sent an admin setup email to your <strong>contact email</strong> address. Click the link inside to set your password and access your dashboard.
                 </CardDescription>
               </div>
-              <Link href="/login" className="w-full mt-4">
+              <Link href="/login?local=true" className="w-full mt-4">
                 <Button size="lg" className="w-full hover:cursor-pointer bg-primary text-primary-foreground">
                   Go to Login <ArrowRight className="ml-2 size-4" />
                 </Button>
