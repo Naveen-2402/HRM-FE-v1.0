@@ -293,4 +293,68 @@ export const useStripeWebhookApiV1BillingWebhookPost = <TError = AxiosError<void
 
       return useMutation(mutationOptions);
     }
+    /**
+ * @summary Get Billing Status
+ */
+export const getBillingStatusApiV1BillingStatusGet = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<unknown>> => {
     
+    
+    return axios.get(
+      `/api/v1/billing/status`,options
+    );
+  }
+
+
+
+
+export const getGetBillingStatusApiV1BillingStatusGetQueryKey = () => {
+    return [
+    `/api/v1/billing/status`
+    ] as const;
+    }
+
+    
+export const getGetBillingStatusApiV1BillingStatusGetQueryOptions = <TData = Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError = AxiosError<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError, TData>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetBillingStatusApiV1BillingStatusGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>> = ({ signal }) => getBillingStatusApiV1BillingStatusGet({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetBillingStatusApiV1BillingStatusGetQueryResult = NonNullable<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>>
+export type GetBillingStatusApiV1BillingStatusGetQueryError = AxiosError<unknown>
+
+
+/**
+ * @summary Get Billing Status
+ */
+
+export function useGetBillingStatusApiV1BillingStatusGet<TData = Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError = AxiosError<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError, TData>, axios?: AxiosRequestConfig}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetBillingStatusApiV1BillingStatusGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+

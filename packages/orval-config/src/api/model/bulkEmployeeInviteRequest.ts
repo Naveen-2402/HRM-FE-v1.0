@@ -16,8 +16,6 @@ The organization_id must match the tenant_id embedded in the
 caller's Keycloak JWT — enforced in the service layer.
  */
 export interface BulkEmployeeInviteRequest {
-  /** Keycloak organization / tenant UUID. Must match the 'tenant_id' claim in the caller's JWT token. */
-  organization_id: string;
   /**
    * List of employees to onboard. Min 1, max 100 per request.
    * @minItems 1

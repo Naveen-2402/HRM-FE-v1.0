@@ -28,6 +28,8 @@ import type {
 
 import type {
   CheckDomainApiV1AuthCheckDomainGetParams,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
   HTTPValidationError,
   LoginRequest
 } from '.././model';
@@ -41,6 +43,76 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 
 
 /**
+ * Sends a time-limited, single-use password-reset link to the user
+via Keycloak's execute-actions-email API.
+
+Security:
+  - Rate limited to 3 requests/minute per IP to prevent abuse.
+  - Always returns a generic 200 response regardless of whether the
+    email exists — prevents email enumeration attacks.
+  - Email delivery is offloaded to a background task so the
+    response returns instantly.
+ * @summary Request a password reset email (magic link)
+ */
+export const forgotPasswordApiV1AuthForgotPasswordPost = (
+    forgotPasswordRequest: ForgotPasswordRequest, options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<ForgotPasswordResponse>> => {
+    
+    
+    return axios.post(
+      `/api/v1/auth/forgot-password`,
+      forgotPasswordRequest,options
+    );
+  }
+
+
+
+export const getForgotPasswordApiV1AuthForgotPasswordPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, TError,{data: ForgotPasswordRequest}, TContext>, axios?: AxiosRequestConfig}
+): UseMutationOptions<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, TError,{data: ForgotPasswordRequest}, TContext> => {
+
+const mutationKey = ['forgotPasswordApiV1AuthForgotPasswordPost'];
+const {mutation: mutationOptions, axios: axiosOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, axios: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, {data: ForgotPasswordRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  forgotPasswordApiV1AuthForgotPasswordPost(data,axiosOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ForgotPasswordApiV1AuthForgotPasswordPostMutationResult = NonNullable<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>>
+    export type ForgotPasswordApiV1AuthForgotPasswordPostMutationBody = ForgotPasswordRequest
+    export type ForgotPasswordApiV1AuthForgotPasswordPostMutationError = AxiosError<HTTPValidationError>
+
+    /**
+ * @summary Request a password reset email (magic link)
+ */
+export const useForgotPasswordApiV1AuthForgotPasswordPost = <TError = AxiosError<HTTPValidationError>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, TError,{data: ForgotPasswordRequest}, TContext>, axios?: AxiosRequestConfig}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>,
+        TError,
+        {data: ForgotPasswordRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getForgotPasswordApiV1AuthForgotPasswordPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
  * Checks if the user's email domain maps to an active SSO Identity Provider.
  * @summary Check if email domain has SSO enabled
  */

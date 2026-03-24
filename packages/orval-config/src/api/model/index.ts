@@ -27,6 +27,8 @@ export * from './employeeListResponse';
 export * from './employeeResponse';
 export * from './employeeStatusResponse';
 export * from './errorResponse';
+export * from './forgotPasswordRequest';
+export * from './forgotPasswordResponse';
 export * from './hTTPValidationError';
 export * from './healthResponse';
 export * from './listEmployeesApiV1EmployeesGetParams';
