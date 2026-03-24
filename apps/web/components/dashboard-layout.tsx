@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   Briefcase, LayoutDashboard, Users, UserPlus, 
-  Settings, LogOut, Menu, X, Bell 
+  Settings, LogOut, Menu, X, Bell, ShieldCheck 
 } from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
@@ -17,11 +17,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Define our navigation items
+  // Added "Auth" to the navigation items
   const navItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "Employees", href: "/dashboard/employees", icon: Users },
     { name: "Invite Team", href: "/dashboard/employees/invite", icon: UserPlus },
+    { name: "Auth", href: "/dashboard/auth", icon: ShieldCheck },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
   ];
 
@@ -35,7 +36,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       
       {/* --- DESKTOP SIDEBAR --- */}
       <aside className="hidden md:flex flex-col w-64 bg-sidebar border-r border-sidebar-border h-full">
-        {/* Sidebar Header (Brand) */}
         <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
           <Link href="/dashboard" className="flex items-center gap-2 hover:cursor-pointer">
             <div className="size-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
@@ -45,7 +45,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
 
-        {/* Sidebar Navigation */}
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -54,7 +53,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <span className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:cursor-pointer ${
                   isActive 
                     ? "bg-sidebar-accent text-sidebar-accent-foreground" 
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 }`}>
                   <item.icon className="size-5" />
                   {item.name}
@@ -64,20 +63,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Sidebar Footer (User Profile & Logout) */}
         <div className="p-4 border-t border-sidebar-border bg-sidebar">
           <div className="flex items-center justify-between">
             <div className="flex flex-col overflow-hidden">
               <span className="text-sm font-semibold text-sidebar-foreground truncate">
                 {user?.first_name || "Admin User"}
               </span>
-              <span className="text-xs text-sidebar-foreground/70 truncate">
+              <span className="text-xs text-sidebar-foreground truncate">
                 {user?.email || "admin@workspace.com"}
               </span>
             </div>
             <button 
               onClick={handleLogout}
-              className="p-2 rounded-md text-sidebar-foreground/70 hover:text-destructive hover:bg-destructive/10 transition-colors hover:cursor-pointer"
+              className="p-2 rounded-md text-sidebar-foreground hover:bg-destructive hover:text-primary-foreground transition-colors hover:cursor-pointer"
               title="Log out"
             >
               <LogOut className="size-4" />
@@ -89,12 +87,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {/* --- MOBILE OVERLAY & SIDEBAR --- */}
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
-          {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm hover:cursor-pointer"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          {/* Mobile Sidebar */}
           <aside className="relative w-64 max-w-xs bg-sidebar border-r border-sidebar-border h-full flex flex-col z-50 animate-in slide-in-from-left">
             <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
               <div className="flex items-center gap-2">
@@ -119,7 +115,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     <span className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors hover:cursor-pointer ${
                       isActive 
                         ? "bg-sidebar-accent text-sidebar-accent-foreground" 
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
                     }`}>
                       <item.icon className="size-5" />
                       {item.name}
@@ -139,8 +135,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       {/* --- MAIN CONTENT AREA --- */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        
-        {/* Top Header */}
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 sm:px-6 shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-4">
             <button 
@@ -158,11 +152,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <button className="p-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-full transition-colors hover:cursor-pointer">
               <Bell className="size-5" />
             </button>
-            {/* Optional: Add a user avatar dropdown here later */}
           </div>
         </header>
 
-        {/* Page Content Container */}
         <main className="flex-1 overflow-y-auto bg-background p-4 sm:p-6 lg:p-8">
           {children}
         </main>

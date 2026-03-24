@@ -62,7 +62,7 @@ export const bulkOnboardEmployeesApiV1EmployeesPost = (
 
 
 
-export const getBulkOnboardEmployeesApiV1EmployeesPostMutationOptions = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse>,
+export const getBulkOnboardEmployeesApiV1EmployeesPostMutationOptions = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkOnboardEmployeesApiV1EmployeesPost>>, TError,{data: BulkEmployeeInviteRequest}, TContext>, axios?: AxiosRequestConfig}
 ): UseMutationOptions<Awaited<ReturnType<typeof bulkOnboardEmployeesApiV1EmployeesPost>>, TError,{data: BulkEmployeeInviteRequest}, TContext> => {
 
@@ -89,12 +89,12 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type BulkOnboardEmployeesApiV1EmployeesPostMutationResult = NonNullable<Awaited<ReturnType<typeof bulkOnboardEmployeesApiV1EmployeesPost>>>
     export type BulkOnboardEmployeesApiV1EmployeesPostMutationBody = BulkEmployeeInviteRequest
-    export type BulkOnboardEmployeesApiV1EmployeesPostMutationError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse>
+    export type BulkOnboardEmployeesApiV1EmployeesPostMutationError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse>
 
     /**
  * @summary Bulk onboard employees
  */
-export const useBulkOnboardEmployeesApiV1EmployeesPost = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse>,
+export const useBulkOnboardEmployeesApiV1EmployeesPost = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkOnboardEmployeesApiV1EmployeesPost>>, TError,{data: BulkEmployeeInviteRequest}, TContext>, axios?: AxiosRequestConfig}
  ): UseMutationResult<
         Awaited<ReturnType<typeof bulkOnboardEmployeesApiV1EmployeesPost>>,
@@ -133,7 +133,7 @@ export const getListEmployeesApiV1EmployeesGetQueryKey = (params?: ListEmployees
     }
 
     
-export const getListEmployeesApiV1EmployeesGetQueryOptions = <TData = Awaited<ReturnType<typeof listEmployeesApiV1EmployeesGet>>, TError = AxiosError<ErrorResponse | ErrorResponse | HTTPValidationError>>(params?: ListEmployeesApiV1EmployeesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEmployeesApiV1EmployeesGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getListEmployeesApiV1EmployeesGetQueryOptions = <TData = Awaited<ReturnType<typeof listEmployeesApiV1EmployeesGet>>, TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>>(params?: ListEmployeesApiV1EmployeesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEmployeesApiV1EmployeesGet>>, TError, TData>, axios?: AxiosRequestConfig}
 ) => {
 
 const {query: queryOptions, axios: axiosOptions} = options ?? {};
@@ -152,14 +152,14 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type ListEmployeesApiV1EmployeesGetQueryResult = NonNullable<Awaited<ReturnType<typeof listEmployeesApiV1EmployeesGet>>>
-export type ListEmployeesApiV1EmployeesGetQueryError = AxiosError<ErrorResponse | ErrorResponse | HTTPValidationError>
+export type ListEmployeesApiV1EmployeesGetQueryError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>
 
 
 /**
  * @summary List employees
  */
 
-export function useListEmployeesApiV1EmployeesGet<TData = Awaited<ReturnType<typeof listEmployeesApiV1EmployeesGet>>, TError = AxiosError<ErrorResponse | ErrorResponse | HTTPValidationError>>(
+export function useListEmployeesApiV1EmployeesGet<TData = Awaited<ReturnType<typeof listEmployeesApiV1EmployeesGet>>, TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>>(
  params?: ListEmployeesApiV1EmployeesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEmployeesApiV1EmployeesGet>>, TError, TData>, axios?: AxiosRequestConfig}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -199,7 +199,7 @@ export const getGetEmployeeApiV1EmployeesEmployeeIdGetQueryKey = (employeeId?: s
     }
 
     
-export const getGetEmployeeApiV1EmployeesEmployeeIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getEmployeeApiV1EmployeesEmployeeIdGet>>, TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>>(employeeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmployeeApiV1EmployeesEmployeeIdGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getGetEmployeeApiV1EmployeesEmployeeIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getEmployeeApiV1EmployeesEmployeeIdGet>>, TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>>(employeeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmployeeApiV1EmployeesEmployeeIdGet>>, TError, TData>, axios?: AxiosRequestConfig}
 ) => {
 
 const {query: queryOptions, axios: axiosOptions} = options ?? {};
@@ -218,14 +218,14 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type GetEmployeeApiV1EmployeesEmployeeIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof getEmployeeApiV1EmployeesEmployeeIdGet>>>
-export type GetEmployeeApiV1EmployeesEmployeeIdGetQueryError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>
+export type GetEmployeeApiV1EmployeesEmployeeIdGetQueryError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>
 
 
 /**
  * @summary Get employee details
  */
 
-export function useGetEmployeeApiV1EmployeesEmployeeIdGet<TData = Awaited<ReturnType<typeof getEmployeeApiV1EmployeesEmployeeIdGet>>, TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>>(
+export function useGetEmployeeApiV1EmployeesEmployeeIdGet<TData = Awaited<ReturnType<typeof getEmployeeApiV1EmployeesEmployeeIdGet>>, TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>>(
  employeeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmployeeApiV1EmployeesEmployeeIdGet>>, TError, TData>, axios?: AxiosRequestConfig}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -257,7 +257,7 @@ export const disableEmployeeApiV1EmployeesEmployeeIdDisablePatch = (
 
 
 
-export const getDisableEmployeeApiV1EmployeesEmployeeIdDisablePatchMutationOptions = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>,
+export const getDisableEmployeeApiV1EmployeesEmployeeIdDisablePatchMutationOptions = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableEmployeeApiV1EmployeesEmployeeIdDisablePatch>>, TError,{employeeId: string}, TContext>, axios?: AxiosRequestConfig}
 ): UseMutationOptions<Awaited<ReturnType<typeof disableEmployeeApiV1EmployeesEmployeeIdDisablePatch>>, TError,{employeeId: string}, TContext> => {
 
@@ -284,12 +284,12 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type DisableEmployeeApiV1EmployeesEmployeeIdDisablePatchMutationResult = NonNullable<Awaited<ReturnType<typeof disableEmployeeApiV1EmployeesEmployeeIdDisablePatch>>>
     
-    export type DisableEmployeeApiV1EmployeesEmployeeIdDisablePatchMutationError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>
+    export type DisableEmployeeApiV1EmployeesEmployeeIdDisablePatchMutationError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>
 
     /**
  * @summary Disable employee access
  */
-export const useDisableEmployeeApiV1EmployeesEmployeeIdDisablePatch = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>,
+export const useDisableEmployeeApiV1EmployeesEmployeeIdDisablePatch = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disableEmployeeApiV1EmployeesEmployeeIdDisablePatch>>, TError,{employeeId: string}, TContext>, axios?: AxiosRequestConfig}
  ): UseMutationResult<
         Awaited<ReturnType<typeof disableEmployeeApiV1EmployeesEmployeeIdDisablePatch>>,
@@ -318,7 +318,7 @@ export const activateCurrentEmployeeApiV1EmployeesActivatePost = (
 
 
 
-export const getActivateCurrentEmployeeApiV1EmployeesActivatePostMutationOptions = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse>,
+export const getActivateCurrentEmployeeApiV1EmployeesActivatePostMutationOptions = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateCurrentEmployeeApiV1EmployeesActivatePost>>, TError,void, TContext>, axios?: AxiosRequestConfig}
 ): UseMutationOptions<Awaited<ReturnType<typeof activateCurrentEmployeeApiV1EmployeesActivatePost>>, TError,void, TContext> => {
 
@@ -345,12 +345,12 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type ActivateCurrentEmployeeApiV1EmployeesActivatePostMutationResult = NonNullable<Awaited<ReturnType<typeof activateCurrentEmployeeApiV1EmployeesActivatePost>>>
     
-    export type ActivateCurrentEmployeeApiV1EmployeesActivatePostMutationError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse>
+    export type ActivateCurrentEmployeeApiV1EmployeesActivatePostMutationError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse>
 
     /**
  * @summary Activate employee post-login
  */
-export const useActivateCurrentEmployeeApiV1EmployeesActivatePost = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse>,
+export const useActivateCurrentEmployeeApiV1EmployeesActivatePost = <TError = AxiosError<ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof activateCurrentEmployeeApiV1EmployeesActivatePost>>, TError,void, TContext>, axios?: AxiosRequestConfig}
  ): UseMutationResult<
         Awaited<ReturnType<typeof activateCurrentEmployeeApiV1EmployeesActivatePost>>,

@@ -6,12 +6,17 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
   MutationFunction,
+  QueryFunction,
+  QueryKey,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import axios from 'axios';
@@ -26,6 +31,7 @@ import type {
   AssignRoleResponse,
   HTTPValidationError,
   SSOConfigRequest,
+  SSOStatusResponse,
   TenantRequest
 } from '.././model';
 
@@ -224,4 +230,69 @@ export const useAssignRoleToUserApiV1TenantsUsersUserIdRolesPost = <TError = Axi
 
       return useMutation(mutationOptions);
     }
+    /**
+ * Check if the current tenant has SSO configured.
+ * @summary Get tenant SSO status
+ */
+export const getTenantSsoStatusApiV1TenantsSsoStatusGet = (
+     options?: AxiosRequestConfig
+ ): Promise<AxiosResponse<SSOStatusResponse>> => {
     
+    
+    return axios.get(
+      `/api/v1/tenants/sso/status`,options
+    );
+  }
+
+
+
+
+export const getGetTenantSsoStatusApiV1TenantsSsoStatusGetQueryKey = () => {
+    return [
+    `/api/v1/tenants/sso/status`
+    ] as const;
+    }
+
+    
+export const getGetTenantSsoStatusApiV1TenantsSsoStatusGetQueryOptions = <TData = Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError = AxiosError<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError, TData>, axios?: AxiosRequestConfig}
+) => {
+
+const {query: queryOptions, axios: axiosOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantSsoStatusApiV1TenantsSsoStatusGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>> = ({ signal }) => getTenantSsoStatusApiV1TenantsSsoStatusGet({ signal, ...axiosOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTenantSsoStatusApiV1TenantsSsoStatusGetQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>>
+export type GetTenantSsoStatusApiV1TenantsSsoStatusGetQueryError = AxiosError<unknown>
+
+
+/**
+ * @summary Get tenant SSO status
+ */
+
+export function useGetTenantSsoStatusApiV1TenantsSsoStatusGet<TData = Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError = AxiosError<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError, TData>, axios?: AxiosRequestConfig}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTenantSsoStatusApiV1TenantsSsoStatusGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+

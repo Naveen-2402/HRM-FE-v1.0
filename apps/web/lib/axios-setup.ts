@@ -9,6 +9,9 @@ export function setupAxiosInterceptors() {
   axios.interceptors.request.use(
     (config) => {
       const token = useAuthStore.getState().token;
+      if (config.url && config.url.startsWith('/api/v1/')) {
+        config.url = config.url.replace('/api/v1/', '/');
+      }
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
