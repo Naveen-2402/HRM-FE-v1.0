@@ -7,9 +7,9 @@ import {
   Briefcase, LayoutDashboard, Users, UserPlus, 
   Settings, LogOut, Menu, X, Bell, ShieldCheck 
 } from "lucide-react";
-
 import { Button } from "@repo/ui/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
+import { ModeToggle } from "@/components/theme-toggle";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -28,7 +28,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     logout();
-    window.location.href = `http://hrm.test:3000/login`;
+    window.location.href = `http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000/login`;
     return;
   };
 
@@ -150,6 +150,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
           
           <div className="flex items-center gap-3">
+            <ModeToggle />
             <button className="p-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-full transition-colors hover:cursor-pointer">
               <Bell className="size-5" />
             </button>
