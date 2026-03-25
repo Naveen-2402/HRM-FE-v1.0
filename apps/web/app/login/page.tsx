@@ -18,10 +18,8 @@ import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/defaul
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
 
 import { jwtDecode } from "jwt-decode";
-import { setAuthToken } from "@repo/utils"; // Adjust path to your utils package
-// import { useAuthStore, UserProfile } from "@/store/useAuthStore";
+import { setAuthToken } from "@repo/utils";
 
-// 1. We extract the form into a child component so we can use useSearchParams safely
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -72,10 +70,11 @@ function LoginFormContent() {
 
         // 5. Redirect to the correct subdomain
         if (tenantSubdomain) {
-          const baseDomain = window.location.hostname.includes("localhost") 
-            ? "localhost:3000" 
-            : "hrm.com"; // Replace with your production root domain
+          const hostname = window.location.hostname;
+          const port = window.location.port ? `:${window.location.port}` : "";
 
+          const baseDomain = `${hostname}${port}`;
+          
           // Hard redirect to force the browser to load the new subdomain context
           window.location.href = `http://${tenantSubdomain}.${baseDomain}/dashboard`;
         } else {

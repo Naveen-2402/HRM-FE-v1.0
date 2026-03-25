@@ -28,7 +28,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     logout();
-    router.push("/login");
+    window.location.href = `http://hrm.test:3000/login`;
+    return;
   };
 
   return (

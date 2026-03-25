@@ -86,9 +86,10 @@ export default function AuthCallbackPage() {
             const port = window.location.port ? `:${window.location.port}` : '';
             
             // Base domain logic (hrm.local:3000 or hrm.com)
-            const baseDomain = hostname.includes("test") ? `hrm.test${port}` : "hrm.com";
+            const baseDomain = `${hostname}${port}`;
             
             window.location.href = `http://${tenantSubdomain}.${baseDomain}/dashboard`;
+            return;
           } else {
             router.push("/dashboard");
           }

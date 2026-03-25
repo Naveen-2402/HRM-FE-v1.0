@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { useAuthStore } from "@/store/useAuthStore";
+import { jwtDecode } from "jwt-decode";
+import { getClientAuthToken } from "@repo/utils";
+import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 
 // 1. Define routes that DO NOT require a login
 const publicPaths = ["/login", "/signup", "/forgot-password", "/auth/callback"];
@@ -11,19 +13,52 @@ const publicPaths = ["/login", "/signup", "/forgot-password", "/auth/callback"];
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  
+  // Grab the necessary actions and state from Zustand
+  const { isAuthenticated, user, login, logout } = useAuthStore();
 
-  // We need to wait for the component to mount so Zustand can safely read from localStorage
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isRehydrating, setIsRehydrating] = useState(false);
 
+  // Mark as mounted to safely execute browser-only logic
   useEffect(() => {
-    setIsHydrated(true);
+    setIsMounted(true);
   }, []);
 
+  // --- THE REHYDRATION ENGINE ---
   useEffect(() => {
-    if (!isHydrated) return;
+    if (!isMounted) return;
 
-    // Check if the current route is in our public list (or is the exact root landing page "/")
+    // If Zustand says we are authenticated, but the user object is missing,
+    // it means we just hard-reloaded (or crossed subdomains) and lost Zustand's memory.
+    if (isAuthenticated && !user) {
+      setIsRehydrating(true);
+      const token = getClientAuthToken();
+      
+      if (token) {
+        try {
+          // Rebuild the user profile from the cross-domain cookie
+          const decodedUser = jwtDecode<UserProfile>(token);
+          login(decodedUser);
+        } catch (e) {
+          console.error("Failed to decode token during rehydration", e);
+          logout(); // Purge corrupted state
+        } finally {
+          setIsRehydrating(false);
+        }
+      } else {
+        // Edge case: Cookie expired or was manually deleted
+        logout();
+        setIsRehydrating(false);
+      }
+    }
+  }, [isMounted, isAuthenticated, user, login, logout]);
+
+  // --- THE ROUTING ENGINE ---
+  useEffect(() => {
+    // Wait until we are fully mounted and finished rehydrating the user
+    if (!isMounted || isRehydrating) return;
+
     const isPublicPath = publicPaths.some((path) => pathname?.startsWith(path)) || pathname === "/";
 
     if (!isAuthenticated && !isPublicPath) {
@@ -34,10 +69,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       // Note: We intentionally let them access /auth/callback so the SSO flow can finish!
       router.replace("/dashboard");
     }
-  }, [isAuthenticated, isHydrated, pathname, router]);
+  }, [isAuthenticated, isMounted, isRehydrating, pathname, router]);
 
-  // Show a loading spinner while Zustand is loading or while calculating redirects
-  if (!isHydrated) {
+  // Show a loading spinner while mounting OR while extracting the user from the cookie
+  if (!isMounted || isRehydrating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="size-8 animate-spin text-primary" />
@@ -52,6 +87,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return null;
   }
 
-  // If all checks pass, render the actual page!
+  // If all checks pass and the user is fully rehydrated, render the app!
   return <>{children}</>;
 }
