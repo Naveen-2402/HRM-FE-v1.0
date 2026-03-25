@@ -6,12 +6,11 @@ export function middleware(req: NextRequest) {
   const hostname = req.headers.get('host') || '';
 
   // Define your base domain for local development and production  
-  let baseDomain = 'hrm.com'; // Production default
-  if (hostname.includes('hrm.test')) {
-    baseDomain = 'hrm.test:3000'; // Local testing
-  } else if (hostname.includes('localhost')) {
-    baseDomain = 'localhost:3000'; // Fallback
+  let baseDomain = `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`; // Production default
+  if (hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)) {
+    baseDomain = `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`; // Local testing
   }
+
   // Determine if the current request is on a subdomain
   const isSubdomain = hostname !== baseDomain && hostname.endsWith(`.${baseDomain}`);
 

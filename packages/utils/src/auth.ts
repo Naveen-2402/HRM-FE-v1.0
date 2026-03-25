@@ -9,10 +9,10 @@ const getCookieDomain = () => {
   }
 
   const hostname = window.location.hostname;
-  if (hostname.includes("hrm.test")) return ".hrm.test";
+  if (hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)) return `.${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`;
 
-  if (hostname.includes("localhost")) return "localhost";
-  return ".hrm.com";
+  // if (hostname.includes("localhost")) return "localhost";
+  return `.${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`;
 };
 
 export const setAuthToken = (token: string) => {

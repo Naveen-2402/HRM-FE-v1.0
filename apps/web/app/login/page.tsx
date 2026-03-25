@@ -109,8 +109,8 @@ function LoginFormContent() {
       
       if (response.data.sso_enabled) {
         const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8082";
-        const realm = "hrm-system";
-        const clientId = "hrm-frontend"; 
+        const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
+        const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID; 
         const redirectUri = `${window.location.origin}/auth/callback`;
         const idpAlias = response.data.idp_alias;
 

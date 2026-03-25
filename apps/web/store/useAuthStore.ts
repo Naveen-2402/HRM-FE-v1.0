@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { clearAuthToken, getClientAuthToken } from "@repo/utils"; // Adjust path to your utils package
+import { clearAuthToken, getClientAuthToken } from "@repo/utils";
 
 export interface UserProfile {
   sub: string; // Keycloak user ID
@@ -39,9 +39,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     // 3. Hard redirect back to the root domain login page
     if (typeof window !== "undefined") {
-      const baseDomain = window.location.hostname.includes("localhost")
-        ? "localhost:3000"
-        : "hrm.com"; // Replace with your production root domain
+      const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
+        ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
+        : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`
 
       window.location.href = `http://${baseDomain}/login`;
     }

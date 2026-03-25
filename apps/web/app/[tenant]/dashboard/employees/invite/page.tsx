@@ -136,14 +136,14 @@ export default function EmployeeInvitePage() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto py-22 px-4">
+    <div className="w-full max-w-5xl mx-auto py-5 px-4">
       
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
           <Users className="size-8 text-primary" />
           Bulk Onboard Teammates
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           Add employees manually or upload a CSV file to invite your entire team at once.
         </p>
       </div>

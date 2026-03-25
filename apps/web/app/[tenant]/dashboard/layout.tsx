@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import axios from "axios";
 import { useAuthStore } from "@/store/useAuthStore";
 import { DashboardShell } from "@/components/dashboard-layout";
 
@@ -46,7 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-background text-foreground flex">
         <DashboardShell>
-          {children}
+            {children}
         </DashboardShell>
     </div>
   );

@@ -43,7 +43,7 @@ export default function AuthSettingsPage() {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const { data } = await getTenantSsoStatusApiV1TenantsSsoStatusGet();
+        const data = await getTenantSsoStatusApiV1TenantsSsoStatusGet();
         const ssoConfigured = data.sso_configured;
                 
         setSelectedMethod(ssoConfigured ? "sso" : "password");
@@ -121,10 +121,10 @@ export default function AuthSettingsPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-4xl flex flex-col items-center space-y-12"
+        className="w-full max-w-5xl px-4 flex flex-col items-center space-y-12"
       >
         {/* --- MAIN AUTH SELECTION --- */}
-        <div className="w-full max-w-4xl">
+        <div className="w-full">
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground flex items-center gap-2">
