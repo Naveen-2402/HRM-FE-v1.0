@@ -19,13 +19,6 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
-import axios from 'axios';
-import type {
-  AxiosError,
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   AssignRoleRequest,
   AssignRoleResponse,
@@ -35,11 +28,14 @@ import type {
   TenantRequest
 } from '.././model';
 
+import { customInstance } from '../../axios-setup';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -48,28 +44,31 @@ type AwaitedInput<T> = PromiseLike<T> | T;
  * @summary Onboard new tenant
  */
 export const onboardTenantApiV1TenantsOnboardPost = (
-    tenantRequest: TenantRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
-    
-    
-    return axios.post(
-      `/api/v1/tenants/onboard`,
-      tenantRequest,options
-    );
-  }
+    tenantRequest: TenantRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/tenants/onboard`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: tenantRequest, signal
+    },
+      options);
+    }
+  
 
 
-
-export const getOnboardTenantApiV1TenantsOnboardPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardTenantApiV1TenantsOnboardPost>>, TError,{data: TenantRequest}, TContext>, axios?: AxiosRequestConfig}
+export const getOnboardTenantApiV1TenantsOnboardPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardTenantApiV1TenantsOnboardPost>>, TError,{data: TenantRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof onboardTenantApiV1TenantsOnboardPost>>, TError,{data: TenantRequest}, TContext> => {
 
 const mutationKey = ['onboardTenantApiV1TenantsOnboardPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -77,7 +76,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof onboardTenantApiV1TenantsOnboardPost>>, {data: TenantRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  onboardTenantApiV1TenantsOnboardPost(data,axiosOptions)
+          return  onboardTenantApiV1TenantsOnboardPost(data,requestOptions)
         }
 
         
@@ -87,13 +86,13 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type OnboardTenantApiV1TenantsOnboardPostMutationResult = NonNullable<Awaited<ReturnType<typeof onboardTenantApiV1TenantsOnboardPost>>>
     export type OnboardTenantApiV1TenantsOnboardPostMutationBody = TenantRequest
-    export type OnboardTenantApiV1TenantsOnboardPostMutationError = AxiosError<HTTPValidationError>
+    export type OnboardTenantApiV1TenantsOnboardPostMutationError = HTTPValidationError
 
     /**
  * @summary Onboard new tenant
  */
-export const useOnboardTenantApiV1TenantsOnboardPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardTenantApiV1TenantsOnboardPost>>, TError,{data: TenantRequest}, TContext>, axios?: AxiosRequestConfig}
+export const useOnboardTenantApiV1TenantsOnboardPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof onboardTenantApiV1TenantsOnboardPost>>, TError,{data: TenantRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof onboardTenantApiV1TenantsOnboardPost>>,
         TError,
@@ -110,28 +109,31 @@ export const useOnboardTenantApiV1TenantsOnboardPost = <TError = AxiosError<HTTP
  * @summary Setup SSO for tenant
  */
 export const setupTenantSsoApiV1TenantsSsoSetupPost = (
-    sSOConfigRequest: SSOConfigRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
-    
-    
-    return axios.post(
-      `/api/v1/tenants/sso/setup`,
-      sSOConfigRequest,options
-    );
-  }
+    sSOConfigRequest: SSOConfigRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/tenants/sso/setup`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: sSOConfigRequest, signal
+    },
+      options);
+    }
+  
 
 
-
-export const getSetupTenantSsoApiV1TenantsSsoSetupPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoApiV1TenantsSsoSetupPost>>, TError,{data: SSOConfigRequest}, TContext>, axios?: AxiosRequestConfig}
+export const getSetupTenantSsoApiV1TenantsSsoSetupPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoApiV1TenantsSsoSetupPost>>, TError,{data: SSOConfigRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoApiV1TenantsSsoSetupPost>>, TError,{data: SSOConfigRequest}, TContext> => {
 
 const mutationKey = ['setupTenantSsoApiV1TenantsSsoSetupPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -139,7 +141,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof setupTenantSsoApiV1TenantsSsoSetupPost>>, {data: SSOConfigRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  setupTenantSsoApiV1TenantsSsoSetupPost(data,axiosOptions)
+          return  setupTenantSsoApiV1TenantsSsoSetupPost(data,requestOptions)
         }
 
         
@@ -149,13 +151,13 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type SetupTenantSsoApiV1TenantsSsoSetupPostMutationResult = NonNullable<Awaited<ReturnType<typeof setupTenantSsoApiV1TenantsSsoSetupPost>>>
     export type SetupTenantSsoApiV1TenantsSsoSetupPostMutationBody = SSOConfigRequest
-    export type SetupTenantSsoApiV1TenantsSsoSetupPostMutationError = AxiosError<HTTPValidationError>
+    export type SetupTenantSsoApiV1TenantsSsoSetupPostMutationError = HTTPValidationError
 
     /**
  * @summary Setup SSO for tenant
  */
-export const useSetupTenantSsoApiV1TenantsSsoSetupPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoApiV1TenantsSsoSetupPost>>, TError,{data: SSOConfigRequest}, TContext>, axios?: AxiosRequestConfig}
+export const useSetupTenantSsoApiV1TenantsSsoSetupPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setupTenantSsoApiV1TenantsSsoSetupPost>>, TError,{data: SSOConfigRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof setupTenantSsoApiV1TenantsSsoSetupPost>>,
         TError,
@@ -173,28 +175,31 @@ export const useSetupTenantSsoApiV1TenantsSsoSetupPost = <TError = AxiosError<HT
  */
 export const assignRoleToUserApiV1TenantsUsersUserIdRolesPost = (
     userId: string,
-    assignRoleRequest: AssignRoleRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<AssignRoleResponse>> => {
-    
-    
-    return axios.post(
-      `/api/v1/tenants/users/${userId}/roles`,
-      assignRoleRequest,options
-    );
-  }
+    assignRoleRequest: AssignRoleRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AssignRoleResponse>(
+      {url: `/api/v1/tenants/users/${userId}/roles`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: assignRoleRequest, signal
+    },
+      options);
+    }
+  
 
 
-
-export const getAssignRoleToUserApiV1TenantsUsersUserIdRolesPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserApiV1TenantsUsersUserIdRolesPost>>, TError,{userId: string;data: AssignRoleRequest}, TContext>, axios?: AxiosRequestConfig}
+export const getAssignRoleToUserApiV1TenantsUsersUserIdRolesPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserApiV1TenantsUsersUserIdRolesPost>>, TError,{userId: string;data: AssignRoleRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserApiV1TenantsUsersUserIdRolesPost>>, TError,{userId: string;data: AssignRoleRequest}, TContext> => {
 
 const mutationKey = ['assignRoleToUserApiV1TenantsUsersUserIdRolesPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -202,7 +207,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof assignRoleToUserApiV1TenantsUsersUserIdRolesPost>>, {userId: string;data: AssignRoleRequest}> = (props) => {
           const {userId,data} = props ?? {};
 
-          return  assignRoleToUserApiV1TenantsUsersUserIdRolesPost(userId,data,axiosOptions)
+          return  assignRoleToUserApiV1TenantsUsersUserIdRolesPost(userId,data,requestOptions)
         }
 
         
@@ -212,13 +217,13 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type AssignRoleToUserApiV1TenantsUsersUserIdRolesPostMutationResult = NonNullable<Awaited<ReturnType<typeof assignRoleToUserApiV1TenantsUsersUserIdRolesPost>>>
     export type AssignRoleToUserApiV1TenantsUsersUserIdRolesPostMutationBody = AssignRoleRequest
-    export type AssignRoleToUserApiV1TenantsUsersUserIdRolesPostMutationError = AxiosError<HTTPValidationError>
+    export type AssignRoleToUserApiV1TenantsUsersUserIdRolesPostMutationError = HTTPValidationError
 
     /**
  * @summary Assign realm roles to a user
  */
-export const useAssignRoleToUserApiV1TenantsUsersUserIdRolesPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserApiV1TenantsUsersUserIdRolesPost>>, TError,{userId: string;data: AssignRoleRequest}, TContext>, axios?: AxiosRequestConfig}
+export const useAssignRoleToUserApiV1TenantsUsersUserIdRolesPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assignRoleToUserApiV1TenantsUsersUserIdRolesPost>>, TError,{userId: string;data: AssignRoleRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof assignRoleToUserApiV1TenantsUsersUserIdRolesPost>>,
         TError,
@@ -235,15 +240,17 @@ export const useAssignRoleToUserApiV1TenantsUsersUserIdRolesPost = <TError = Axi
  * @summary Get tenant SSO status
  */
 export const getTenantSsoStatusApiV1TenantsSsoStatusGet = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SSOStatusResponse>> => {
     
-    
-    return axios.get(
-      `/api/v1/tenants/sso/status`,options
-    );
-  }
-
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<SSOStatusResponse>(
+      {url: `/api/v1/tenants/sso/status`, method: 'GET', signal
+    },
+      options);
+    }
+  
 
 
 
@@ -254,16 +261,16 @@ export const getGetTenantSsoStatusApiV1TenantsSsoStatusGetQueryKey = () => {
     }
 
     
-export const getGetTenantSsoStatusApiV1TenantsSsoStatusGetQueryOptions = <TData = Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError = AxiosError<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getGetTenantSsoStatusApiV1TenantsSsoStatusGetQueryOptions = <TData = Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-const {query: queryOptions, axios: axiosOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetTenantSsoStatusApiV1TenantsSsoStatusGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>> = ({ signal }) => getTenantSsoStatusApiV1TenantsSsoStatusGet({ signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>> = ({ signal }) => getTenantSsoStatusApiV1TenantsSsoStatusGet(requestOptions, signal);
 
       
 
@@ -273,15 +280,15 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type GetTenantSsoStatusApiV1TenantsSsoStatusGetQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>>
-export type GetTenantSsoStatusApiV1TenantsSsoStatusGetQueryError = AxiosError<unknown>
+export type GetTenantSsoStatusApiV1TenantsSsoStatusGetQueryError = unknown
 
 
 /**
  * @summary Get tenant SSO status
  */
 
-export function useGetTenantSsoStatusApiV1TenantsSsoStatusGet<TData = Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError = AxiosError<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export function useGetTenantSsoStatusApiV1TenantsSsoStatusGet<TData = Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoStatusApiV1TenantsSsoStatusGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 

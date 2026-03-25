@@ -1,42 +1,49 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { clearAuthToken, getClientAuthToken } from "@repo/utils"; // Adjust path to your utils package
 
-interface UserProfile {
+export interface UserProfile {
   sub: string; // Keycloak user ID
-  first_name: string;
+  first_name?: string;
   email: string;
   preferred_username: string;
   realm_access?: { roles: string[] };
-  organization?: Record<string, any>;
+  organization?: Record<string, any> | string[];
+  tenant_id?: string;
 }
 
 interface AuthState {
-  token: string | null;
   isAuthenticated: boolean;
   user: UserProfile | null;
-  setToken: (token: string) => void;
+  login: (user: UserProfile) => void;
   setUser: (user: UserProfile) => void;
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      isAuthenticated: false,
-      user: null,
+export const useAuthStore = create<AuthState>((set) => ({
+  // Initialize auth state directly from the cross-domain cookie
+  isAuthenticated: !!getClientAuthToken(),
+  user: null,
 
-      setToken: (token: string) =>
-        set({ token, isAuthenticated: true }),
+  login: (user: UserProfile) =>
+    set({ user, isAuthenticated: true }),
 
-      setUser: (user: UserProfile) =>
-        set({ user }),
+  setUser: (user: UserProfile) =>
+    set({ user }),
 
-      logout: () =>
-        set({ token: null, isAuthenticated: false, user: null }),
-    }),
-    {
-      name: "hrm-auth-storage",
+  logout: () => {
+    // 1. Clear the cross-domain cookie
+    clearAuthToken();
+
+    // 2. Clear local state
+    set({ isAuthenticated: false, user: null });
+
+    // 3. Hard redirect back to the root domain login page
+    if (typeof window !== "undefined") {
+      const baseDomain = window.location.hostname.includes("localhost")
+        ? "localhost:3000"
+        : "hrm.com"; // Replace with your production root domain
+
+      window.location.href = `http://${baseDomain}/login`;
     }
-  )
-);
+  },
+}));

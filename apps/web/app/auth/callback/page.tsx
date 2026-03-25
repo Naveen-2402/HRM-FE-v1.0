@@ -5,13 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
-
-import { useAuthStore } from "@/store/useAuthStore";
+import { jwtDecode } from "jwt-decode";
+import { setAuthToken } from "@repo/utils";
+import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const setToken = useAuthStore((state) => state.setToken);
+  const login = useAuthStore((state) => state.login);
 
   const [error, setError] = useState<string | null>(null);
   
@@ -37,7 +38,7 @@ export default function AuthCallbackPage() {
         const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8082";
         const realm = "hrm-system";
         const clientId = "hrm-frontend"; // Your new public client
-        const redirectUri = "http://localhost:3000/auth/callback"; // Must match exactly
+        const redirectUri = `${window.location.origin}/auth/callback`; // Must match exactly
 
         // Because it's a public client, we post directly to Keycloak's token endpoint
         const tokenEndpoint = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/token`;
@@ -55,12 +56,42 @@ export default function AuthCallbackPage() {
           },
         });
 
-        const accessToken = response.data.access_token;
+        const token = (response.data as any).access_token;
 
-        if (accessToken) {
+        if (token) {
           // Save the token to Zustand
-          setToken(accessToken);
+          setAuthToken(token);
+
+          const decodedUser = jwtDecode<UserProfile>(token);
+
+          // 4. Save the user profile to Zustand
+          login(decodedUser);
           toast.success("Successfully logged in via SSO!");
+
+          // 4. Extract Tenant Subdomain
+          let tenantSubdomain = "";
+          const orgClaim = decodedUser.organization;
+
+          console.log("Organization: ", orgClaim)
+
+          if (Array.isArray(orgClaim) && orgClaim.length > 0) {
+            tenantSubdomain = orgClaim[0];
+          } else if (typeof orgClaim === "object" && orgClaim !== null) {
+            tenantSubdomain = Object.keys(orgClaim)[0] || "";
+          }
+
+          // 5. Hard Redirect to Subdomain
+          if (tenantSubdomain) {
+            const hostname = window.location.hostname;
+            const port = window.location.port ? `:${window.location.port}` : '';
+            
+            // Base domain logic (hrm.local:3000 or hrm.com)
+            const baseDomain = hostname.includes("test") ? `hrm.test${port}` : "hrm.com";
+            
+            window.location.href = `http://${tenantSubdomain}.${baseDomain}/dashboard`;
+          } else {
+            router.push("/dashboard");
+          }
           
           // Redirect to the dashboard
           router.push("/dashboard");
@@ -76,7 +107,7 @@ export default function AuthCallbackPage() {
     };
 
     exchangeCodeForToken();
-  }, [searchParams, router, setToken]);
+  }, [searchParams, router, login]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">

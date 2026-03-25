@@ -19,13 +19,6 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
-import axios from 'axios';
-import type {
-  AxiosError,
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   CheckoutRequest,
   CheckoutResponse,
@@ -35,11 +28,14 @@ import type {
   SubscriptionResponse
 } from '.././model';
 
+import { customInstance } from '../../axios-setup';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -48,28 +44,31 @@ type AwaitedInput<T> = PromiseLike<T> | T;
  * @summary Create Stripe checkout session
  */
 export const createCheckoutSessionApiV1BillingCheckoutPost = (
-    checkoutRequest: CheckoutRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<CheckoutResponse>> => {
-    
-    
-    return axios.post(
-      `/api/v1/billing/checkout`,
-      checkoutRequest,options
-    );
-  }
+    checkoutRequest: CheckoutRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CheckoutResponse>(
+      {url: `/api/v1/billing/checkout`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: checkoutRequest, signal
+    },
+      options);
+    }
+  
 
 
-
-export const getCreateCheckoutSessionApiV1BillingCheckoutPostMutationOptions = <TError = AxiosError<void | HTTPValidationError | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, TError,{data: CheckoutRequest}, TContext>, axios?: AxiosRequestConfig}
+export const getCreateCheckoutSessionApiV1BillingCheckoutPostMutationOptions = <TError = void | HTTPValidationError | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, TError,{data: CheckoutRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, TError,{data: CheckoutRequest}, TContext> => {
 
 const mutationKey = ['createCheckoutSessionApiV1BillingCheckoutPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -77,7 +76,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, {data: CheckoutRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  createCheckoutSessionApiV1BillingCheckoutPost(data,axiosOptions)
+          return  createCheckoutSessionApiV1BillingCheckoutPost(data,requestOptions)
         }
 
         
@@ -87,13 +86,13 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type CreateCheckoutSessionApiV1BillingCheckoutPostMutationResult = NonNullable<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>>
     export type CreateCheckoutSessionApiV1BillingCheckoutPostMutationBody = CheckoutRequest
-    export type CreateCheckoutSessionApiV1BillingCheckoutPostMutationError = AxiosError<void | HTTPValidationError | void>
+    export type CreateCheckoutSessionApiV1BillingCheckoutPostMutationError = void | HTTPValidationError | void
 
     /**
  * @summary Create Stripe checkout session
  */
-export const useCreateCheckoutSessionApiV1BillingCheckoutPost = <TError = AxiosError<void | HTTPValidationError | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, TError,{data: CheckoutRequest}, TContext>, axios?: AxiosRequestConfig}
+export const useCreateCheckoutSessionApiV1BillingCheckoutPost = <TError = void | HTTPValidationError | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, TError,{data: CheckoutRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>,
         TError,
@@ -110,15 +109,17 @@ export const useCreateCheckoutSessionApiV1BillingCheckoutPost = <TError = AxiosE
  * @summary Get subscription status
  */
 export const getSubscriptionStatusApiV1BillingSubscriptionGet = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<SubscriptionResponse>> => {
     
-    
-    return axios.get(
-      `/api/v1/billing/subscription`,options
-    );
-  }
-
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<SubscriptionResponse>(
+      {url: `/api/v1/billing/subscription`, method: 'GET', signal
+    },
+      options);
+    }
+  
 
 
 
@@ -129,16 +130,16 @@ export const getGetSubscriptionStatusApiV1BillingSubscriptionGetQueryKey = () =>
     }
 
     
-export const getGetSubscriptionStatusApiV1BillingSubscriptionGetQueryOptions = <TData = Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError = AxiosError<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getGetSubscriptionStatusApiV1BillingSubscriptionGetQueryOptions = <TData = Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError = void>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-const {query: queryOptions, axios: axiosOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetSubscriptionStatusApiV1BillingSubscriptionGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>> = ({ signal }) => getSubscriptionStatusApiV1BillingSubscriptionGet({ signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>> = ({ signal }) => getSubscriptionStatusApiV1BillingSubscriptionGet(requestOptions, signal);
 
       
 
@@ -148,15 +149,15 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type GetSubscriptionStatusApiV1BillingSubscriptionGetQueryResult = NonNullable<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>>
-export type GetSubscriptionStatusApiV1BillingSubscriptionGetQueryError = AxiosError<void>
+export type GetSubscriptionStatusApiV1BillingSubscriptionGetQueryError = void
 
 
 /**
  * @summary Get subscription status
  */
 
-export function useGetSubscriptionStatusApiV1BillingSubscriptionGet<TData = Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError = AxiosError<void>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export function useGetSubscriptionStatusApiV1BillingSubscriptionGet<TData = Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError = void>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -176,27 +177,29 @@ export function useGetSubscriptionStatusApiV1BillingSubscriptionGet<TData = Awai
  * @summary Create Stripe billing portal session
  */
 export const createPortalSessionApiV1BillingPortalPost = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<PortalResponse>> => {
     
-    
-    return axios.post(
-      `/api/v1/billing/portal`,undefined,options
-    );
-  }
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PortalResponse>(
+      {url: `/api/v1/billing/portal`, method: 'POST', signal
+    },
+      options);
+    }
+  
 
 
-
-export const getCreatePortalSessionApiV1BillingPortalPostMutationOptions = <TError = AxiosError<void | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, TError,void, TContext>, axios?: AxiosRequestConfig}
+export const getCreatePortalSessionApiV1BillingPortalPostMutationOptions = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, TError,void, TContext> => {
 
 const mutationKey = ['createPortalSessionApiV1BillingPortalPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -204,7 +207,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, void> = () => {
           
 
-          return  createPortalSessionApiV1BillingPortalPost(axiosOptions)
+          return  createPortalSessionApiV1BillingPortalPost(requestOptions)
         }
 
         
@@ -214,13 +217,13 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type CreatePortalSessionApiV1BillingPortalPostMutationResult = NonNullable<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>>
     
-    export type CreatePortalSessionApiV1BillingPortalPostMutationError = AxiosError<void | void>
+    export type CreatePortalSessionApiV1BillingPortalPostMutationError = void | void
 
     /**
  * @summary Create Stripe billing portal session
  */
-export const useCreatePortalSessionApiV1BillingPortalPost = <TError = AxiosError<void | void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, TError,void, TContext>, axios?: AxiosRequestConfig}
+export const useCreatePortalSessionApiV1BillingPortalPost = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>,
         TError,
@@ -237,27 +240,29 @@ export const useCreatePortalSessionApiV1BillingPortalPost = <TError = AxiosError
  * @summary Stripe webhook receiver
  */
 export const stripeWebhookApiV1BillingWebhookPost = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<StripeWebhookApiV1BillingWebhookPost200>> => {
     
-    
-    return axios.post(
-      `/api/v1/billing/webhook`,undefined,options
-    );
-  }
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<StripeWebhookApiV1BillingWebhookPost200>(
+      {url: `/api/v1/billing/webhook`, method: 'POST', signal
+    },
+      options);
+    }
+  
 
 
-
-export const getStripeWebhookApiV1BillingWebhookPostMutationOptions = <TError = AxiosError<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>, TError,void, TContext>, axios?: AxiosRequestConfig}
+export const getStripeWebhookApiV1BillingWebhookPostMutationOptions = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>, TError,void, TContext> => {
 
 const mutationKey = ['stripeWebhookApiV1BillingWebhookPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -265,7 +270,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>, void> = () => {
           
 
-          return  stripeWebhookApiV1BillingWebhookPost(axiosOptions)
+          return  stripeWebhookApiV1BillingWebhookPost(requestOptions)
         }
 
         
@@ -275,13 +280,13 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type StripeWebhookApiV1BillingWebhookPostMutationResult = NonNullable<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>>
     
-    export type StripeWebhookApiV1BillingWebhookPostMutationError = AxiosError<void>
+    export type StripeWebhookApiV1BillingWebhookPostMutationError = void
 
     /**
  * @summary Stripe webhook receiver
  */
-export const useStripeWebhookApiV1BillingWebhookPost = <TError = AxiosError<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>, TError,void, TContext>, axios?: AxiosRequestConfig}
+export const useStripeWebhookApiV1BillingWebhookPost = <TError = void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>,
         TError,
@@ -297,15 +302,17 @@ export const useStripeWebhookApiV1BillingWebhookPost = <TError = AxiosError<void
  * @summary Get Billing Status
  */
 export const getBillingStatusApiV1BillingStatusGet = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
     
-    
-    return axios.get(
-      `/api/v1/billing/status`,options
-    );
-  }
-
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/billing/status`, method: 'GET', signal
+    },
+      options);
+    }
+  
 
 
 
@@ -316,16 +323,16 @@ export const getGetBillingStatusApiV1BillingStatusGetQueryKey = () => {
     }
 
     
-export const getGetBillingStatusApiV1BillingStatusGetQueryOptions = <TData = Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError = AxiosError<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getGetBillingStatusApiV1BillingStatusGetQueryOptions = <TData = Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-const {query: queryOptions, axios: axiosOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getGetBillingStatusApiV1BillingStatusGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>> = ({ signal }) => getBillingStatusApiV1BillingStatusGet({ signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>> = ({ signal }) => getBillingStatusApiV1BillingStatusGet(requestOptions, signal);
 
       
 
@@ -335,15 +342,15 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type GetBillingStatusApiV1BillingStatusGetQueryResult = NonNullable<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>>
-export type GetBillingStatusApiV1BillingStatusGetQueryError = AxiosError<unknown>
+export type GetBillingStatusApiV1BillingStatusGetQueryError = unknown
 
 
 /**
  * @summary Get Billing Status
  */
 
-export function useGetBillingStatusApiV1BillingStatusGet<TData = Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError = AxiosError<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export function useGetBillingStatusApiV1BillingStatusGet<TData = Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getBillingStatusApiV1BillingStatusGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 

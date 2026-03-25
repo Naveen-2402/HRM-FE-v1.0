@@ -19,13 +19,6 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
-import axios from 'axios';
-import type {
-  AxiosError,
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   CheckDomainApiV1AuthCheckDomainGetParams,
   ForgotPasswordRequest,
@@ -34,11 +27,14 @@ import type {
   LoginRequest
 } from '.././model';
 
+import { customInstance } from '../../axios-setup';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -55,28 +51,31 @@ Security:
  * @summary Request a password reset email (magic link)
  */
 export const forgotPasswordApiV1AuthForgotPasswordPost = (
-    forgotPasswordRequest: ForgotPasswordRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<ForgotPasswordResponse>> => {
-    
-    
-    return axios.post(
-      `/api/v1/auth/forgot-password`,
-      forgotPasswordRequest,options
-    );
-  }
+    forgotPasswordRequest: ForgotPasswordRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ForgotPasswordResponse>(
+      {url: `/api/v1/auth/forgot-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: forgotPasswordRequest, signal
+    },
+      options);
+    }
+  
 
 
-
-export const getForgotPasswordApiV1AuthForgotPasswordPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, TError,{data: ForgotPasswordRequest}, TContext>, axios?: AxiosRequestConfig}
+export const getForgotPasswordApiV1AuthForgotPasswordPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, TError,{data: ForgotPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, TError,{data: ForgotPasswordRequest}, TContext> => {
 
 const mutationKey = ['forgotPasswordApiV1AuthForgotPasswordPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -84,7 +83,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, {data: ForgotPasswordRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  forgotPasswordApiV1AuthForgotPasswordPost(data,axiosOptions)
+          return  forgotPasswordApiV1AuthForgotPasswordPost(data,requestOptions)
         }
 
         
@@ -94,13 +93,13 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type ForgotPasswordApiV1AuthForgotPasswordPostMutationResult = NonNullable<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>>
     export type ForgotPasswordApiV1AuthForgotPasswordPostMutationBody = ForgotPasswordRequest
-    export type ForgotPasswordApiV1AuthForgotPasswordPostMutationError = AxiosError<HTTPValidationError>
+    export type ForgotPasswordApiV1AuthForgotPasswordPostMutationError = HTTPValidationError
 
     /**
  * @summary Request a password reset email (magic link)
  */
-export const useForgotPasswordApiV1AuthForgotPasswordPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, TError,{data: ForgotPasswordRequest}, TContext>, axios?: AxiosRequestConfig}
+export const useForgotPasswordApiV1AuthForgotPasswordPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>, TError,{data: ForgotPasswordRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof forgotPasswordApiV1AuthForgotPasswordPost>>,
         TError,
@@ -117,17 +116,18 @@ export const useForgotPasswordApiV1AuthForgotPasswordPost = <TError = AxiosError
  * @summary Check if email domain has SSO enabled
  */
 export const checkDomainApiV1AuthCheckDomainGet = (
-    params: CheckDomainApiV1AuthCheckDomainGetParams, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
-    
-    
-    return axios.get(
-      `/api/v1/auth/check-domain`,{
-    ...options,
-        params: {...params, ...options?.params},}
-    );
-  }
-
+    params: CheckDomainApiV1AuthCheckDomainGetParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/auth/check-domain`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
 
 
 
@@ -138,16 +138,16 @@ export const getCheckDomainApiV1AuthCheckDomainGetQueryKey = (params?: CheckDoma
     }
 
     
-export const getCheckDomainApiV1AuthCheckDomainGetQueryOptions = <TData = Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>, TError = AxiosError<HTTPValidationError>>(params: CheckDomainApiV1AuthCheckDomainGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getCheckDomainApiV1AuthCheckDomainGetQueryOptions = <TData = Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>, TError = HTTPValidationError>(params: CheckDomainApiV1AuthCheckDomainGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-const {query: queryOptions, axios: axiosOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getCheckDomainApiV1AuthCheckDomainGetQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>> = ({ signal }) => checkDomainApiV1AuthCheckDomainGet(params, { signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>> = ({ signal }) => checkDomainApiV1AuthCheckDomainGet(params, requestOptions, signal);
 
       
 
@@ -157,15 +157,15 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type CheckDomainApiV1AuthCheckDomainGetQueryResult = NonNullable<Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>>
-export type CheckDomainApiV1AuthCheckDomainGetQueryError = AxiosError<HTTPValidationError>
+export type CheckDomainApiV1AuthCheckDomainGetQueryError = HTTPValidationError
 
 
 /**
  * @summary Check if email domain has SSO enabled
  */
 
-export function useCheckDomainApiV1AuthCheckDomainGet<TData = Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>, TError = AxiosError<HTTPValidationError>>(
- params: CheckDomainApiV1AuthCheckDomainGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export function useCheckDomainApiV1AuthCheckDomainGet<TData = Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>, TError = HTTPValidationError>(
+ params: CheckDomainApiV1AuthCheckDomainGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkDomainApiV1AuthCheckDomainGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -184,28 +184,31 @@ export function useCheckDomainApiV1AuthCheckDomainGet<TData = Awaited<ReturnType
  * @summary Login to get access token
  */
 export const loginForAccessTokenApiV1AuthLoginPost = (
-    loginRequest: LoginRequest, options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
-    
-    
-    return axios.post(
-      `/api/v1/auth/login`,
-      loginRequest,options
-    );
-  }
+    loginRequest: LoginRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/auth/login`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: loginRequest, signal
+    },
+      options);
+    }
+  
 
 
-
-export const getLoginForAccessTokenApiV1AuthLoginPostMutationOptions = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginForAccessTokenApiV1AuthLoginPost>>, TError,{data: LoginRequest}, TContext>, axios?: AxiosRequestConfig}
+export const getLoginForAccessTokenApiV1AuthLoginPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginForAccessTokenApiV1AuthLoginPost>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof loginForAccessTokenApiV1AuthLoginPost>>, TError,{data: LoginRequest}, TContext> => {
 
 const mutationKey = ['loginForAccessTokenApiV1AuthLoginPost'];
-const {mutation: mutationOptions, axios: axiosOptions} = options ?
+const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
       : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, axios: undefined};
+      : {mutation: { mutationKey, }, request: undefined};
 
       
 
@@ -213,7 +216,7 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
       const mutationFn: MutationFunction<Awaited<ReturnType<typeof loginForAccessTokenApiV1AuthLoginPost>>, {data: LoginRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  loginForAccessTokenApiV1AuthLoginPost(data,axiosOptions)
+          return  loginForAccessTokenApiV1AuthLoginPost(data,requestOptions)
         }
 
         
@@ -223,13 +226,13 @@ const {mutation: mutationOptions, axios: axiosOptions} = options ?
 
     export type LoginForAccessTokenApiV1AuthLoginPostMutationResult = NonNullable<Awaited<ReturnType<typeof loginForAccessTokenApiV1AuthLoginPost>>>
     export type LoginForAccessTokenApiV1AuthLoginPostMutationBody = LoginRequest
-    export type LoginForAccessTokenApiV1AuthLoginPostMutationError = AxiosError<HTTPValidationError>
+    export type LoginForAccessTokenApiV1AuthLoginPostMutationError = HTTPValidationError
 
     /**
  * @summary Login to get access token
  */
-export const useLoginForAccessTokenApiV1AuthLoginPost = <TError = AxiosError<HTTPValidationError>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginForAccessTokenApiV1AuthLoginPost>>, TError,{data: LoginRequest}, TContext>, axios?: AxiosRequestConfig}
+export const useLoginForAccessTokenApiV1AuthLoginPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof loginForAccessTokenApiV1AuthLoginPost>>, TError,{data: LoginRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof loginForAccessTokenApiV1AuthLoginPost>>,
         TError,

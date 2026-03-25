@@ -13,9 +13,13 @@ import { Input } from "@repo/ui/components/ui/input";
 import { Label } from "@repo/ui/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
+
+import { jwtDecode } from "jwt-decode";
+import { setAuthToken } from "@repo/utils"; // Adjust path to your utils package
+// import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 
 // 1. We extract the form into a child component so we can use useSearchParams safely
 function LoginFormContent() {
@@ -29,7 +33,7 @@ function LoginFormContent() {
   const [isChecking, setIsChecking] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const setToken = useAuthStore((state) => state.setToken);
+  const login = useAuthStore((state) => state.login);
   const loginMutation = useLoginAuthLoginPost();
 
   const form = useForm({
@@ -44,9 +48,41 @@ function LoginFormContent() {
         });
 
         const token = (response.data as any).access_token;
-        setToken(token);      
+        
+        // 1. Set the cross-subdomain cookie
+        setAuthToken(token);      
+
+        // 2. Decode the Keycloak JWT to extract the user's profile and organization
+        const decodedUser = jwtDecode<UserProfile>(token);
+        
+        // 3. Update Zustand state
+        login(decodedUser);
+        
         toast.success("Login successful");
-        router.push("/dashboard");
+
+        // 4. Extract the Tenant Subdomain alias from the Keycloak token
+        let tenantSubdomain = "";
+        const orgClaim = decodedUser.organization;
+
+        if (Array.isArray(orgClaim) && orgClaim.length > 0) {
+          tenantSubdomain = orgClaim[0];
+        } else if (typeof orgClaim === "object" && orgClaim !== null) {
+          tenantSubdomain = Object.keys(orgClaim)[0] || "";
+        }
+
+        // 5. Redirect to the correct subdomain
+        if (tenantSubdomain) {
+          const baseDomain = window.location.hostname.includes("localhost") 
+            ? "localhost:3000" 
+            : "hrm.com"; // Replace with your production root domain
+
+          // Hard redirect to force the browser to load the new subdomain context
+          window.location.href = `http://${tenantSubdomain}.${baseDomain}/dashboard`;
+        } else {
+          // Fallback if they do not belong to an organization (e.g., a super admin)
+          router.push("/dashboard");
+        }
+
       } catch (error: any) {
         toast.error(
           error?.response?.data?.detail?.error_description || 
@@ -76,7 +112,7 @@ function LoginFormContent() {
         const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8082";
         const realm = "hrm-system";
         const clientId = "hrm-frontend"; 
-        const redirectUri = encodeURIComponent("http://localhost:3000/auth/callback");
+        const redirectUri = `${window.location.origin}/auth/callback`;
         const idpAlias = response.data.idp_alias;
 
         const authUrl = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20profile%20email%20organization&kc_idp_hint=${idpAlias}`;        

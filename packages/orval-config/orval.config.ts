@@ -9,6 +9,12 @@ export default defineConfig({
       schemas: 'src/api/model',
       client: 'react-query',
       mock: false,
+      override: {
+        mutator: {
+          path: 'src/axios-setup.ts',
+          name: 'customInstance',
+        },
+      },
     },
   },
 });

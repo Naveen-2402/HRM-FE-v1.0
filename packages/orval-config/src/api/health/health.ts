@@ -15,23 +15,19 @@ import type {
   UseQueryResult
 } from '@tanstack/react-query';
 
-import axios from 'axios';
-import type {
-  AxiosError,
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 import type {
   DetailedHealthResponse,
   HealthResponse
 } from '.././model';
 
+import { customInstance } from '../../axios-setup';
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
       type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
+
+type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 
@@ -40,15 +36,17 @@ type AwaitedInput<T> = PromiseLike<T> | T;
  * @summary Basic health check
  */
 export const healthCheckHealthGet = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<HealthResponse>> => {
     
-    
-    return axios.get(
-      `/health`,options
-    );
-  }
-
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<HealthResponse>(
+      {url: `/health`, method: 'GET', signal
+    },
+      options);
+    }
+  
 
 
 
@@ -59,16 +57,16 @@ export const getHealthCheckHealthGetQueryKey = () => {
     }
 
     
-export const getHealthCheckHealthGetQueryOptions = <TData = Awaited<ReturnType<typeof healthCheckHealthGet>>, TError = AxiosError<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckHealthGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getHealthCheckHealthGetQueryOptions = <TData = Awaited<ReturnType<typeof healthCheckHealthGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-const {query: queryOptions, axios: axiosOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getHealthCheckHealthGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthCheckHealthGet>>> = ({ signal }) => healthCheckHealthGet({ signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthCheckHealthGet>>> = ({ signal }) => healthCheckHealthGet(requestOptions, signal);
 
       
 
@@ -78,15 +76,15 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type HealthCheckHealthGetQueryResult = NonNullable<Awaited<ReturnType<typeof healthCheckHealthGet>>>
-export type HealthCheckHealthGetQueryError = AxiosError<unknown>
+export type HealthCheckHealthGetQueryError = unknown
 
 
 /**
  * @summary Basic health check
  */
 
-export function useHealthCheckHealthGet<TData = Awaited<ReturnType<typeof healthCheckHealthGet>>, TError = AxiosError<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckHealthGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export function useHealthCheckHealthGet<TData = Awaited<ReturnType<typeof healthCheckHealthGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -106,15 +104,17 @@ export function useHealthCheckHealthGet<TData = Awaited<ReturnType<typeof health
  * @summary Detailed health check
  */
 export const detailedHealthCheckHealthDetailedGet = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<DetailedHealthResponse>> => {
     
-    
-    return axios.get(
-      `/health/detailed`,options
-    );
-  }
-
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<DetailedHealthResponse>(
+      {url: `/health/detailed`, method: 'GET', signal
+    },
+      options);
+    }
+  
 
 
 
@@ -125,16 +125,16 @@ export const getDetailedHealthCheckHealthDetailedGetQueryKey = () => {
     }
 
     
-export const getDetailedHealthCheckHealthDetailedGetQueryOptions = <TData = Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>, TError = AxiosError<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getDetailedHealthCheckHealthDetailedGetQueryOptions = <TData = Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-const {query: queryOptions, axios: axiosOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getDetailedHealthCheckHealthDetailedGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>> = ({ signal }) => detailedHealthCheckHealthDetailedGet({ signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>> = ({ signal }) => detailedHealthCheckHealthDetailedGet(requestOptions, signal);
 
       
 
@@ -144,15 +144,15 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type DetailedHealthCheckHealthDetailedGetQueryResult = NonNullable<Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>>
-export type DetailedHealthCheckHealthDetailedGetQueryError = AxiosError<unknown>
+export type DetailedHealthCheckHealthDetailedGetQueryError = unknown
 
 
 /**
  * @summary Detailed health check
  */
 
-export function useDetailedHealthCheckHealthDetailedGet<TData = Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>, TError = AxiosError<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export function useDetailedHealthCheckHealthDetailedGet<TData = Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof detailedHealthCheckHealthDetailedGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -172,15 +172,17 @@ export function useDetailedHealthCheckHealthDetailedGet<TData = Awaited<ReturnTy
  * @summary Readiness probe
  */
 export const readinessCheckReadinessGet = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
     
-    
-    return axios.get(
-      `/readiness`,options
-    );
-  }
-
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/readiness`, method: 'GET', signal
+    },
+      options);
+    }
+  
 
 
 
@@ -191,16 +193,16 @@ export const getReadinessCheckReadinessGetQueryKey = () => {
     }
 
     
-export const getReadinessCheckReadinessGetQueryOptions = <TData = Awaited<ReturnType<typeof readinessCheckReadinessGet>>, TError = AxiosError<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof readinessCheckReadinessGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getReadinessCheckReadinessGetQueryOptions = <TData = Awaited<ReturnType<typeof readinessCheckReadinessGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof readinessCheckReadinessGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-const {query: queryOptions, axios: axiosOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getReadinessCheckReadinessGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof readinessCheckReadinessGet>>> = ({ signal }) => readinessCheckReadinessGet({ signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof readinessCheckReadinessGet>>> = ({ signal }) => readinessCheckReadinessGet(requestOptions, signal);
 
       
 
@@ -210,15 +212,15 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type ReadinessCheckReadinessGetQueryResult = NonNullable<Awaited<ReturnType<typeof readinessCheckReadinessGet>>>
-export type ReadinessCheckReadinessGetQueryError = AxiosError<unknown>
+export type ReadinessCheckReadinessGetQueryError = unknown
 
 
 /**
  * @summary Readiness probe
  */
 
-export function useReadinessCheckReadinessGet<TData = Awaited<ReturnType<typeof readinessCheckReadinessGet>>, TError = AxiosError<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof readinessCheckReadinessGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export function useReadinessCheckReadinessGet<TData = Awaited<ReturnType<typeof readinessCheckReadinessGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof readinessCheckReadinessGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -238,15 +240,17 @@ export function useReadinessCheckReadinessGet<TData = Awaited<ReturnType<typeof 
  * @summary Liveness probe
  */
 export const livenessCheckLivenessGet = (
-     options?: AxiosRequestConfig
- ): Promise<AxiosResponse<unknown>> => {
     
-    
-    return axios.get(
-      `/liveness`,options
-    );
-  }
-
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/liveness`, method: 'GET', signal
+    },
+      options);
+    }
+  
 
 
 
@@ -257,16 +261,16 @@ export const getLivenessCheckLivenessGetQueryKey = () => {
     }
 
     
-export const getLivenessCheckLivenessGetQueryOptions = <TData = Awaited<ReturnType<typeof livenessCheckLivenessGet>>, TError = AxiosError<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof livenessCheckLivenessGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export const getLivenessCheckLivenessGetQueryOptions = <TData = Awaited<ReturnType<typeof livenessCheckLivenessGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof livenessCheckLivenessGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
-const {query: queryOptions, axios: axiosOptions} = options ?? {};
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
   const queryKey =  queryOptions?.queryKey ?? getLivenessCheckLivenessGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof livenessCheckLivenessGet>>> = ({ signal }) => livenessCheckLivenessGet({ signal, ...axiosOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof livenessCheckLivenessGet>>> = ({ signal }) => livenessCheckLivenessGet(requestOptions, signal);
 
       
 
@@ -276,15 +280,15 @@ const {query: queryOptions, axios: axiosOptions} = options ?? {};
 }
 
 export type LivenessCheckLivenessGetQueryResult = NonNullable<Awaited<ReturnType<typeof livenessCheckLivenessGet>>>
-export type LivenessCheckLivenessGetQueryError = AxiosError<unknown>
+export type LivenessCheckLivenessGetQueryError = unknown
 
 
 /**
  * @summary Liveness probe
  */
 
-export function useLivenessCheckLivenessGet<TData = Awaited<ReturnType<typeof livenessCheckLivenessGet>>, TError = AxiosError<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof livenessCheckLivenessGet>>, TError, TData>, axios?: AxiosRequestConfig}
+export function useLivenessCheckLivenessGet<TData = Awaited<ReturnType<typeof livenessCheckLivenessGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof livenessCheckLivenessGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
