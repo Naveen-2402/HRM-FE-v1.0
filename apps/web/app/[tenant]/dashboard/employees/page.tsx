@@ -12,11 +12,13 @@ import {
   getListEmployeesApiV1EmployeesGetQueryKey
 } from "@repo/orval-config/src/api/employees/employees"; // Adjust path if needed based on your file structure
 import { useEmployeeStore } from "@/store/useEmployeeStore";
+import { useRouter } from "next/navigation";
 
 export default function EmployeesPage() {
   const queryClient = useQueryClient();
   const { searchQuery, sortField, sortOrder, skip, limit, setSearchQuery, setSort, setPage } = useEmployeeStore();
-  
+  const router = useRouter();
+
   // Track which employee is currently being disabled to show a row-specific spinner
   const [disablingId, setDisablingId] = useState<string | null>(null);
 
@@ -92,7 +94,7 @@ export default function EmployeesPage() {
           <h1 className="text-2xl font-bold">Team Members</h1>
           <p className="text-muted-foreground text-sm">Manage your workspace employees and their access.</p>
         </div>
-        <button className="bg-primary text-primary-foreground hover:cursor-pointer px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium">
+        <button onClick={()=>router.push("/dashboard/employees/invite")} className="bg-primary text-primary-foreground hover:cursor-pointer px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium">
           <UserPlus className="size-4" />
           Invite Employee
         </button>

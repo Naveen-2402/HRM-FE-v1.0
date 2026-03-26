@@ -16,13 +16,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navItems = [
-    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Employees", href: "/dashboard/employees", icon: Users },
-    { name: "Invite Team", href: "/dashboard/employees/invite", icon: UserPlus },
-    { name: "Auth", href: "/dashboard/auth", icon: ShieldCheck },
-    { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  // Safely check if the user has the tenant-admin role from Keycloak
+  const isAdmin = user?.realm_access?.roles?.includes("tenant-admin");
+
+  // Add an adminOnly flag to your routes
+  const allNavItems = [
+    { name: "Overview", href: "/dashboard", icon: LayoutDashboard, adminOnly: false },
+    { name: "Employees", href: "/dashboard/employees", icon: Users, adminOnly: true },
+    { name: "Invite Team", href: "/dashboard/employees/invite", icon: UserPlus, adminOnly: true },
+    { name: "Auth", href: "/dashboard/auth", icon: ShieldCheck, adminOnly: true },
+    { name: "Settings", href: "/dashboard/settings", icon: Settings, adminOnly: false },
   ];
+
+  // Filter out the admin routes if the user is a standard employee
+  const visibleNavItems = allNavItems.filter(item => !item.adminOnly || isAdmin);
 
   const handleLogout = () => {
     logout();
@@ -45,7 +52,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          {navItems.map((item) => {
+          {/* Map over the filtered array instead of the raw array */}
+          {visibleNavItems.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link key={item.name} href={item.href}>
@@ -107,7 +115,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </div>
             
             <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-              {navItems.map((item) => {
+              {/* Also map over the filtered array here */}
+              {visibleNavItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <Link key={item.name} href={item.href} onClick={() => setIsMobileMenuOpen(false)}>

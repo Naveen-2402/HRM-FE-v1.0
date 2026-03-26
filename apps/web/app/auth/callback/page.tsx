@@ -118,7 +118,7 @@ export default function AuthCallbackPage() {
         if (isAdmin) {
           toast.warning("Subscription required.");
           setError("Your workspace does not have an active subscription. Please select a plan to activate it.");
-          setActionUrl(`http://${baseDomain}/pricing`);
+          setActionUrl(`http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}/pricing`);
           return;
         } else {
           setError("Your organization does not have an active subscription. Please contact your workspace administrator to unlock access.");
