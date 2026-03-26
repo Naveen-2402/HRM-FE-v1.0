@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { 
   Briefcase, LayoutDashboard, Users, UserPlus, 
   Settings, LogOut, Menu, X, Bell, ShieldCheck 
@@ -13,11 +13,9 @@ import { ModeToggle } from "@/components/theme-toggle";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { user, logout } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Added "Auth" to the navigation items
   const navItems = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "Employees", href: "/dashboard/employees", icon: Users },
@@ -68,10 +66,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-between">
             <div className="flex flex-col overflow-hidden">
               <span className="text-sm font-semibold text-sidebar-foreground truncate">
-                {user?.first_name || "Admin User"}
+                {user?.name || "User"}
               </span>
               <span className="text-xs text-sidebar-foreground truncate">
-                {user?.email || "admin@workspace.com"}
+                {user?.preferred_username || "user@workspace.com"}
               </span>
             </div>
             <button 

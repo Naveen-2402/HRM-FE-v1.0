@@ -9,6 +9,7 @@ import { jwtDecode } from "jwt-decode";
 import { setAuthToken } from "@repo/utils";
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
+import { useActivateCurrentEmployeeApiV1EmployeesActivatePost } from "@repo/orval-config/src/api/employees/employees";
 import { Button } from "@repo/ui/components/ui/button";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
@@ -18,6 +19,7 @@ export default function AuthCallbackPage() {
   const login = useAuthStore((state) => state.login);
 
   const { redirectToTenantDashboard } = useTenantRedirect();
+  const activateMutation = useActivateCurrentEmployeeApiV1EmployeesActivatePost();
 
   const [error, setError] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Securing your session...");
@@ -37,7 +39,6 @@ export default function AuthCallbackPage() {
       setTimeout(() => router.push("/login"), 3000);
       return;
     }
-
 
     window.history.replaceState({}, document.title, window.location.pathname);
 
@@ -69,6 +70,12 @@ export default function AuthCallbackPage() {
         setAuthToken(token);
         const decodedUser = jwtDecode<UserProfile>(token);
         login(decodedUser);
+
+        try {
+          await activateMutation.mutateAsync();
+        } catch (activationError) {
+          console.warn("Employee activation skipped or failed (likely already active).");
+        }
         
         let tenantSubdomain = "";
         const orgClaim = decodedUser.organization;

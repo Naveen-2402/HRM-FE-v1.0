@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
+import { useActivateCurrentEmployeeApiV1EmployeesActivatePost } from "@repo/orval-config/src/api/employees/employees";
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
@@ -34,7 +35,7 @@ function LoginFormContent() {
 
   const login = useAuthStore((state) => state.login);
   const loginMutation = useLoginAuthLoginPost();
-
+  const activateMutation = useActivateCurrentEmployeeApiV1EmployeesActivatePost();
 
   const form = useForm({
     defaultValues: {
@@ -50,12 +51,19 @@ function LoginFormContent() {
         const token = (response.data as any).access_token;
         
         // 1. Set the cross-subdomain cookie
-        setAuthToken(token);      
+        setAuthToken(token);
+        
+        // 2. Fire the activation endpoint silently before decoding the user
+        try {
+          await activateMutation.mutateAsync();
+        } catch (activationError) {
+          console.warn("Employee activation skipped or failed (likely already active).");
+        }
 
-        // 2. Decode the Keycloak JWT to extract the user's profile and organization
+        // 3. Decode the Keycloak JWT to extract the user's profile and organization
         const decodedUser = jwtDecode<UserProfile>(token);
         
-        // 3. Update Zustand state
+        // 4. Update Zustand state
         login(decodedUser);
         
         toast.success("Login successful");

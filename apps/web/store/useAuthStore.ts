@@ -2,7 +2,8 @@ import { create } from "zustand";
 import { clearAuthToken, getClientAuthToken } from "@repo/utils";
 
 export interface UserProfile {
-  sub: string; // Keycloak user ID
+  sub: string;
+  name: string;
   first_name?: string;
   email: string;
   preferred_username: string;
