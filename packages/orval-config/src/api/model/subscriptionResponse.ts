@@ -8,6 +8,7 @@
 import type { SubscriptionResponseStripeSubscriptionId } from './subscriptionResponseStripeSubscriptionId';
 import type { SubscriptionResponseCurrentPeriodStart } from './subscriptionResponseCurrentPeriodStart';
 import type { SubscriptionResponseCurrentPeriodEnd } from './subscriptionResponseCurrentPeriodEnd';
+import type { SubscriptionResponseTrialRemainingHours } from './subscriptionResponseTrialRemainingHours';
 
 /**
  * Subscription status response.
@@ -24,4 +25,6 @@ export interface SubscriptionResponse {
   current_period_start?: SubscriptionResponseCurrentPeriodStart;
   /** Current billing period end */
   current_period_end?: SubscriptionResponseCurrentPeriodEnd;
+  /** Remaining hours of trial if trialing */
+  trial_remaining_hours?: SubscriptionResponseTrialRemainingHours;
 }

@@ -12,8 +12,7 @@ import type { BulkEmployeeEntry } from './bulkEmployeeEntry';
 
 Accepts up to 100 employees per call. Duplicate emails within
 the request are automatically removed (case-insensitive).
-The organization_id must match the tenant_id embedded in the
-caller's Keycloak JWT — enforced in the service layer.
+The tenant_id is automatically derived from the Keycloak JWT.
  */
 export interface BulkEmployeeInviteRequest {
   /**

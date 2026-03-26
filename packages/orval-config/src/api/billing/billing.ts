@@ -24,8 +24,10 @@ import type {
   CheckoutResponse,
   HTTPValidationError,
   PortalResponse,
+  ReconcileResponse,
   StripeWebhookApiV1BillingWebhookPost200,
-  SubscriptionResponse
+  SubscriptionResponse,
+  TrialResponse
 } from '.././model';
 
 import { customInstance } from '../../axios-setup';
@@ -40,7 +42,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Creates a Stripe Checkout Session for the tenant. Returns a URL to redirect the user to the Stripe-hosted checkout page. Requires tenant-admin role.
+ * Creates a Stripe Checkout Session for the tenant. Rejects if active subscription exists. Idempotent via request-scoped idempotency key. Requires tenant-admin role.
  * @summary Create Stripe checkout session
  */
 export const createCheckoutSessionApiV1BillingCheckoutPost = (
@@ -101,6 +103,69 @@ export const useCreateCheckoutSessionApiV1BillingCheckoutPost = <TError = void |
       > => {
 
       const mutationOptions = getCreateCheckoutSessionApiV1BillingCheckoutPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Creates a Stripe 24-hour trial subscription. Rejects if: (a) trial already activated, or (b) active subscription exists. Requires tenant-admin role.
+ * @summary Start a 24-hour free trial
+ */
+export const createTrialApiV1BillingTrialPost = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<TrialResponse>(
+      {url: `/api/v1/billing/trial`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getCreateTrialApiV1BillingTrialPostMutationOptions = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>, TError,void, TContext> => {
+
+const mutationKey = ['createTrialApiV1BillingTrialPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>, void> = () => {
+          
+
+          return  createTrialApiV1BillingTrialPost(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTrialApiV1BillingTrialPostMutationResult = NonNullable<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>>
+    
+    export type CreateTrialApiV1BillingTrialPostMutationError = void | void
+
+    /**
+ * @summary Start a 24-hour free trial
+ */
+export const useCreateTrialApiV1BillingTrialPost = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getCreateTrialApiV1BillingTrialPostMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
@@ -295,6 +360,69 @@ export const useStripeWebhookApiV1BillingWebhookPost = <TError = void,
       > => {
 
       const mutationOptions = getStripeWebhookApiV1BillingWebhookPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Force-syncs the tenant's local subscription record from Stripe's live state. Use this after completing a checkout when the webhook hasn't fired yet, or to fix null current_period_start / current_period_end values. Requires tenant-admin role.
+ * @summary Reconcile subscription with Stripe
+ */
+export const reconcileSubscriptionApiV1BillingReconcilePost = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ReconcileResponse>(
+      {url: `/api/v1/billing/reconcile`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getReconcileSubscriptionApiV1BillingReconcilePostMutationOptions = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reconcileSubscriptionApiV1BillingReconcilePost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof reconcileSubscriptionApiV1BillingReconcilePost>>, TError,void, TContext> => {
+
+const mutationKey = ['reconcileSubscriptionApiV1BillingReconcilePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reconcileSubscriptionApiV1BillingReconcilePost>>, void> = () => {
+          
+
+          return  reconcileSubscriptionApiV1BillingReconcilePost(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReconcileSubscriptionApiV1BillingReconcilePostMutationResult = NonNullable<Awaited<ReturnType<typeof reconcileSubscriptionApiV1BillingReconcilePost>>>
+    
+    export type ReconcileSubscriptionApiV1BillingReconcilePostMutationError = void | void
+
+    /**
+ * @summary Reconcile subscription with Stripe
+ */
+export const useReconcileSubscriptionApiV1BillingReconcilePost = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reconcileSubscriptionApiV1BillingReconcilePost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reconcileSubscriptionApiV1BillingReconcilePost>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getReconcileSubscriptionApiV1BillingReconcilePostMutationOptions(options);
 
       return useMutation(mutationOptions);
     }

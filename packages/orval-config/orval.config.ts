@@ -1,4 +1,9 @@
 import { defineConfig } from 'orval';
+import { config } from 'dotenv';
+
+import path from 'path';
+
+config({ path: path.resolve(__dirname, '../../apps/web/.env') });
 
 export default defineConfig({
   hrm: {

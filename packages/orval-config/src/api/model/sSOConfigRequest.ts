@@ -10,6 +10,8 @@
  * Request to configure SSO for a tenant.
  */
 export interface SSOConfigRequest {
+  /** Identity provider vendor (e.g. 'azure_ad', 'okta', 'google', 'oidc') */
+  provider_type?: string;
   sso_client_id: string;
   sso_client_secret: string;
   sso_issuer_url: string;

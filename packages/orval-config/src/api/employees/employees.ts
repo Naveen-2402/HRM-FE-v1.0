@@ -42,7 +42,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Onboard multiple employees in a single request (up to 100). Validates the caller's JWT and ensures the organization_id belongs to their tenant. Returns per-user results — does not stop the batch on a single failure. Rate limited to 5 requests/minute per IP. Requires admin role.
+ * Onboard multiple employees in a single request (up to 100). Validates the caller's JWT and automatically derives the tenant context. Returns per-user results — does not stop the batch on a single failure. Rate limited to 5 requests/minute per IP. Requires admin role.
  * @summary Bulk onboard employees
  */
 export const bulkOnboardEmployeesApiV1EmployeesPost = (

@@ -24,6 +24,7 @@ import type {
   AssignRoleResponse,
   HTTPValidationError,
   SSOConfigRequest,
+  SSOConfigResponse,
   SSOStatusResponse,
   TenantRequest
 } from '.././model';
@@ -293,6 +294,74 @@ export function useGetTenantSsoStatusApiV1TenantsSsoStatusGet<TData = Awaited<Re
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetTenantSsoStatusApiV1TenantsSsoStatusGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Returns the SSO identity provider configuration for the authenticated tenant. Requires tenant-admin role. The client_secret is always redacted in the response.
+ * @summary Get tenant SSO provider configuration
+ */
+export const getTenantSsoConfigApiV1TenantsSsoConfigGet = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<SSOConfigResponse>(
+      {url: `/api/v1/tenants/sso/config`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetTenantSsoConfigApiV1TenantsSsoConfigGetQueryKey = () => {
+    return [
+    `/api/v1/tenants/sso/config`
+    ] as const;
+    }
+
+    
+export const getGetTenantSsoConfigApiV1TenantsSsoConfigGetQueryOptions = <TData = Awaited<ReturnType<typeof getTenantSsoConfigApiV1TenantsSsoConfigGet>>, TError = void | void | void | void>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoConfigApiV1TenantsSsoConfigGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantSsoConfigApiV1TenantsSsoConfigGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantSsoConfigApiV1TenantsSsoConfigGet>>> = ({ signal }) => getTenantSsoConfigApiV1TenantsSsoConfigGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoConfigApiV1TenantsSsoConfigGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTenantSsoConfigApiV1TenantsSsoConfigGetQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantSsoConfigApiV1TenantsSsoConfigGet>>>
+export type GetTenantSsoConfigApiV1TenantsSsoConfigGetQueryError = void | void | void | void
+
+
+/**
+ * @summary Get tenant SSO provider configuration
+ */
+
+export function useGetTenantSsoConfigApiV1TenantsSsoConfigGet<TData = Awaited<ReturnType<typeof getTenantSsoConfigApiV1TenantsSsoConfigGet>>, TError = void | void | void | void>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantSsoConfigApiV1TenantsSsoConfigGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTenantSsoConfigApiV1TenantsSsoConfigGetQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
