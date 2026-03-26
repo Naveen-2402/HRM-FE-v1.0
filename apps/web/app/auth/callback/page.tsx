@@ -10,11 +10,14 @@ import { setAuthToken } from "@repo/utils";
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
 import { Button } from "@repo/ui/components/ui/button";
+import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const login = useAuthStore((state) => state.login);
+
+  const { redirectToTenantDashboard } = useTenantRedirect();
 
   const [error, setError] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Securing your session...");
@@ -71,8 +74,6 @@ export default function AuthCallbackPage() {
         const orgClaim = decodedUser.organization;
         if (Array.isArray(orgClaim) && orgClaim.length > 0) {
           tenantSubdomain = orgClaim[0];
-        } else if (typeof orgClaim === "object" && orgClaim !== null) {
-          tenantSubdomain = Object.keys(orgClaim)[0] || "";
         }
 
         if (!tenantSubdomain) {
@@ -99,16 +100,9 @@ export default function AuthCallbackPage() {
 
         const hasActiveAccess = billingStatus === "active" || billingStatus === "trialing";
 
-        const hostname = window.location.hostname;
-        const port = window.location.port ? `:${window.location.port}` : '';
-        const baseDomain = hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`) 
-                            ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}${port}` 
-                            : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`;
-        const subdomainBaseUrl = `http://${tenantSubdomain}.${baseDomain}`;
-
         if (hasActiveAccess) {
           toast.success("Successfully logged in via SSO!");
-          window.location.href = `${subdomainBaseUrl}/dashboard`;
+          redirectToTenantDashboard();
           return;
         }
 
@@ -116,10 +110,8 @@ export default function AuthCallbackPage() {
 
         if (isAdmin) {
           toast.warning("Subscription required.");
-          // Instead of hard-redirecting, set the error message and the action URL
           setError("Your workspace does not have an active subscription. Please select a plan to activate it.");
           setActionUrl(`http://${baseDomain}/pricing`);
-          // Notice we DO NOT logout the admin here. They need the token to checkout.
           return;
         } else {
           setError("Your organization does not have an active subscription. Please contact your workspace administrator to unlock access.");

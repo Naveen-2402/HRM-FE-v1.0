@@ -12,7 +12,8 @@ import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 import { Badge } from "@repo/ui/components/ui/badge";
 
-import { useCreateCheckoutSessionApiV1BillingCheckoutPost } from "@repo/orval-config/src/api/billing/billing";
+import { useCreateCheckoutSessionApiV1BillingCheckoutPost, useCreateTrialApiV1BillingTrialPost } from "@repo/orval-config/src/api/billing/billing";
+import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
 const PRICING_PLANS = [
   {
@@ -91,8 +92,12 @@ const itemVariants = {
 
 export default function OnboardingPricingPage() {
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
+  const [isTrialLoading, setIsTrialLoading] = useState(false);
 
   const checkoutMutation = useCreateCheckoutSessionApiV1BillingCheckoutPost();
+  const trialMutation = useCreateTrialApiV1BillingTrialPost();
+
+  const { redirectToTenantDashboard } = useTenantRedirect();
 
   const handleSelectPlan = async (priceId: string | undefined) => {
     if (!priceId) return;
@@ -114,6 +119,30 @@ export default function OnboardingPricingPage() {
     } catch (error) {
       toast.error("Failed to initiate checkout. Please try again.");
       setProcessingPlanId(null);
+    }
+  };
+
+  const handleStartTrial = async () => {
+    setIsTrialLoading(true);
+    try {
+      const response = await trialMutation.mutateAsync();
+      
+      // Format the date to be user-friendly (e.g., "Mar 27, 2026, 12:56 PM")
+      const endDate = new Date(response.trial_ends_at).toLocaleString();
+      
+      toast.success(`Trial activated! Full access granted until ${endDate}.`);
+      
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        redirectToTenantDashboard();
+      }, 2000);
+
+    } catch (error: any) {
+      // Handle the 400 rejection cases mentioned in your API specs
+      const errorMessage = error.response?.data?.detail || "Failed to activate trial. You may already have an active subscription.";
+      toast.error(errorMessage);
+    } finally {
+      setIsTrialLoading(false);
     }
   };
 
@@ -236,8 +265,30 @@ export default function OnboardingPricingPage() {
           </motion.div>
 
           {/* Minimal footer note */}
-          <motion.div variants={itemVariants} className="text-center mt-20 text-muted-foreground">
-            <p>Need a custom trial or have questions? <a href="#" className="text-primary hover:underline font-semibold">Talk to our experts.</a></p>
+          {/* Free Trial CTA */}
+          <motion.div variants={itemVariants} className="text-center mt-20 flex flex-col items-center gap-6">
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold text-foreground">
+                Not ready to commit yet?
+              </h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Experience the full power of our platform firsthand. No credit card required.
+              </p>
+            </div>
+            
+            <Button
+              onClick={handleStartTrial}
+              disabled={isTrialLoading || processingPlanId !== null}
+              variant="outline"
+              size="lg"
+              className="hover:cursor-pointer border-border bg-card text-card-foreground hover:bg-accent hover:text-accent-foreground shadow-sm transition-all"
+            >
+              {isTrialLoading ? (
+                <><Loader2 className="mr-2 size-5 animate-spin" /> Activating Workspace...</>
+              ) : (
+                <><Zap className="mr-2 size-5 text-primary" /> Start 24-Hour Free Trial</>
+              )}
+            </Button>
           </motion.div>
 
         </motion.div>

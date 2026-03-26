@@ -7,21 +7,17 @@ import { CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 
-import { UserProfile } from "@/store/useAuthStore";
-import { getClientAuthToken } from "@repo/utils";
-import { jwtDecode } from "jwt-decode";
+import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
 export default function BillingSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const { redirectToTenantDashboard } = useTenantRedirect();
   
-  // We use a 4-second countdown to ensure your FastAPI webhook has time to update the DB
   const [countdown, setCountdown] = useState(4);
 
   useEffect(() => {
-    // Stripe usually appends ?session_id=cs_test_... to the URL on success.
-    // You can capture it here if you need to fire a manual verification API call,
-    // but relying on backend Webhooks is the standard, safest practice.
     const sessionId = searchParams.get("session_id");
     
     if (sessionId) {
@@ -33,39 +29,7 @@ export default function BillingSuccessPage() {
         if (prev <= 1) {
           clearInterval(timer);
           
-          const token = getClientAuthToken();
-
-          if (!token) {
-            console.log("Token not found");
-            return
-          }
-                  
-          // 1. Decode the Keycloak JWT to extract the user's profile and organization
-          const decodedUser = jwtDecode<UserProfile>(token);
-  
-          // 2. Extract the Tenant Subdomain alias from the Keycloak token
-          let tenantSubdomain = "";
-          const orgClaim = decodedUser.organization;
-  
-          if (Array.isArray(orgClaim) && orgClaim.length > 0) {
-            tenantSubdomain = orgClaim[0];
-          } else if (typeof orgClaim === "object" && orgClaim !== null) {
-            tenantSubdomain = Object.keys(orgClaim)[0] || "";
-          }
-  
-          // 3. Redirect to the correct subdomain
-          if (tenantSubdomain) {
-            const hostname = window.location.hostname;
-            const port = window.location.port ? `:${window.location.port}` : "";
-  
-            const baseDomain = `${hostname}${port}`;
-            
-            // Hard redirect to force the browser to load the new subdomain context
-            window.location.href = `http://${tenantSubdomain}.${baseDomain}/dashboard`;
-          } else {
-            // Fallback if they do not belong to an organization (e.g., a super admin)
-            router.push("/dashboard");
-          }
+          redirectToTenantDashboard();
           return 0;
         }
         return prev - 1;

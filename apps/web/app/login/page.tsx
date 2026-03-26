@@ -16,13 +16,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
+import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
 import { jwtDecode } from "jwt-decode";
 import { setAuthToken } from "@repo/utils";
 
 function LoginFormContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const { redirectToTenantDashboard } = useTenantRedirect();
   
   // Check if the URL has ?local=true
   const isLocalLogin = searchParams.get("local") === "true";
@@ -33,6 +34,7 @@ function LoginFormContent() {
 
   const login = useAuthStore((state) => state.login);
   const loginMutation = useLoginAuthLoginPost();
+
 
   const form = useForm({
     defaultValues: {
@@ -58,29 +60,7 @@ function LoginFormContent() {
         
         toast.success("Login successful");
 
-        // 4. Extract the Tenant Subdomain alias from the Keycloak token
-        let tenantSubdomain = "";
-        const orgClaim = decodedUser.organization;
-
-        if (Array.isArray(orgClaim) && orgClaim.length > 0) {
-          tenantSubdomain = orgClaim[0];
-        } else if (typeof orgClaim === "object" && orgClaim !== null) {
-          tenantSubdomain = Object.keys(orgClaim)[0] || "";
-        }
-
-        // 5. Redirect to the correct subdomain
-        if (tenantSubdomain) {
-          const hostname = window.location.hostname;
-          const port = window.location.port ? `:${window.location.port}` : "";
-
-          const baseDomain = `${hostname}${port}`;
-          
-          // Hard redirect to force the browser to load the new subdomain context
-          window.location.href = `http://${tenantSubdomain}.${baseDomain}/dashboard`;
-        } else {
-          // Fallback if they do not belong to an organization (e.g., a super admin)
-          router.push("/dashboard");
-        }
+        redirectToTenantDashboard();
 
       } catch (error: any) {
         toast.error(
