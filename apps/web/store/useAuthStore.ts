@@ -38,12 +38,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isAuthenticated: false, user: null });
 
     // 3. Hard redirect back to the root domain login page
-    if (typeof window !== "undefined") {
-      const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
-        ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
-        : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`
+    // if (typeof window !== "undefined") {
+    //   const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
+    //     ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
+    //     : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`
 
-      window.location.href = `http://${baseDomain}/login`;
-    }
+    //   window.location.href = `http://${baseDomain}/login`;
+    // }
   },
 }));

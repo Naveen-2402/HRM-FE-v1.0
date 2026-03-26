@@ -19,6 +19,7 @@ export default function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Securing your session...");
   const [actionUrl, setActionUrl] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
   
   const hasFetched = useRef(false);
 
@@ -123,8 +124,7 @@ export default function AuthCallbackPage() {
         } else {
           setError("Your organization does not have an active subscription. Please contact your workspace administrator to unlock access.");
           useAuthStore.getState().logout(); 
-          // Trigger the standard redirect for regular employees
-          setTimeout(() => router.push("/login"), 10000);
+          setCountdown(10);
           return;
         }
 
@@ -137,6 +137,21 @@ export default function AuthCallbackPage() {
 
     exchangeCodeForToken();
   }, [searchParams, router, login]);
+
+  useEffect(() => {
+    if (countdown === null) return;
+    
+    if (countdown === 0) {
+      router.push("/login");
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [countdown, router]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -168,10 +183,10 @@ export default function AuthCallbackPage() {
             <>
               {error.includes("expired") || error.includes("does not have an active") ? (
                  <p className="text-sm text-muted-foreground mt-4 font-semibold">
-                   You have been securely signed out.
+                   You have been securely signed out. Redirecting to login in {countdown}s...
                  </p>
               ) : (
-                <p className="text-sm text-muted-foreground mt-4">Redirecting back to login...</p>
+                <p className="text-sm text-muted-foreground mt-4">Redirecting back to login in...</p>
               )}
             </>
           )}
