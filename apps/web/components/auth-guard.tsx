@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { getClientAuthToken } from "@repo/utils";
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
+import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
 // 1. Define routes that DO NOT require a login
 const publicPaths = ["/login", "/signup", "/forgot-password", "/auth/callback"];
@@ -13,6 +14,7 @@ const publicPaths = ["/login", "/signup", "/forgot-password", "/auth/callback"];
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { redirectToTenantDashboard } = useTenantRedirect();
   
   // Grab the necessary actions and state from Zustand
   const { isAuthenticated, user, login, logout } = useAuthStore();
@@ -65,9 +67,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       // SCENARIO 1: Not logged in + trying to access a private page -> Kick to login
       router.replace("/login");
     } else if (isAuthenticated && isPublicPath && pathname !== "/auth/callback") {
-      // SCENARIO 2: Logged in + trying to access login/signup -> Push to dashboard
+      // SCENARIO 2: Logged in + trying to access login/signup -> Push to dashboard with tenant subdomain
       // Note: We intentionally let them access /auth/callback so the SSO flow can finish!
-      router.replace("/dashboard");
+      redirectToTenantDashboard();
     }
   }, [isAuthenticated, isMounted, isRehydrating, pathname, router]);
 

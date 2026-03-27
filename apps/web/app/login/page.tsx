@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "react-toastify";
-import { Mail, Lock, Loader2, Briefcase, Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Loader2, Briefcase, Eye, EyeOff, ArrowLeft, AlertTriangle } from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
 import { useActivateCurrentEmployeeApiV1EmployeesActivatePost } from "@repo/orval-config/src/api/employees/employees";
+import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
@@ -32,10 +33,13 @@ function LoginFormContent() {
   const [step, setStep] = useState<1 | 2>(1);
   const [isChecking, setIsChecking] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+  const [actionUrl, setActionUrl] = useState<string | null>(null);
 
   const login = useAuthStore((state) => state.login);
   const loginMutation = useLoginAuthLoginPost();
   const activateMutation = useActivateCurrentEmployeeApiV1EmployeesActivatePost();
+  const router = useRouter();
 
   const form = useForm({
     defaultValues: {
@@ -63,11 +67,43 @@ function LoginFormContent() {
         // 3. Decode the Keycloak JWT to extract the user's profile and organization
         const decodedUser = jwtDecode<UserProfile>(token);
         
-        // 4. Update Zustand state
-        login(decodedUser);
+        // 4. Check subscription status BEFORE updating Zustand state
+        let billingStatus = "inactive";
         
-        toast.success("Login successful");
+        try {
+          const subscription = await getSubscriptionStatusApiV1BillingSubscriptionGet();
+          billingStatus = subscription.status;
+        } catch (billingError: any) {
+          const errorDetail = billingError?.response?.data?.detail;
+          
+          if (errorDetail === "No subscription found for this tenant." || billingError?.response?.status === 404) {
+            console.warn("New workspace detected: No subscription on file.");
+            billingStatus = "none";
+          } else {
+            throw billingError;
+          }
+        }
 
+        const hasActiveAccess = billingStatus === "active" || billingStatus === "trialing";
+
+        if (!hasActiveAccess) {
+          // No active subscription - handle without logging in
+          const isAdmin = decodedUser.realm_access?.roles?.includes("tenant-admin");
+
+          if (isAdmin) {
+            toast.warning("Subscription required.");
+            setSubscriptionError("Your workspace does not have an active subscription. Please select a plan to activate it.");
+            setActionUrl(`http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000/pricing`);
+            return;
+          } else {
+            setSubscriptionError("Your organization does not have an active subscription. Please contact your workspace administrator to unlock access.");
+            return;
+          }
+        }
+
+        // Only update auth state if subscription is active
+        login(decodedUser);
+        toast.success("Login successful");
         redirectToTenantDashboard();
 
       } catch (error: any) {
@@ -116,154 +152,201 @@ function LoginFormContent() {
 
   return (
     <>
-      <CardHeader className="space-y-3 pb-8 pt-5 px-8 border-b border-border bg-muted/30 relative">
-        {step === 2 && (
-          <button 
-            onClick={() => { 
-              setStep(1); 
-              form.setFieldValue("password", ""); 
-            }}
-            className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer"
-          >
-            <ArrowLeft className="size-5" />
-          </button>
-        )}
-        <CardTitle className="text-3xl font-bold tracking-tight text-card-foreground text-center">
-          {step === 1 ? (isLocalLogin ? "Admin Login" : "Sign in") : "Enter password"}
-        </CardTitle>
-        <form.Subscribe
-          selector={(state) => state.values.email}
-          children={(email) => (
-            <CardDescription className="text-base text-muted-foreground text-center">
-              {step === 1 ? "Enter your work email to continue" : `Signing in as ${email}`}
-            </CardDescription>
-          )}
-        />
-      </CardHeader>
-      
-      <CardContent className="px-8 py-5">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (step === 1) {
-              handleCheckDomain();
-            } else {
-              form.handleSubmit();
-            }
-          }}
-          className="space-y-6"
-        >
-          {/* STEP 1 FORM: Email Only */}
-          {step === 1 && (
-            <div className="animate-in fade-in slide-in-from-left-4 space-y-6">
-              <form.Field
-                name="email"
-                validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
-                children={(field) => (
-                  <div className="space-y-2 relative">
-                    <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">Work Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 size-5 text-muted-foreground" />
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="admin@acmecorp.com"
-                        autoFocus
-                        className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring"
-                      />
-                    </div>
-                    <div className="h-4">
-                      {field.state.meta.errors.length > 0 && (
-                        <p className="text-xs font-medium text-destructive">
-                          {field.state.meta.errors.join(", ")}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+      {subscriptionError ? (
+        // Subscription Error State
+        <div className="w-full">
+          <CardHeader className="space-y-3 pb-8 pt-5 px-8 border-b border-border bg-muted/30">
+            <div className="text-center">
+              <div className="size-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                {actionUrl ? (
+                  <AlertTriangle className="size-8 text-destructive" />
+                ) : (
+                  <span className="text-destructive font-bold text-2xl">!</span>
                 )}
-              />
-
-              <form.Subscribe
-                selector={(state) => state.values.email}
-                children={(email) => (
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    disabled={isChecking || !email} 
-                    className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground group"
-                  >
-                    {isChecking ? <><Loader2 className="mr-2 size-5 animate-spin" /> Checking...</> : "Continue"}
-                  </Button>
-                )}
-              />
+              </div>
+              <CardTitle className="text-2xl font-bold text-card-foreground">
+                {actionUrl ? "Subscription Required" : "Access Denied"}
+              </CardTitle>
             </div>
-          )}
+          </CardHeader>
+          
+          <CardContent className="px-8 py-6">
+            <div className="space-y-4 text-center">
+              <p className="text-muted-foreground">{subscriptionError}</p>
+              
+              {actionUrl ? (
+                <Button 
+                  onClick={() => window.location.href = actionUrl}
+                  className="w-full text-primary-foreground bg-primary hover:cursor-pointer"
+                  size="lg"
+                >
+                  View Pricing Plans
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => router.push("/login")}
+                  className="w-full text-primary-foreground bg-primary hover:cursor-pointer"
+                  size="lg"
+                >
+                  Back to Login
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </div>
+      ) : (
+        // Normal Login Form
+        <>
+          <CardHeader className="space-y-3 pb-8 pt-5 px-8 border-b border-border bg-muted/30 relative">
+            {step === 2 && (
+              <button 
+                onClick={() => { 
+                  setStep(1); 
+                  form.setFieldValue("password", ""); 
+                }}
+                className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer"
+              >
+                <ArrowLeft className="size-5" />
+              </button>
+            )}
+            <CardTitle className="text-3xl font-bold tracking-tight text-card-foreground text-center">
+              {step === 1 ? (isLocalLogin ? "Admin Login" : "Sign in") : "Enter password"}
+            </CardTitle>
+            <form.Subscribe
+              selector={(state) => state.values.email}
+              children={(email) => (
+                <CardDescription className="text-base text-muted-foreground text-center">
+                  {step === 1 ? "Enter your work email to continue" : `Signing in as ${email}`}
+                </CardDescription>
+              )}
+            />
+          </CardHeader>
+          
+          <CardContent className="px-8 py-5">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (step === 1) {
+                  handleCheckDomain();
+                } else {
+                  form.handleSubmit();
+                }
+              }}
+              className="space-y-6"
+            >
+              {/* STEP 1 FORM: Email Only */}
+              {step === 1 && (
+                <div className="animate-in fade-in slide-in-from-left-4 space-y-6">
+                  <form.Field
+                    name="email"
+                    validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
+                    children={(field) => (
+                      <div className="space-y-2 relative">
+                        <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">Work Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-3 size-5 text-muted-foreground" />
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            placeholder="admin@acmecorp.com"
+                            autoFocus
+                            className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring"
+                          />
+                        </div>
+                        <div className="h-4">
+                          {field.state.meta.errors.length > 0 && (
+                            <p className="text-xs font-medium text-destructive">
+                              {field.state.meta.errors.join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  />
 
-          {/* STEP 2 FORM: Password Only */}
-          {step === 2 && (
-            <div className="animate-in fade-in slide-in-from-right-4 space-y-6">
-              <form.Field
-                name="password"
-                validators={{ onChange: ({ value }) => validateWith(ssoPasswordSchema)(value) }}
-                children={(field) => (
-                  <div className="space-y-2 relative">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">Password</Label>
-                      <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline hover:cursor-pointer">Forgot password?</Link>
-                    </div>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 size-5 text-muted-foreground" />
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        type={showPassword ? "text" : "password"}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        placeholder="••••••••"
-                        autoFocus
-                        className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring"
-                      />
-                      <button 
-                        type="button" 
-                        onClick={() => setShowPassword(!showPassword)} 
-                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer focus:outline-none"
+                  <form.Subscribe
+                    selector={(state) => state.values.email}
+                    children={(email) => (
+                      <Button 
+                        type="submit" 
+                        size="lg" 
+                        disabled={isChecking || !email} 
+                        className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground group"
                       >
-                        {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
-                      </button>
-                    </div>
-                    <div className="h-4">
-                      {field.state.meta.errors.length > 0 && (
-                        <p className="text-xs font-medium text-destructive">
-                          {field.state.meta.errors.join(", ")}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              />
+                        {isChecking ? <><Loader2 className="mr-2 size-5 animate-spin" /> Checking...</> : "Continue"}
+                      </Button>
+                    )}
+                  />
+                </div>
+              )}
 
-              <form.Subscribe
-                selector={(state) => state.values.password}
-                children={(password) => (
-                  <Button 
-                    type="submit" 
-                    size="lg" 
-                    disabled={loginMutation.isPending || !password} 
-                    className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground group"
-                  >
-                    {loginMutation.isPending ? <><Loader2 className="mr-2 size-5 animate-spin" /> Signing in...</> : "Sign In"}
-                  </Button>
-                )}
-              />
-            </div>
-          )}
-        </form>
-      </CardContent>
+              {/* STEP 2 FORM: Password Only */}
+              {step === 2 && (
+                <div className="animate-in fade-in slide-in-from-right-4 space-y-6">
+                  <form.Field
+                    name="password"
+                    validators={{ onChange: ({ value }) => validateWith(ssoPasswordSchema)(value) }}
+                    children={(field) => (
+                      <div className="space-y-2 relative">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">Password</Label>
+                          <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline hover:cursor-pointer">Forgot password?</Link>
+                        </div>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-3 size-5 text-muted-foreground" />
+                          <Input
+                            id={field.name}
+                            name={field.name}
+                            type={showPassword ? "text" : "password"}
+                            value={field.state.value}
+                            onBlur={field.handleBlur}
+                            onChange={(e) => field.handleChange(e.target.value)}
+                            placeholder="••••••••"
+                            autoFocus
+                            className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring"
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setShowPassword(!showPassword)} 
+                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer focus:outline-none"
+                          >
+                            {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                          </button>
+                        </div>
+                        <div className="h-4">
+                          {field.state.meta.errors.length > 0 && (
+                            <p className="text-xs font-medium text-destructive">
+                              {field.state.meta.errors.join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  />
+
+                  <form.Subscribe
+                    selector={(state) => state.values.password}
+                    children={(password) => (
+                      <Button 
+                        type="submit" 
+                        size="lg" 
+                        disabled={loginMutation.isPending || !password} 
+                        className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground group"
+                      >
+                        {loginMutation.isPending ? <><Loader2 className="mr-2 size-5 animate-spin" /> Signing in...</> : "Sign In"}
+                      </Button>
+                    )}
+                  />
+                </div>
+              )}
+            </form>
+          </CardContent>
+        </>
+      )}
     </>
   );
 }
