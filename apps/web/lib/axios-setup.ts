@@ -1,6 +1,7 @@
 // apps/web/lib/axios-setup.ts
 import axios from 'axios';
 import { useAuthStore } from '@/store/useAuthStore';
+import { getClientAuthToken } from '@repo/utils';
 
 export function setupAxiosInterceptors() {
   axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -8,7 +9,7 @@ export function setupAxiosInterceptors() {
   // Request Interceptor
   axios.interceptors.request.use(
     (config) => {
-      const token = useAuthStore.getState().token;
+      const token = getClientAuthToken();
       if (config.url && config.url.startsWith('/api/v1/')) {
         config.url = config.url.replace('/api/v1/', '/');
       }
