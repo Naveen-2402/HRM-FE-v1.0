@@ -6,33 +6,52 @@ import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Loader2, 
-  CheckCircle2, UploadCloud, Trash2, Users, Plus 
+  CheckCircle2, UploadCloud, Trash2, Users, Plus, Shield, ShieldCheck, Mail, Database
 } from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { Label } from "@repo/ui/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@repo/ui/components/ui/card";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { useBulkOnboardEmployeesTenantsEmployeesBulkOnboardPost } from "@repo/orval-config/src/api/default/default";
 
-// Manual validation helpers
+// Import the shared aesthetic components you use in settings
+import { AccentBar, SectionCard } from "../../settings/components/_shared"; 
+
+// ── Validation Helpers ────────────────────────────────────────────────────────
 const validateRequired = (val: string, fieldName: string) => {
   const result = z.string().min(1, `${fieldName} is required`).safeParse(val);
   return result?.success ? undefined : result?.error?.issues[0]?.message;
 };
 
 const validateEmail = (val: string) => {
-  const result = z.string().email("Please enter a valid email address").safeParse(val);
+  const result = z.string().email("Please enter a valid email").safeParse(val);
   return result?.success ? undefined : result?.error?.issues[0]?.message;
 };
 
+const validateOptionalEmail = (val: string) => {
+  if (!val || val.trim() === "") return undefined;
+  const result = z.string().email("Please enter a valid email").safeParse(val);
+  return result?.success ? undefined : result?.error?.issues[0]?.message;
+};
+
+// ── Fallback ID Generator ─────────────────────────────────────────────────────
+const generateId = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 type StagedEmployee = {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
+  contact_email?: string;
+  tenant_role: string;
 };
 
 export default function EmployeeInvitePage() {
@@ -44,31 +63,33 @@ export default function EmployeeInvitePage() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<"manual" | "csv">("manual");
   
-  // Extract org_id from Zustand
   const user = useAuthStore((state) => state.user);
   const orgClaim = user?.organization || {};
   const orgId = Object.keys(orgClaim)[0] || "";
 
   const inviteMutation = useBulkOnboardEmployeesTenantsEmployeesBulkOnboardPost();
 
-  // Form for manually adding a SINGLE employee to the staging list
   const form = useForm({
     defaultValues: {
       first_name: "",
       last_name: "",
       email: "",
+      contact_email: "",
+      tenant_role: "employee", 
     },
     onSubmit: async ({ value }) => {
-      // Add to staging list instead of submitting to API directly
       setStagedEmployees((prev) => [
         ...prev, 
-        { ...value, id: crypto.randomUUID() }
+        { 
+          ...value, 
+          contact_email: value.contact_email.trim() !== "" ? value.contact_email : undefined,
+          id: generateId() 
+        }
       ]);
       form.reset();
     },
   });
 
-  // Handle CSV Upload and Parsing
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -77,28 +98,26 @@ export default function EmployeeInvitePage() {
     reader.onload = (event) => {
       try {
         const text = event.target?.result as string;
-        // Split by newlines and remove empty rows
         const rows = text.split(/\r?\n/).filter(row => row.trim().length > 0);
-        
-        // Assume first row is header, process the rest
-        const dataRows = rows.slice(1);
+        const dataRows = rows.slice(1); 
         
         const newEmployees: StagedEmployee[] = dataRows.map(row => {
-          // Handle standard comma separation (basic parsing)
-          const [first, last, email] = row.split(',').map(item => item.trim());
+          const [first, last, email, contactEmail, role] = row.split(',').map(item => item.trim());
           return {
-            id: crypto.randomUUID(),
+            id: generateId(), 
             first_name: first || "",
             last_name: last || "",
-            email: email || ""
+            email: email || "",
+            contact_email: contactEmail || undefined,
+            tenant_role: role ? role.toLowerCase() : "employee" 
           };
-        }).filter(emp => emp.email && emp.first_name); // Only keep valid rows
+        }).filter(emp => emp.email && emp.first_name); 
 
         setStagedEmployees(prev => [...prev, ...newEmployees]);
         if (fileInputRef.current) fileInputRef.current.value = "";
         setGlobalError(null);
       } catch (err) {
-        setGlobalError("Failed to parse CSV file. Please ensure it has first_name, last_name, email columns.");
+        setGlobalError("Failed to parse CSV file. Please ensure it matches the required format.");
       }
     };
     reader.readAsText(file);
@@ -108,7 +127,6 @@ export default function EmployeeInvitePage() {
     setStagedEmployees(prev => prev.filter(emp => emp.id !== id));
   };
 
-  // The actual API Submission
   const handleSubmitAll = async () => {
     if (stagedEmployees.length === 0) return;
     setGlobalError(null);
@@ -117,10 +135,12 @@ export default function EmployeeInvitePage() {
     try {
       const payload = {
         organization_id: orgId,
-        employees: stagedEmployees.map(({ first_name, last_name, email }) => ({
+        employees: stagedEmployees.map(({ first_name, last_name, email, contact_email, tenant_role }) => ({
           first_name,
           last_name,
           email,
+          contact_email,
+          tenant_role
         }))
       };
 
@@ -136,236 +156,329 @@ export default function EmployeeInvitePage() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto py-5 px-4">
-      
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-3">
-          <Users className="size-8 text-primary" />
-          Bulk Onboard Teammates
-        </h1>
-        <p className="text-sm text-muted-foreground mt-2">
-          Add employees manually or upload a CSV file to invite your entire team at once.
-        </p>
-      </div>
+    <div className="min-h-screen bg-background sm:px-8 px-4 py-8">
+      <div className="mx-auto max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        
-        {/* Left Column: Input Methods */}
-        <div className="lg:col-span-3 space-y-6">
-          <Card className="bg-card border-border shadow-sm">
-            <CardHeader className="bg-muted/30 border-b border-border p-4 flex flex-row items-center justify-between">
-              <div className="flex bg-muted p-1 rounded-md">
-                <button
-                  onClick={() => setActiveTab("manual")}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-sm transition-colors hover:cursor-pointer ${
-                    activeTab === "manual" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Add Manually
-                </button>
-                <button
-                  onClick={() => setActiveTab("csv")}
-                  className={`px-4 py-1.5 text-sm font-medium rounded-sm transition-colors hover:cursor-pointer ${
-                    activeTab === "csv" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Upload CSV
-                </button>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="pt-6">
-              {activeTab === "manual" ? (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    form.handleSubmit();
-                  }}
-                  className="space-y-4"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* First Name */}
-                    <form.Field
-                      name="first_name"
-                      validators={{ onChange: ({ value }) => validateRequired(value, "First Name") }}
-                      children={(field) => (
-                        <div className="space-y-1.5">
-                          <Label htmlFor={field.name} className="text-foreground text-xs font-semibold">First Name</Label>
-                          <Input
-                            id={field.name}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            placeholder="Jane"
-                            className="border-input bg-background text-foreground focus-visible:ring-ring h-10"
-                          />
-                        </div>
-                      )}
-                    />
-
-                    {/* Last Name */}
-                    <form.Field
-                      name="last_name"
-                      validators={{ onChange: ({ value }) => validateRequired(value, "Last Name") }}
-                      children={(field) => (
-                        <div className="space-y-1.5">
-                          <Label htmlFor={field.name} className="text-foreground text-xs font-semibold">Last Name</Label>
-                          <Input
-                            id={field.name}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            placeholder="Doe"
-                            className="border-input bg-background text-foreground focus-visible:ring-ring h-10"
-                          />
-                        </div>
-                      )}
-                    />
-                  </div>
-
-                  {/* Email */}
-                  <form.Field
-                    name="email"
-                    validators={{ onChange: ({ value }) => validateEmail(value) }}
-                    children={(field) => (
-                      <div className="space-y-1.5">
-                        <Label htmlFor={field.name} className="text-foreground text-xs font-semibold">Email Address</Label>
-                        <Input
-                          id={field.name}
-                          type="email"
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          placeholder="jane.doe@company.com"
-                          className="border-input bg-background text-foreground focus-visible:ring-ring h-10"
-                        />
-                      </div>
-                    )}
-                  />
-
-                  <Button 
-                    type="submit" 
-                    variant="secondary"
-                    className="w-full mt-2 hover:cursor-pointer"
-                  >
-                    <Plus className="mr-2 size-4" /> Add to List
-                  </Button>
-                </form>
-              ) : (
-                <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg p-8 bg-muted/10 text-center">
-                  <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <UploadCloud className="size-6 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-1">Upload CSV File</h3>
-                  <p className="text-sm text-muted-foreground mb-4 max-w-[250px]">
-                    File must contain headers: <br/><span className="font-mono text-xs bg-muted p-1 rounded">first_name, last_name, email</span>
-                  </p>
-                  
-                  <input 
-                    type="file" 
-                    accept=".csv" 
-                    className="hidden" 
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                  />
-                  <Button 
-                    onClick={() => fileInputRef.current?.click()} 
-                    variant="outline"
-                    className="hover:cursor-pointer"
-                  >
-                    Select File
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* ── Page Header ───────────────────────────────────────────────── */}
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Onboarding
+          </p>
+          <h1 className="text-[28px] font-semibold tracking-tight text-foreground flex items-center gap-3">
+            Invite Team
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Add employees manually or upload a CSV file to provision their workspace accounts.
+          </p>
         </div>
 
-        {/* Right Column: Staging Area */}
-        <div className="lg:col-span-2">
-          {/* 1. Added h-[550px] to force a fixed height container */}
-          <Card className="bg-card border-border shadow-sm h-[341px] flex flex-col relative overflow-hidden">
-            
-            <AnimatePresence>
-              {isSuccess && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="absolute top-0 left-0 w-full bg-primary text-primary-foreground p-3 flex items-center justify-center gap-2 z-10 text-sm"
-                >
-                  <CheckCircle2 className="size-4" />
-                  <span className="font-medium">Invites sent!</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        {/* Tab Bar (Mirrored from Settings) */}
+        <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted p-1">
+          {(["manual", "csv"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={[
+                "hover:cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all capitalize",
+                activeTab === tab
+                  ? "bg-card text-foreground shadow-sm border border-border"
+                  : "text-muted-foreground hover:text-foreground hover:bg-card/60",
+              ].join(" ")}
+            >
+              {tab === "manual" ? <Plus className="size-4" /> : <UploadCloud className="size-4" />}
+              {tab === "manual" ? "Add Manually" : "Upload CSV"}
+            </button>
+          ))}
+        </div>
 
-            {/* 2. Added shrink-0 to prevent the header from squishing */}
-            <CardHeader className="bg-muted/30 border-b border-border py-4 shrink-0">
-              <CardTitle className="text-base text-card-foreground flex justify-between items-center">
-                Staged Invites
-                <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full font-bold">
-                  {stagedEmployees.length}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            
-            {/* 3. Changed max-h to pure flex-1 overflow-y-auto so it perfectly fills the remaining space and scrolls */}
-            <CardContent className="p-0 flex-1 overflow-y-auto scroll-smooth">
-              {stagedEmployees.length === 0 ? (
-                <div className="p-8 h-full text-center text-muted-foreground text-sm flex flex-col items-center justify-center">
-                  <Users className="size-8 mb-2 opacity-20" />
-                  No employees staged yet. Add them manually or upload a CSV.
-                </div>
-              ) : (
-                <ul className="divide-y divide-border">
-                  {stagedEmployees.map((emp) => (
-                    <li key={emp.id} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
-                      <div className="flex flex-col overflow-hidden">
-                        <span className="font-medium text-sm text-foreground truncate">{emp.first_name} {emp.last_name}</span>
-                        <span className="text-xs text-muted-foreground truncate">{emp.email}</span>
-                      </div>
-                      <button 
-                        onClick={() => removeStagedEmployee(emp.id)}
-                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors hover:cursor-pointer flex-shrink-0"
-                        title="Remove"
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-
-            {/* 4. Added shrink-0 here as well */}
-            <CardFooter className="bg-muted/10 border-t border-border p-4 flex flex-col gap-3 shrink-0">
-              {globalError && (
-                <div className="w-full p-3 rounded bg-destructive/10 border border-destructive text-destructive text-xs font-medium">
-                  {globalError}
-                </div>
-              )}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 xl:gap-8">  
+          {/* ── Left Column: Input Methods ─────────────────────────────── */}
+          <div className="lg:col-span-3 space-y-6">
+            <SectionCard>
+              <AccentBar />
               
-              <Button 
-                onClick={handleSubmitAll}
-                disabled={stagedEmployees.length === 0 || inviteMutation.isPending}
-                className="w-full bg-primary text-primary-foreground hover:cursor-pointer"
-              >
-                {inviteMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 size-4 animate-spin" /> Processing...
-                  </>
+              <div className="border-b border-border px-6 py-5 space-y-0.5">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-chart-2">
+                  <Users className="size-3" /> Data Entry
+                </div>
+                <h2 className="text-base font-semibold text-card-foreground">
+                  {activeTab === "manual" ? "Employee Details" : "Bulk Upload"}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {activeTab === "manual" 
+                    ? "Fill out the fields below to stage a new user." 
+                    : "Upload a structured file to map multiple users at once."}
+                </p>
+              </div>
+
+              <div className="p-6">
+                {activeTab === "manual" ? (
+                  <form
+                    id="manual-invite-form"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      form.handleSubmit();
+                    }}
+                    className="space-y-6"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <form.Field
+                        name="first_name"
+                        validators={{ onChange: ({ value }) => validateRequired(value, "First Name") }}
+                        children={(field) => (
+                          <div className="space-y-2">
+                            <Label htmlFor={field.name} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">First Name</Label>
+                            <Input
+                              id={field.name}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) => field.handleChange(e.target.value)}
+                              placeholder="Jane"
+                              className="h-10 border-input bg-background text-foreground text-sm focus-visible:ring-ring"
+                            />
+                            {field.state.meta.errors.length > 0 && (
+                              <p className="text-xs text-destructive mt-1">{field.state.meta.errors.join(", ")}</p>
+                            )}
+                          </div>
+                        )}
+                      />
+
+                      <form.Field
+                        name="last_name"
+                        validators={{ onChange: ({ value }) => validateRequired(value, "Last Name") }}
+                        children={(field) => (
+                          <div className="space-y-2">
+                            <Label htmlFor={field.name} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Last Name</Label>
+                            <Input
+                              id={field.name}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) => field.handleChange(e.target.value)}
+                              placeholder="Doe"
+                              className="h-10 border-input bg-background text-foreground text-sm focus-visible:ring-ring"
+                            />
+                            {field.state.meta.errors.length > 0 && (
+                              <p className="text-xs text-destructive mt-1">{field.state.meta.errors.join(", ")}</p>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <form.Field
+                        name="email"
+                        validators={{ onChange: ({ value }) => validateEmail(value) }}
+                        children={(field) => (
+                          <div className="space-y-2">
+                            <Label htmlFor={field.name} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Workspace Email</Label>
+                            <Input
+                              id={field.name}
+                              type="email"
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) => field.handleChange(e.target.value)}
+                              placeholder="jane@company.com"
+                              className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring"
+                            />
+                            {field.state.meta.errors.length > 0 && (
+                              <p className="text-xs text-destructive mt-1">{field.state.meta.errors.join(", ")}</p>
+                            )}
+                          </div>
+                        )}
+                      />
+
+                      <form.Field
+                        name="contact_email"
+                        validators={{ onChange: ({ value }) => validateOptionalEmail(value) }}
+                        children={(field) => (
+                          <div className="space-y-2">
+                            <Label htmlFor={field.name} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Personal Email (Optional)</Label>
+                            <Input
+                              id={field.name}
+                              type="email"
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) => field.handleChange(e.target.value)}
+                              placeholder="jane.doe@gmail.com"
+                              className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring"
+                            />
+                            {field.state.meta.errors.length > 0 && (
+                              <p className="text-xs text-destructive mt-1">{field.state.meta.errors.join(", ")}</p>
+                            )}
+                          </div>
+                        )}
+                      />
+                    </div>
+
+                    <div className="h-px bg-border my-4" />
+
+                    <form.Field
+                      name="tenant_role"
+                      children={(field) => (
+                        <div className="space-y-2">
+                          <Label htmlFor={field.name} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Workspace Role</Label>
+                          <div className="relative">
+                            <select
+                              id={field.name}
+                              value={field.state.value}
+                              onBlur={field.handleBlur}
+                              onChange={(e) => field.handleChange(e.target.value)}
+                              className="flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:cursor-pointer pr-10"
+                            >
+                              <option value="employee">Employee</option>
+                              <option value="manager">Manager</option>
+                              <option value="tenant-admin">Admin</option>
+                            </select>
+                            <Shield className="absolute right-3 top-3 size-4 text-muted-foreground pointer-events-none" />
+                          </div>
+                        </div>
+                      )}
+                    />
+                  </form>
                 ) : (
-                  <>
-                    Send Invites ({stagedEmployees.length}) <ArrowRight className="ml-2 size-4" />
-                  </>
+                  <div className="flex flex-col items-center justify-center border border-dashed border-border rounded-xl py-12 px-6 bg-muted/20 text-center transition-all hover:bg-muted/40 hover:border-foreground/30">
+                    <div className="flex size-14 items-center justify-center rounded-full border border-border bg-card mb-4">
+                      <Database className="size-6 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-semibold text-foreground mb-1">Upload Data File</h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+                      Your CSV must contain exactly these headers in row 1:
+                      <span className="block font-mono text-[10px] bg-card p-2 rounded-md border border-border mt-3 text-card-foreground">
+                        first_name, last_name, email, contact_email, tenant_role
+                      </span>
+                    </p>
+                    
+                    <input 
+                      type="file" 
+                      accept=".csv" 
+                      className="hidden" 
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                    />
+                    <Button 
+                      onClick={() => fileInputRef.current?.click()} 
+                      variant="outline"
+                      className="hover:cursor-pointer bg-card"
+                    >
+                      <UploadCloud className="mr-2 size-4" /> Select .CSV File
+                    </Button>
+                  </div>
                 )}
-              </Button>
-            </CardFooter>
-          </Card>
+              </div>
+
+              {/* Form Footer (Only shown for Manual) */}
+              {activeTab === "manual" && (
+                <div className="flex items-center justify-between gap-3 border-t border-border bg-muted/30 px-6 py-4">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <CheckCircle2 className="size-3.5" /> Required fields marked
+                  </div>
+                  <Button 
+                    type="submit"
+                    form="manual-invite-form"
+                    variant="outline"
+                    className="inline-flex items-center gap-2 bg-card text-foreground hover:bg-muted font-medium text-sm px-5 py-2 rounded-xl shadow-sm hover:cursor-pointer"
+                  >
+                    <Plus className="size-4" /> Stage User
+                  </Button>
+                </div>
+              )}
+            </SectionCard>
+          </div>
+
+          {/* ── Right Column: Staging Area ─────────────────────────────────── */}
+          <div className="lg:col-span-2">
+            <SectionCard className="h-[550px] flex flex-col relative overflow-hidden">
+              <AccentBar />
+              
+              <AnimatePresence>
+                {isSuccess && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="absolute top-0 left-0 w-full bg-success text-success-foreground px-4 py-3 flex items-center justify-center gap-2 z-20 text-sm font-semibold shadow-sm border-b border-success/20"
+                  >
+                    <CheckCircle2 className="size-4" />
+                    <span>Invitations sent successfully!</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="border-b border-border px-5 py-4 shrink-0 bg-muted/10">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-semibold text-card-foreground text-sm">Staged Roster</h3>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Pending deployment</p>
+                  </div>
+                  <span className="bg-primary/10 text-primary text-xs px-2.5 py-1 rounded-full font-bold border border-primary/20">
+                    {stagedEmployees.length}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto scroll-smooth bg-card">
+                {stagedEmployees.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                    <div className="flex size-12 items-center justify-center rounded-full border border-border bg-muted/50 mb-3">
+                      <Users className="size-5 opacity-40" />
+                    </div>
+                    <p className="text-sm font-medium">No users staged</p>
+                    <p className="text-xs mt-1 max-w-[200px]">Add employees manually or upload a CSV to populate this list.</p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {stagedEmployees.map((emp) => (
+                      <li key={emp.id} className="p-4 flex items-center justify-between hover:bg-muted/40 transition-colors group">
+                        <div className="flex flex-col overflow-hidden w-full pr-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold text-sm text-foreground truncate">{emp.first_name} {emp.last_name}</span>
+                            <span className="text-[9px] uppercase tracking-wider bg-secondary/50 border border-border text-secondary-foreground px-2 py-0.5 rounded-full font-bold shrink-0">
+                              {emp.tenant_role}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground truncate" title={`Work: ${emp.email}`}>
+                            <Mail className="size-3 opacity-70" /> {emp.email}
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => removeStagedEmployee(emp.id)}
+                          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors hover:cursor-pointer flex-shrink-0 opacity-0 group-hover:opacity-100"
+                          title="Remove from staging"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="border-t border-border bg-muted/30 p-5 shrink-0 flex flex-col gap-3">
+                {globalError && (
+                  <div className="w-full px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-start gap-2">
+                    <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                    <p>{globalError}</p>
+                  </div>
+                )}
+                
+                <Button 
+                  onClick={handleSubmitAll}
+                  disabled={stagedEmployees.length === 0 || inviteMutation.isPending}
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer font-semibold shadow-sm h-11 rounded-xl"
+                >
+                  {inviteMutation.isPending ? (
+                    <><Loader2 className="mr-2 size-4 animate-spin" /> Deploying...</>
+                  ) : (
+                    <>Deploy {stagedEmployees.length} Accounts <ArrowRight className="ml-2 size-4" /></>
+                  )}
+                </Button>
+              </div>
+            </SectionCard>
+          </div>
+          
         </div>
-        
       </div>
     </div>
   );
