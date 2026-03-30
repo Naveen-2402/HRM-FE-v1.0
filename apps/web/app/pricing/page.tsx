@@ -156,7 +156,7 @@ export default function OnboardingPricingPage() {
               <div className="size-10 rounded-xl bg-primary flex items-center justify-center shadow-lg">
                 <Briefcase className="size-5 text-primary-foreground" />
               </div>
-              <span className="font-bold text-2xl tracking-tighter text-foreground">Aactory HRM</span>
+              <span className="font-bold text-2xl tracking-tighter text-foreground">AgentsFactory HRM</span>
             </div>
             
             <div className="flex items-center gap-2">
@@ -177,9 +177,6 @@ export default function OnboardingPricingPage() {
         >
           {/* Hero Section */}
           <motion.div variants={itemVariants} className="text-center mb-16 md:mb-24">
-            <Badge variant="secondary" className="mb-4 px-4 py-1 text-sm font-medium rounded-full shadow-sm bg-muted/50 text-foreground border border-border/50">
-                Step 2: Subscription Setup
-            </Badge>
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-foreground mb-6 bg-gradient-to-b from-foreground to-foreground/80 bg-clip-text text-transparent">
               Elevate your workforce.
             </h1>

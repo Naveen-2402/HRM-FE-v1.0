@@ -6,12 +6,13 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { BulkEmployeeRole } from './bulkEmployeeRole';
+import type { BulkEmployeeEntryContactEmail } from './bulkEmployeeEntryContactEmail';
 
 /**
  * A single employee entry inside a bulk onboarding request.
  */
 export interface BulkEmployeeEntry {
-  /** Employee email. Must be unique within the organization. */
+  /** Employee email (login identity). Must be unique within the organization. */
   email: string;
   /**
    * Employee first name
@@ -27,4 +28,6 @@ export interface BulkEmployeeEntry {
   last_name: string;
   /** Role to assign in the local database (employee or manager). NOT sent to Keycloak. */
   tenant_role?: BulkEmployeeRole;
+  /** Delivery email address (optional). Required for non-gmail users. Must be gmail.com. */
+  contact_email?: BulkEmployeeEntryContactEmail;
 }
