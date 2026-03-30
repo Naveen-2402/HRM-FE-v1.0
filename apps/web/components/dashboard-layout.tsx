@@ -24,7 +24,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard, adminOnly: false },
     { name: "Employees", href: "/dashboard/employees", icon: Users, adminOnly: true },
     { name: "Invite Team", href: "/dashboard/employees/invite", icon: UserPlus, adminOnly: true },
-    { name: "Auth", href: "/dashboard/auth", icon: ShieldCheck, adminOnly: true },
     { name: "Settings", href: "/dashboard/settings", icon: Settings, adminOnly: false },
   ];
 

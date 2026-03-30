@@ -7,7 +7,7 @@ import { useForm } from "@tanstack/react-form";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, ArrowRight, ShieldCheck, CheckCircle2,
-  Mail, Building2, KeyRound, Shield, AlertTriangle,
+  Mail, Building2, KeyRound, Shield, AlertTriangle, RefreshCw
 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
@@ -15,7 +15,7 @@ import { Label } from "@repo/ui/components/ui/label";
 import { toast } from "react-toastify";
 
 import { useSetupTenantSsoTenantsSsoSetupPost } from "@repo/orval-config/src/api/default/default";
-import { getTenantSsoStatusApiV1TenantsSsoStatusGet } from "@repo/orval-config/src/api/tenants/tenants";
+import { getTenantSsoConfigApiV1TenantsSsoConfigGet } from "@repo/orval-config/src/api/tenants/tenants";
 import { AccentBar, SectionCard } from "./_shared";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,35 +36,22 @@ export default function SecurityTab() {
   const [selectedIdp,     setSelectedIdp]     = useState<IdpType>(null);
   const [savingPassword,  setSavingPassword]  = useState(false);
   const [globalError,     setGlobalError]     = useState<string | null>(null);
+  const [isUpdateMode,    setIsUpdateMode]    = useState(false);
 
   const ssoMutation = useSetupTenantSsoTenantsSsoSetupPost();
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getTenantSsoStatusApiV1TenantsSsoStatusGet();
-        setSelectedMethod(data.sso_configured ? "sso" : "password");
-      } catch {
-        toast.error("Failed to load authentication settings.");
-        setSelectedMethod("password");
-      } finally {
-        setInitializing(false);
-      }
-    })();
-  }, []);
-
-  const handleSavePasswordAuth = async () => {
-    setSavingPassword(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSavingPassword(false);
-    toast.success("Authentication preferences saved!");
-    router.push("/dashboard/employees/invite");
-  };
 
   const form = useForm({
     defaultValues: { tenant_id: "", client_id: "", client_secret: "" },
     onSubmit: async ({ value }) => {
       setGlobalError(null);
+      
+      // If we are in update mode, bypass the mutation since endpoint isn't ready
+      if (isUpdateMode) {
+        console.log("Update Payload:", value);
+        toast.info("Update endpoint coming soon! Values captured.");
+        return;
+      }
+
       try {
         let payload = {
           sso_client_id:         value.client_id,
@@ -94,6 +81,61 @@ export default function SecurityTab() {
       }
     },
   });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getTenantSsoConfigApiV1TenantsSsoConfigGet();
+        
+        if (data.sso_configured) {
+          setSelectedMethod("sso");
+          setIsUpdateMode(true);
+          
+          if (data.provider) {
+            const pType = data.provider.provider_type?.toLowerCase() || "";
+            const tokenUrl = data.provider.token_url || "";
+            
+            // Map known providers
+            if (pType === "microsoft" || tokenUrl.includes("microsoftonline.com")) {
+              setSelectedIdp("microsoft");
+              
+              // Extract the tenant_id from the token_url safely
+              if (data.provider.token_url) {
+                const urlParts = data.provider.token_url.split("login.microsoftonline.com/");
+                if (urlParts.length > 1) {
+                  const extractedTenantId = urlParts[1].split("/")[0];
+                  form.setFieldValue("tenant_id", extractedTenantId);
+                }
+              }
+            }
+
+            // Auto-fill Client ID & Secret
+            if (data.provider.client_id) {
+              form.setFieldValue("client_id", data.provider.client_id);
+            }
+            if (data.provider.client_secret) {
+              form.setFieldValue("client_secret", data.provider.client_secret);
+            }
+          }
+        } else {
+          setSelectedMethod("password");
+        }
+      } catch {
+        toast.error("Failed to load authentication settings.");
+        setSelectedMethod("password");
+      } finally {
+        setInitializing(false);
+      }
+    })();
+  }, []);
+
+  const handleSavePasswordAuth = async () => {
+    setSavingPassword(true);
+    await new Promise((r) => setTimeout(r, 800));
+    setSavingPassword(false);
+    toast.success("Authentication preferences saved!");
+    router.push("/dashboard/employees/invite");
+  };
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -304,20 +346,6 @@ export default function SecurityTab() {
                     </div>
                   )}
 
-                  {/* Read-only org ID */}
-                  <div className="space-y-1.5">
-                    <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Organization ID (Auto-detected)
-                    </Label>
-                    <Input
-                      disabled
-                      value="***********"
-                      className="h-9 bg-muted text-muted-foreground border-input font-mono text-sm"
-                    />
-                  </div>
-
-                  <div className="h-px bg-border" />
-
                   {/* Tenant ID — Microsoft only */}
                   {selectedIdp === "microsoft" && (
                     <form.Field
@@ -403,7 +431,7 @@ export default function SecurityTab() {
 
                 <div className="flex items-center justify-between gap-3 border-t border-border bg-muted/30 px-6 py-4">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Shield className="size-3.5" /> Endpoints mapped automatically
+                    <Shield className="size-3.5" /> {isUpdateMode ? "Editing existing mapping" : "Endpoints mapped automatically"}
                   </div>
                   <Button
                     type="submit"
@@ -414,7 +442,10 @@ export default function SecurityTab() {
                   >
                     {form.state.isSubmitting || ssoMutation.isPending
                       ? <><Loader2 className="size-4 animate-spin" /> Verifying…</>
-                      : <><CheckCircle2 className="size-4" /> Save Configuration</>}
+                      : isUpdateMode 
+                        ? <><RefreshCw className="size-4" /> Update Configuration</>
+                        : <><CheckCircle2 className="size-4" /> Save Configuration</>
+                    }
                   </Button>
                 </div>
               </form>
