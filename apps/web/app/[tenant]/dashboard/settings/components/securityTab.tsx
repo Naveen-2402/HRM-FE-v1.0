@@ -15,7 +15,7 @@ import { Label } from "@repo/ui/components/ui/label";
 import { toast } from "react-toastify";
 
 import { useSetupTenantSsoTenantsSsoSetupPost } from "@repo/orval-config/src/api/default/default";
-import { getTenantSsoConfigApiV1TenantsSsoConfigGet } from "@repo/orval-config/src/api/tenants/tenants";
+import { getTenantSsoConfigApiV1TenantsSsoConfigGet, useUpdateTenantSsoConfigApiV1TenantsSsoConfigPut } from "@repo/orval-config/src/api/tenants/tenants";
 import { AccentBar, SectionCard } from "./_shared";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -39,20 +39,35 @@ export default function SecurityTab() {
   const [isUpdateMode,    setIsUpdateMode]    = useState(false);
 
   const ssoMutation = useSetupTenantSsoTenantsSsoSetupPost();
+  const ssoUpdateMutation = useUpdateTenantSsoConfigApiV1TenantsSsoConfigPut();
 
   const form = useForm({
     defaultValues: { tenant_id: "", client_id: "", client_secret: "" },
     onSubmit: async ({ value }) => {
       setGlobalError(null);
-      
-      // If we are in update mode, bypass the mutation since endpoint isn't ready
-      if (isUpdateMode) {
-        console.log("Update Payload:", value);
-        toast.info("Update endpoint coming soon! Values captured.");
-        return;
-      }
 
       try {
+        if (isUpdateMode) {
+          // ── 1. CONSTRUCT PUT PAYLOAD (UPDATE) ──
+          const updatePayload: Record<string, any> = {
+            client_id: value.client_id,
+            tenant_id: value.tenant_id
+          };
+          
+          // if (selectedIdp === "microsoft") {
+          // }
+
+          // SAFETY CHECK: Only send the secret if the user actually typed a new one.
+          // Do not send the placeholder back to the database!
+          if (value.client_secret && value.client_secret !== "***REDACTED***") {
+            updatePayload.client_secret = value.client_secret;
+          }
+
+          await ssoUpdateMutation.mutateAsync({ data: updatePayload });
+          toast.success("SSO configuration updated successfully!");
+          return
+        }
+
         let payload = {
           sso_client_id:         value.client_id,
           sso_client_secret:     value.client_secret,
@@ -61,6 +76,7 @@ export default function SecurityTab() {
           sso_token_url:         "",
           sso_jwks_url:          "",
         };
+
         if (selectedIdp === "microsoft") {
           const tid = value.tenant_id;
           payload = {
@@ -71,9 +87,11 @@ export default function SecurityTab() {
             sso_jwks_url:          `https://login.microsoftonline.com/${tid}/discovery/v2.0/keys`,
           };
         }
+        
         await ssoMutation.mutateAsync({ data: payload });
         toast.success("SSO configured successfully!");
         router.push("/dashboard/employees/invite");
+
       } catch (err: any) {
         setGlobalError(
           err?.response?.data?.detail ?? "Failed to set up SSO. Please verify your credentials."
@@ -436,11 +454,11 @@ export default function SecurityTab() {
                   <Button
                     type="submit"
                     form="sso-form"
-                    disabled={form.state.isSubmitting || ssoMutation.isPending}
+                    disabled={form.state.isSubmitting || ssoMutation.isPending || ssoUpdateMutation.isPending}
                     className="inline-flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90
                                font-medium text-sm px-5 py-2 rounded-xl shadow-sm hover:cursor-pointer"
                   >
-                    {form.state.isSubmitting || ssoMutation.isPending
+                    {form.state.isSubmitting || ssoMutation.isPending || ssoUpdateMutation.isPending
                       ? <><Loader2 className="size-4 animate-spin" /> Verifying…</>
                       : isUpdateMode 
                         ? <><RefreshCw className="size-4" /> Update Configuration</>
