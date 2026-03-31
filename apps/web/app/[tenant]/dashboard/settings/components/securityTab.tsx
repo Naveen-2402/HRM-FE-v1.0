@@ -7,7 +7,7 @@ import { useForm } from "@tanstack/react-form";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, ArrowRight, ShieldCheck, CheckCircle2,
-  Mail, Building2, KeyRound, Shield, AlertTriangle, RefreshCw
+  Mail, Building2, KeyRound, Shield, AlertTriangle, RefreshCw, Pencil, X
 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
@@ -37,6 +37,7 @@ export default function SecurityTab() {
   const [savingPassword,  setSavingPassword]  = useState(false);
   const [globalError,     setGlobalError]     = useState<string | null>(null);
   const [isUpdateMode,    setIsUpdateMode]    = useState(false);
+  const [isEditing,       setIsEditing]       = useState(false);
 
   const ssoMutation = useSetupTenantSsoTenantsSsoSetupPost();
   const ssoUpdateMutation = useUpdateTenantSsoConfigApiV1TenantsSsoConfigPut();
@@ -53,9 +54,6 @@ export default function SecurityTab() {
             client_id: value.client_id,
             tenant_id: value.tenant_id
           };
-          
-          // if (selectedIdp === "microsoft") {
-          // }
 
           // SAFETY CHECK: Only send the secret if the user actually typed a new one.
           // Do not send the placeholder back to the database!
@@ -65,9 +63,11 @@ export default function SecurityTab() {
 
           await ssoUpdateMutation.mutateAsync({ data: updatePayload });
           toast.success("SSO configuration updated successfully!");
-          return
+          setIsEditing(false); // Lock the form again after successful update
+          return;
         }
 
+        // ── 2. CONSTRUCT POST PAYLOAD (SETUP) ──
         let payload = {
           sso_client_id:         value.client_id,
           sso_client_secret:     value.client_secret,
@@ -108,6 +108,7 @@ export default function SecurityTab() {
         if (data.sso_configured) {
           setSelectedMethod("sso");
           setIsUpdateMode(true);
+          setIsEditing(false); // Ensure it's locked initially
           
           if (data.provider) {
             const pType = data.provider.provider_type?.toLowerCase() || "";
@@ -154,6 +155,9 @@ export default function SecurityTab() {
     toast.success("Authentication preferences saved!");
     router.push("/dashboard/employees/invite");
   };
+
+  // Helper boolean to determine if inputs should be disabled
+  const isFormLocked = isUpdateMode && !isEditing;
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
@@ -294,12 +298,15 @@ export default function SecurityTab() {
               <div className="p-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button
                   type="button"
+                  disabled={isFormLocked}
                   onClick={() => setSelectedIdp("microsoft")}
                   className={[
-                    "relative text-left rounded-xl border p-4 transition-all hover:cursor-pointer",
+                    "relative text-left rounded-xl border p-4 transition-all",
+                    !isFormLocked && "hover:cursor-pointer",
                     selectedIdp === "microsoft"
                       ? "border-foreground/30 bg-muted ring-1 ring-foreground/20"
                       : "border-border bg-card hover:bg-muted/60",
+                    isFormLocked && selectedIdp !== "microsoft" && "opacity-50"
                   ].join(" ")}
                 >
                   {selectedIdp === "microsoft" && (
@@ -342,14 +349,33 @@ export default function SecurityTab() {
           >
             <SectionCard>
               <AccentBar />
-              <div className="border-b border-border px-6 py-5 space-y-0.5">
-                <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-chart-2">
-                  <KeyRound className="size-3" /> Step 2
+              <div className="flex items-center justify-between border-b border-border px-6 py-5">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-chart-2">
+                    <KeyRound className="size-3" /> Step 2
+                  </div>
+                  <h2 className="text-base font-semibold text-card-foreground">Application Details</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Create an App Registration in your Identity Provider to get these values.
+                  </p>
                 </div>
-                <h2 className="text-base font-semibold text-card-foreground">Application Details</h2>
-                <p className="text-sm text-muted-foreground">
-                  Create an App Registration in your Identity Provider to get these values.
-                </p>
+                
+                {/* ── Edit Button (Only visible if already configured) ── */}
+                {isUpdateMode && (
+                  <Button
+                    type="button"
+                    variant={isEditing ? "ghost" : "outline"}
+                    size="sm"
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="hover:cursor-pointer transition-all py-1 px-2 rounded-xl"
+                  >
+                    {isEditing ? (
+                      <><X className="size-4 mr-2" /> Cancel</>
+                    ) : (
+                      <><Pencil className="size-4 mr-2" /> Edit</>
+                    )}
+                  </Button>
+                )}
               </div>
 
               <form
@@ -381,10 +407,11 @@ export default function SecurityTab() {
                             value={field.state.value}
                             onBlur={field.handleBlur}
                             onChange={(e) => field.handleChange(e.target.value)}
+                            disabled={isFormLocked}
                             placeholder="e.g., cee5328c-2ee6-45ad-a480-3a304681dfb7"
-                            className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring"
+                            className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                           />
-                          {field.state.meta.errors.length > 0 && (
+                          {field.state.meta.errors.length > 0 && !isFormLocked && (
                             <p className="text-xs text-destructive">{field.state.meta.errors.join(", ")}</p>
                           )}
                         </div>
@@ -409,10 +436,11 @@ export default function SecurityTab() {
                             value={field.state.value}
                             onBlur={field.handleBlur}
                             onChange={(e) => field.handleChange(e.target.value)}
+                            disabled={isFormLocked}
                             placeholder="App Client ID"
-                            className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring"
+                            className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                           />
-                          {field.state.meta.errors.length > 0 && (
+                          {field.state.meta.errors.length > 0 && !isFormLocked && (
                             <p className="text-xs text-destructive">{field.state.meta.errors.join(", ")}</p>
                           )}
                         </div>
@@ -431,14 +459,15 @@ export default function SecurityTab() {
                           <Input
                             id={field.name}
                             name={field.name}
-                            type="password"
+                            type={isFormLocked ? "password" : "text"} // Show text if editing, password if locked
                             value={field.state.value}
                             onBlur={field.handleBlur}
                             onChange={(e) => field.handleChange(e.target.value)}
+                            disabled={isFormLocked}
                             placeholder="App Client Secret Value"
-                            className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring"
+                            className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                           />
-                          {field.state.meta.errors.length > 0 && (
+                          {field.state.meta.errors.length > 0 && !isFormLocked && (
                             <p className="text-xs text-destructive">{field.state.meta.errors.join(", ")}</p>
                           )}
                         </div>
@@ -449,14 +478,14 @@ export default function SecurityTab() {
 
                 <div className="flex items-center justify-between gap-3 border-t border-border bg-muted/30 px-6 py-4">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Shield className="size-3.5" /> {isUpdateMode ? "Editing existing mapping" : "Endpoints mapped automatically"}
+                    <Shield className="size-3.5" /> {isUpdateMode ? "Endpoints mapped automatically" : "Endpoints mapped automatically"}
                   </div>
                   <Button
                     type="submit"
                     form="sso-form"
-                    disabled={form.state.isSubmitting || ssoMutation.isPending || ssoUpdateMutation.isPending}
+                    disabled={isFormLocked || form.state.isSubmitting || ssoMutation.isPending || ssoUpdateMutation.isPending}
                     className="inline-flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90
-                               font-medium text-sm px-5 py-2 rounded-xl shadow-sm hover:cursor-pointer"
+                               font-medium text-sm px-5 py-2 rounded-xl shadow-sm hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {form.state.isSubmitting || ssoMutation.isPending || ssoUpdateMutation.isPending
                       ? <><Loader2 className="size-4 animate-spin" /> Verifying…</>
