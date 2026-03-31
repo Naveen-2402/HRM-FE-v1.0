@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Loader2, 
-  CheckCircle2, UploadCloud, Trash2, Users, Plus, Shield, ShieldCheck, Mail, Database
+  CheckCircle2, UploadCloud, Trash2, Users, Plus, Shield, ShieldCheck, Mail, Database, AlertTriangle
 } from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
