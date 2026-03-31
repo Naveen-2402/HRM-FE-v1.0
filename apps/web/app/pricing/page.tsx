@@ -135,7 +135,7 @@ export default function OnboardingPricingPage() {
         window.location.href = response.checkout_url;
       }
     } catch (error) {
-      toast.error("Failed to initiate checkout. Please try again.");
+      toast.error(error?.response?.data?.detail || "Failed to initiate checkout. Please try again.");
       setProcessingPlanId(null);
     }
   };

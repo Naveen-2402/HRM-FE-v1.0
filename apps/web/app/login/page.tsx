@@ -203,7 +203,7 @@ function LoginFormContent() {
               {actionUrl ? (
                 <Button 
                   onClick={() => window.location.href = actionUrl}
-                  className="w-full text-primary-foreground bg-primary hover:cursor-pointer"
+                  className="w-full p-2 text-primary-foreground bg-primary hover:cursor-pointer"
                   size="lg"
                 >
                   View Pricing Plans
