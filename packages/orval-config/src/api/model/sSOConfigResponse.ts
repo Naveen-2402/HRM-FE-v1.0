@@ -11,7 +11,6 @@ import type { SSOConfigResponseProvider } from './sSOConfigResponseProvider';
  * Response for GET /tenants/sso/config.
  */
 export interface SSOConfigResponse {
-  organization_id: string;
   sso_configured: boolean;
   provider?: SSOConfigResponseProvider;
 }

@@ -7,8 +7,6 @@
  */
 
 /**
- * Response for tenant SSO configuration status.
+ * New Azure AD application (client) ID
  */
-export interface SSOStatusResponse {
-  sso_configured: boolean;
-}
+export type SSOConfigUpdateRequestClientId = string | null;

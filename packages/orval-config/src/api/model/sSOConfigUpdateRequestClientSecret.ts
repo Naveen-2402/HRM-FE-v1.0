@@ -7,8 +7,6 @@
  */
 
 /**
- * Response for tenant SSO configuration status.
+ * New Azure AD client secret
  */
-export interface SSOStatusResponse {
-  sso_configured: boolean;
-}
+export type SSOConfigUpdateRequestClientSecret = string | null;

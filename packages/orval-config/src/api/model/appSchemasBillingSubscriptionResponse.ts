@@ -14,7 +14,6 @@ import type { AppSchemasBillingSubscriptionResponseTrialRemainingHours } from '.
  * Subscription status response.
  */
 export interface AppSchemasBillingSubscriptionResponse {
-  tenant_id: string;
   /** Subscription status: active, canceled, past_due, incomplete, trialing */
   status: string;
   /** Plan name / price nickname */

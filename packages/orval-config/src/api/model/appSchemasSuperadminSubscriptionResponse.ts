@@ -11,7 +11,6 @@ import type { AppSchemasSuperadminSubscriptionResponseTrialEndsAt } from './appS
 
 export interface AppSchemasSuperadminSubscriptionResponse {
   id: string;
-  tenant_id: string;
   stripe_customer_id: string;
   stripe_subscription_id: string;
   status: string;

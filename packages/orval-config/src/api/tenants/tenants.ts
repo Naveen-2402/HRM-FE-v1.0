@@ -25,6 +25,7 @@ import type {
   HTTPValidationError,
   SSOConfigRequest,
   SSOConfigResponse,
+  SSOConfigUpdateRequest,
   SSOStatusResponse,
   TenantRequest
 } from '.././model';
@@ -372,3 +373,68 @@ export function useGetTenantSsoConfigApiV1TenantsSsoConfigGet<TData = Awaited<Re
 
 
 
+/**
+ * Update Azure AD client_id, client_secret, and/or tenant_id for the tenant's SSO. When tenant_id is changed, the four SSO URLs are automatically rebuilt. Changes are applied to both Keycloak and the local database.
+ * @summary Update SSO configuration
+ */
+export const updateTenantSsoConfigApiV1TenantsSsoConfigPut = (
+    sSOConfigUpdateRequest: SSOConfigUpdateRequest,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/tenants/sso/config`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: sSOConfigUpdateRequest
+    },
+      options);
+    }
+  
+
+
+export const getUpdateTenantSsoConfigApiV1TenantsSsoConfigPutMutationOptions = <TError = void | void | HTTPValidationError | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTenantSsoConfigApiV1TenantsSsoConfigPut>>, TError,{data: SSOConfigUpdateRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTenantSsoConfigApiV1TenantsSsoConfigPut>>, TError,{data: SSOConfigUpdateRequest}, TContext> => {
+
+const mutationKey = ['updateTenantSsoConfigApiV1TenantsSsoConfigPut'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTenantSsoConfigApiV1TenantsSsoConfigPut>>, {data: SSOConfigUpdateRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateTenantSsoConfigApiV1TenantsSsoConfigPut(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTenantSsoConfigApiV1TenantsSsoConfigPutMutationResult = NonNullable<Awaited<ReturnType<typeof updateTenantSsoConfigApiV1TenantsSsoConfigPut>>>
+    export type UpdateTenantSsoConfigApiV1TenantsSsoConfigPutMutationBody = SSOConfigUpdateRequest
+    export type UpdateTenantSsoConfigApiV1TenantsSsoConfigPutMutationError = void | void | HTTPValidationError | void
+
+    /**
+ * @summary Update SSO configuration
+ */
+export const useUpdateTenantSsoConfigApiV1TenantsSsoConfigPut = <TError = void | void | HTTPValidationError | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTenantSsoConfigApiV1TenantsSsoConfigPut>>, TError,{data: SSOConfigUpdateRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTenantSsoConfigApiV1TenantsSsoConfigPut>>,
+        TError,
+        {data: SSOConfigUpdateRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateTenantSsoConfigApiV1TenantsSsoConfigPutMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    

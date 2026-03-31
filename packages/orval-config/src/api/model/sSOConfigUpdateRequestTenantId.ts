@@ -7,8 +7,6 @@
  */
 
 /**
- * Response for tenant SSO configuration status.
+ * New Azure AD directory (tenant) ID. When provided, the four SSO URLs are automatically rebuilt.
  */
-export interface SSOStatusResponse {
-  sso_configured: boolean;
-}
+export type SSOConfigUpdateRequestTenantId = string | null;
