@@ -118,11 +118,26 @@ function LoginFormContent() {
         redirectToTenantDashboard();
 
       } catch (error: any) {
-        toast.error(
-          error?.response?.data?.detail?.error_description || 
-          error?.response?.data?.detail || 
-          "Invalid email or password."
-        );
+        let errorMessage = "Invalid email or password.";
+        const detail = error?.response?.data?.detail;
+
+        if (detail) {
+          if (typeof detail === "string") {
+            try {
+              // Keycloak errors often come back as stringified JSON inside the detail field
+              const parsedDetail = JSON.parse(detail);
+              errorMessage = parsedDetail.error_description || parsedDetail.error || detail;
+            } catch {
+              // If it's a regular plain text string, just use it
+              errorMessage = detail;
+            }
+          } else if (typeof detail === "object") {
+            // If the backend eventually sends it as a proper object
+            errorMessage = detail.error_description || detail.error || JSON.stringify(detail);
+          }
+        }
+
+        toast.error(errorMessage);
       }
     },
   });
