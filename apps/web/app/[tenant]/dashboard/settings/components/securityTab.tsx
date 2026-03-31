@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 
 import { useSetupTenantSsoTenantsSsoSetupPost } from "@repo/orval-config/src/api/default/default";
 import { getTenantSsoConfigApiV1TenantsSsoConfigGet, useUpdateTenantSsoConfigApiV1TenantsSsoConfigPut } from "@repo/orval-config/src/api/tenants/tenants";
-import { AccentBar, SectionCard } from "./_shared";
+import { AccentBar, SectionCard } from "@/components/_shared";
 
 // ─────────────────────────────────────────────────────────────────────────────
 type AuthMethod = "password" | "sso" | null;

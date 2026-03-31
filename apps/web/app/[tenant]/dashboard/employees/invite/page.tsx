@@ -17,7 +17,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useBulkOnboardEmployeesTenantsEmployeesBulkOnboardPost } from "@repo/orval-config/src/api/default/default";
 
 // Import the shared aesthetic components you use in settings
-import { AccentBar, SectionCard } from "../../settings/components/_shared"; 
+import { AccentBar, SectionCard } from "@/components/_shared"; 
 
 // ── Validation Helpers ────────────────────────────────────────────────────────
 const validateRequired = (val: string, fieldName: string) => {

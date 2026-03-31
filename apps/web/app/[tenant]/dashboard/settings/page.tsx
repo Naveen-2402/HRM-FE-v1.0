@@ -9,7 +9,7 @@ import {
 import { Button } from "@repo/ui/components/ui/button";
 
 import { useGetSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
-import { AccentBar, SectionCard } from "./components/_shared";
+import { AccentBar, SectionCard } from "@/components/_shared";
 
 // ── Lazy-load every non-first tab ─────────────────────────────────────────────
 const SecurityTab = dynamic(() => import("./components/securityTab"), {
