@@ -4,12 +4,14 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { 
   Building2, CreditCard, Receipt, 
-  ShieldAlert, LogOut, Loader2, MoreVertical, Search, Filter
+  ShieldAlert, LogOut, Loader2, MoreVertical, Search, Filter, Trash2
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 import { 
-  useGetAllTenantsSuperadminTenantsGet,
-  useGetEnumValuesSuperadminEnumsGet
+  useGetAllTenantsApiV1SuperadminTenantsGet,
+  useGetEnumValuesApiV1SuperadminEnumsGet,
+  useDeleteTenantApiV1SuperadminTenantTenantIdDelete
 } from "@repo/orval-config/src/api/superadmin/superadmin";
 
 import { SectionCard, AccentBar } from "@/components/_shared";
@@ -27,12 +29,19 @@ const SubscriptionsTab = dynamic(() => import("./components/subscriptionsTab"), 
   ),
 });
 
-// const PaymentsTab = dynamic(() => import("./components/PaymentsTab"), { ... });
+const PaymentsTab = dynamic(() => import("./components/paymentsTab"), {
+  loading: () => (
+    <div className="flex flex-col items-center justify-center min-h-[600px] border border-border rounded-xl bg-card shadow-sm">
+      <Loader2 className="size-8 animate-spin text-primary mb-4" />
+      <p className="text-muted-foreground font-medium">Loading payments...</p>
+    </div>
+  ),
+});
 
 // ── Status Helper ────────────────────────────────────────────────────────
-function getStatusBadge(status?: string) {
+export function getStatusBadge(status?: string) {
   const s = status?.toLowerCase() || "";
-  if (["active", "paid", "success"].includes(s)) {
+  if (["active", "paid", "success", "succeeded"].includes(s)) {
     return "bg-success/10 text-success border-success/20";
   }
   if (["suspended", "past_due", "canceled", "failed", "expired"].includes(s)) {
@@ -52,16 +61,19 @@ export default function SuperadminDashboard() {
   // Filtering & Pagination State for Tenants
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(20);
 
   // ── API Hooks ──
-  const { data: enums } = useGetEnumValuesSuperadminEnumsGet();
+  const { data: enums } = useGetEnumValuesApiV1SuperadminEnumsGet();
   
-  const { data: tenantsData, isLoading: isLoadingTenants } = useGetAllTenantsSuperadminTenantsGet({
-    limit: pageSize,
-    offset: (page - 1) * pageSize,
+  // Using the exact param structure from your new OpenAPI spec
+  const { data: tenantsData, isLoading: isLoadingTenants, refetch } = useGetAllTenantsApiV1SuperadminTenantsGet({
+    page: page,
+    page_size: pageSize,
     search: search || undefined
   });
+
+  const deleteMutation = useDeleteTenantApiV1SuperadminTenantTenantIdDelete();
 
   const handleLogout = () => {
     logout();
@@ -69,6 +81,20 @@ export default function SuperadminDashboard() {
       ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
       : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`;
     window.location.href = `http://${baseDomain}/login`;
+  };
+
+  const handleDeleteTenant = async (tenantId: string, tenantName: string) => {
+    if (!window.confirm(`CRITICAL WARNING:\n\nAre you sure you want to permanently delete "${tenantName}"?\nThis will cancel their Stripe subscription, delete their Keycloak realm, and wipe their database schema. This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await deleteMutation.mutateAsync({ tenantId });
+      toast.success(`${tenantName} has been permanently deleted.`);
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || "Failed to delete tenant.");
+    }
   };
 
   return (
@@ -101,17 +127,17 @@ export default function SuperadminDashboard() {
         </div>
 
         {/* ── Tab Navigation ────────────────────────────────────────────── */}
-        <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted p-1">
+        <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted p-1 overflow-x-auto w-full sm:w-auto">
           {[
             { id: "tenants", label: "Workspaces", icon: Building2 },
             { id: "subscriptions", label: "Subscriptions", icon: CreditCard },
-            { id: "payments", label: "Revenue & Payments", icon: Receipt },
+            { id: "payments", label: "Payments & Invoices", icon: Receipt },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
               className={[
-                "hover:cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all",
+                "hover:cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all whitespace-nowrap",
                 activeTab === tab.id
                   ? "bg-card text-foreground shadow-sm border border-border"
                   : "text-muted-foreground hover:text-foreground hover:bg-card/60",
@@ -136,19 +162,22 @@ export default function SuperadminDashboard() {
                   <Input 
                     placeholder="Search by tenant name or domain..." 
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setPage(1); // Reset page on search
+                    }}
                     className="pl-9 h-10 border-input bg-background focus-visible:ring-1 focus-visible:ring-ring w-full"
                   />
                 </div>
                 
-                <div className="flex items-center gap-3">
+                {/* <div className="flex items-center gap-3">
                   <Button variant="outline" className="h-10 border-border bg-card text-foreground hover:bg-muted hover:cursor-pointer">
                     <Filter className="size-4 mr-2" /> Filter
                   </Button>
                   <Button className="h-10 bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer shadow-sm">
                     Provision Tenant
                   </Button>
-                </div>
+                </div> */}
               </div>
 
               {/* Data Table */}
@@ -172,22 +201,22 @@ export default function SuperadminDashboard() {
                           <p className="text-muted-foreground">Loading workspaces...</p>
                         </td>
                       </tr>
-                    ) : tenantsData?.data?.length === 0 ? ( // Adjusted to match your JSON (.data)
+                    ) : tenantsData?.data?.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                           No workspaces found matching your criteria.
                         </td>
                       </tr>
                     ) : (
-                      tenantsData?.data?.map((tenant: any) => ( // Adjusted to match your JSON (.data)
-                        <tr key={tenant.id} className="hover:bg-muted/20 transition-colors">
+                      tenantsData?.data?.map((tenant: any) => (
+                        <tr key={tenant.id} className="hover:bg-muted/20 transition-colors group">
                           <td className="px-6 py-4 font-medium text-foreground">
                             {tenant.name}
                           </td>
                           <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
                             {tenant.subdomain}
                           </td>
-                          <td className="px-6 py-4 text-muted-foreground">
+                          <td className="px-6 py-4 text-muted-foreground truncate max-w-[150px]" title={tenant.admin_email}>
                             {tenant.admin_email || "N/A"}
                           </td>
                           <td className="px-6 py-4">
@@ -199,9 +228,22 @@ export default function SuperadminDashboard() {
                             {new Date(tenant.created_at).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 text-right">
-                            <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors hover:cursor-pointer">
-                              <MoreVertical className="size-4" />
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              {/* Delete Button */}
+                              <button 
+                                onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
+                                disabled={deleteMutation.isPending}
+                                className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors hover:cursor-pointer opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                                title="Delete Workspace"
+                              >
+                                {deleteMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                              </button>
+                              
+                              {/* Details Menu */}
+                              <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors hover:cursor-pointer">
+                                <MoreVertical className="size-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -240,7 +282,7 @@ export default function SuperadminDashboard() {
           )}
 
           {activeTab === "subscriptions" && <SubscriptionsTab />}
-          {/* {activeTab === "payments" && <PaymentsTab />} */}
+          {activeTab === "payments" && <PaymentsTab />}
         </div>
       </div>
     </div>

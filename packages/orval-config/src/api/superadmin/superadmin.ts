@@ -6,21 +6,25 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
+  useMutation,
   useQuery
 } from '@tanstack/react-query';
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
   EnumValuesResponse,
-  GetAllInvoicesSuperadminInvoicesGetParams,
-  GetAllPaymentsSuperadminPaymentsGetParams,
-  GetAllSubscriptionsSuperadminSubscriptionsGetParams,
-  GetAllTenantsSuperadminTenantsGetParams,
+  GetAllInvoicesApiV1SuperadminInvoicesGetParams,
+  GetAllPaymentsApiV1SuperadminPaymentsGetParams,
+  GetAllSubscriptionsApiV1SuperadminSubscriptionsGetParams,
+  GetAllTenantsApiV1SuperadminTenantsGetParams,
   HTTPValidationError,
   PaginatedResponseSubscriptionResponse,
   PaginatedResponseTenantResponse
@@ -41,14 +45,14 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * Return all valid enum/filter values used across the superadmin dashboard.
  * @summary Get Enum Values
  */
-export const getEnumValuesSuperadminEnumsGet = (
+export const getEnumValuesApiV1SuperadminEnumsGet = (
     
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<EnumValuesResponse>(
-      {url: `/superadmin/enums`, method: 'GET', signal
+      {url: `/api/v1/superadmin/enums`, method: 'GET', signal
     },
       options);
     }
@@ -56,45 +60,45 @@ export const getEnumValuesSuperadminEnumsGet = (
 
 
 
-export const getGetEnumValuesSuperadminEnumsGetQueryKey = () => {
+export const getGetEnumValuesApiV1SuperadminEnumsGetQueryKey = () => {
     return [
-    `/superadmin/enums`
+    `/api/v1/superadmin/enums`
     ] as const;
     }
 
     
-export const getGetEnumValuesSuperadminEnumsGetQueryOptions = <TData = Awaited<ReturnType<typeof getEnumValuesSuperadminEnumsGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEnumValuesSuperadminEnumsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getGetEnumValuesApiV1SuperadminEnumsGetQueryOptions = <TData = Awaited<ReturnType<typeof getEnumValuesApiV1SuperadminEnumsGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEnumValuesApiV1SuperadminEnumsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetEnumValuesSuperadminEnumsGetQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetEnumValuesApiV1SuperadminEnumsGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEnumValuesSuperadminEnumsGet>>> = ({ signal }) => getEnumValuesSuperadminEnumsGet(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEnumValuesApiV1SuperadminEnumsGet>>> = ({ signal }) => getEnumValuesApiV1SuperadminEnumsGet(requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEnumValuesSuperadminEnumsGet>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEnumValuesApiV1SuperadminEnumsGet>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetEnumValuesSuperadminEnumsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getEnumValuesSuperadminEnumsGet>>>
-export type GetEnumValuesSuperadminEnumsGetQueryError = unknown
+export type GetEnumValuesApiV1SuperadminEnumsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getEnumValuesApiV1SuperadminEnumsGet>>>
+export type GetEnumValuesApiV1SuperadminEnumsGetQueryError = unknown
 
 
 /**
  * @summary Get Enum Values
  */
 
-export function useGetEnumValuesSuperadminEnumsGet<TData = Awaited<ReturnType<typeof getEnumValuesSuperadminEnumsGet>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEnumValuesSuperadminEnumsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export function useGetEnumValuesApiV1SuperadminEnumsGet<TData = Awaited<ReturnType<typeof getEnumValuesApiV1SuperadminEnumsGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEnumValuesApiV1SuperadminEnumsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetEnumValuesSuperadminEnumsGetQueryOptions(options)
+  const queryOptions = getGetEnumValuesApiV1SuperadminEnumsGetQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -108,14 +112,14 @@ export function useGetEnumValuesSuperadminEnumsGet<TData = Awaited<ReturnType<ty
 /**
  * @summary Get All Tenants
  */
-export const getAllTenantsSuperadminTenantsGet = (
-    params?: GetAllTenantsSuperadminTenantsGetParams,
+export const getAllTenantsApiV1SuperadminTenantsGet = (
+    params?: GetAllTenantsApiV1SuperadminTenantsGetParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<PaginatedResponseTenantResponse>(
-      {url: `/superadmin/tenants`, method: 'GET',
+      {url: `/api/v1/superadmin/tenants`, method: 'GET',
         params, signal
     },
       options);
@@ -124,45 +128,45 @@ export const getAllTenantsSuperadminTenantsGet = (
 
 
 
-export const getGetAllTenantsSuperadminTenantsGetQueryKey = (params?: GetAllTenantsSuperadminTenantsGetParams,) => {
+export const getGetAllTenantsApiV1SuperadminTenantsGetQueryKey = (params?: GetAllTenantsApiV1SuperadminTenantsGetParams,) => {
     return [
-    `/superadmin/tenants`, ...(params ? [params]: [])
+    `/api/v1/superadmin/tenants`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getGetAllTenantsSuperadminTenantsGetQueryOptions = <TData = Awaited<ReturnType<typeof getAllTenantsSuperadminTenantsGet>>, TError = HTTPValidationError>(params?: GetAllTenantsSuperadminTenantsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllTenantsSuperadminTenantsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getGetAllTenantsApiV1SuperadminTenantsGetQueryOptions = <TData = Awaited<ReturnType<typeof getAllTenantsApiV1SuperadminTenantsGet>>, TError = HTTPValidationError>(params?: GetAllTenantsApiV1SuperadminTenantsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllTenantsApiV1SuperadminTenantsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAllTenantsSuperadminTenantsGetQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetAllTenantsApiV1SuperadminTenantsGetQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllTenantsSuperadminTenantsGet>>> = ({ signal }) => getAllTenantsSuperadminTenantsGet(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllTenantsApiV1SuperadminTenantsGet>>> = ({ signal }) => getAllTenantsApiV1SuperadminTenantsGet(params, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllTenantsSuperadminTenantsGet>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllTenantsApiV1SuperadminTenantsGet>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetAllTenantsSuperadminTenantsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getAllTenantsSuperadminTenantsGet>>>
-export type GetAllTenantsSuperadminTenantsGetQueryError = HTTPValidationError
+export type GetAllTenantsApiV1SuperadminTenantsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getAllTenantsApiV1SuperadminTenantsGet>>>
+export type GetAllTenantsApiV1SuperadminTenantsGetQueryError = HTTPValidationError
 
 
 /**
  * @summary Get All Tenants
  */
 
-export function useGetAllTenantsSuperadminTenantsGet<TData = Awaited<ReturnType<typeof getAllTenantsSuperadminTenantsGet>>, TError = HTTPValidationError>(
- params?: GetAllTenantsSuperadminTenantsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllTenantsSuperadminTenantsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export function useGetAllTenantsApiV1SuperadminTenantsGet<TData = Awaited<ReturnType<typeof getAllTenantsApiV1SuperadminTenantsGet>>, TError = HTTPValidationError>(
+ params?: GetAllTenantsApiV1SuperadminTenantsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllTenantsApiV1SuperadminTenantsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetAllTenantsSuperadminTenantsGetQueryOptions(params,options)
+  const queryOptions = getGetAllTenantsApiV1SuperadminTenantsGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -176,14 +180,14 @@ export function useGetAllTenantsSuperadminTenantsGet<TData = Awaited<ReturnType<
 /**
  * @summary Get All Subscriptions
  */
-export const getAllSubscriptionsSuperadminSubscriptionsGet = (
-    params?: GetAllSubscriptionsSuperadminSubscriptionsGetParams,
+export const getAllSubscriptionsApiV1SuperadminSubscriptionsGet = (
+    params?: GetAllSubscriptionsApiV1SuperadminSubscriptionsGetParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<PaginatedResponseSubscriptionResponse>(
-      {url: `/superadmin/subscriptions`, method: 'GET',
+      {url: `/api/v1/superadmin/subscriptions`, method: 'GET',
         params, signal
     },
       options);
@@ -192,45 +196,45 @@ export const getAllSubscriptionsSuperadminSubscriptionsGet = (
 
 
 
-export const getGetAllSubscriptionsSuperadminSubscriptionsGetQueryKey = (params?: GetAllSubscriptionsSuperadminSubscriptionsGetParams,) => {
+export const getGetAllSubscriptionsApiV1SuperadminSubscriptionsGetQueryKey = (params?: GetAllSubscriptionsApiV1SuperadminSubscriptionsGetParams,) => {
     return [
-    `/superadmin/subscriptions`, ...(params ? [params]: [])
+    `/api/v1/superadmin/subscriptions`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getGetAllSubscriptionsSuperadminSubscriptionsGetQueryOptions = <TData = Awaited<ReturnType<typeof getAllSubscriptionsSuperadminSubscriptionsGet>>, TError = HTTPValidationError>(params?: GetAllSubscriptionsSuperadminSubscriptionsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllSubscriptionsSuperadminSubscriptionsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getGetAllSubscriptionsApiV1SuperadminSubscriptionsGetQueryOptions = <TData = Awaited<ReturnType<typeof getAllSubscriptionsApiV1SuperadminSubscriptionsGet>>, TError = HTTPValidationError>(params?: GetAllSubscriptionsApiV1SuperadminSubscriptionsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllSubscriptionsApiV1SuperadminSubscriptionsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAllSubscriptionsSuperadminSubscriptionsGetQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetAllSubscriptionsApiV1SuperadminSubscriptionsGetQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllSubscriptionsSuperadminSubscriptionsGet>>> = ({ signal }) => getAllSubscriptionsSuperadminSubscriptionsGet(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllSubscriptionsApiV1SuperadminSubscriptionsGet>>> = ({ signal }) => getAllSubscriptionsApiV1SuperadminSubscriptionsGet(params, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllSubscriptionsSuperadminSubscriptionsGet>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllSubscriptionsApiV1SuperadminSubscriptionsGet>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetAllSubscriptionsSuperadminSubscriptionsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getAllSubscriptionsSuperadminSubscriptionsGet>>>
-export type GetAllSubscriptionsSuperadminSubscriptionsGetQueryError = HTTPValidationError
+export type GetAllSubscriptionsApiV1SuperadminSubscriptionsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getAllSubscriptionsApiV1SuperadminSubscriptionsGet>>>
+export type GetAllSubscriptionsApiV1SuperadminSubscriptionsGetQueryError = HTTPValidationError
 
 
 /**
  * @summary Get All Subscriptions
  */
 
-export function useGetAllSubscriptionsSuperadminSubscriptionsGet<TData = Awaited<ReturnType<typeof getAllSubscriptionsSuperadminSubscriptionsGet>>, TError = HTTPValidationError>(
- params?: GetAllSubscriptionsSuperadminSubscriptionsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllSubscriptionsSuperadminSubscriptionsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export function useGetAllSubscriptionsApiV1SuperadminSubscriptionsGet<TData = Awaited<ReturnType<typeof getAllSubscriptionsApiV1SuperadminSubscriptionsGet>>, TError = HTTPValidationError>(
+ params?: GetAllSubscriptionsApiV1SuperadminSubscriptionsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllSubscriptionsApiV1SuperadminSubscriptionsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetAllSubscriptionsSuperadminSubscriptionsGetQueryOptions(params,options)
+  const queryOptions = getGetAllSubscriptionsApiV1SuperadminSubscriptionsGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -244,14 +248,14 @@ export function useGetAllSubscriptionsSuperadminSubscriptionsGet<TData = Awaited
 /**
  * @summary Get All Payments
  */
-export const getAllPaymentsSuperadminPaymentsGet = (
-    params?: GetAllPaymentsSuperadminPaymentsGetParams,
+export const getAllPaymentsApiV1SuperadminPaymentsGet = (
+    params?: GetAllPaymentsApiV1SuperadminPaymentsGetParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<unknown>(
-      {url: `/superadmin/payments`, method: 'GET',
+      {url: `/api/v1/superadmin/payments`, method: 'GET',
         params, signal
     },
       options);
@@ -260,45 +264,45 @@ export const getAllPaymentsSuperadminPaymentsGet = (
 
 
 
-export const getGetAllPaymentsSuperadminPaymentsGetQueryKey = (params?: GetAllPaymentsSuperadminPaymentsGetParams,) => {
+export const getGetAllPaymentsApiV1SuperadminPaymentsGetQueryKey = (params?: GetAllPaymentsApiV1SuperadminPaymentsGetParams,) => {
     return [
-    `/superadmin/payments`, ...(params ? [params]: [])
+    `/api/v1/superadmin/payments`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getGetAllPaymentsSuperadminPaymentsGetQueryOptions = <TData = Awaited<ReturnType<typeof getAllPaymentsSuperadminPaymentsGet>>, TError = HTTPValidationError>(params?: GetAllPaymentsSuperadminPaymentsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllPaymentsSuperadminPaymentsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getGetAllPaymentsApiV1SuperadminPaymentsGetQueryOptions = <TData = Awaited<ReturnType<typeof getAllPaymentsApiV1SuperadminPaymentsGet>>, TError = HTTPValidationError>(params?: GetAllPaymentsApiV1SuperadminPaymentsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllPaymentsApiV1SuperadminPaymentsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAllPaymentsSuperadminPaymentsGetQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetAllPaymentsApiV1SuperadminPaymentsGetQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllPaymentsSuperadminPaymentsGet>>> = ({ signal }) => getAllPaymentsSuperadminPaymentsGet(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllPaymentsApiV1SuperadminPaymentsGet>>> = ({ signal }) => getAllPaymentsApiV1SuperadminPaymentsGet(params, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllPaymentsSuperadminPaymentsGet>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllPaymentsApiV1SuperadminPaymentsGet>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetAllPaymentsSuperadminPaymentsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getAllPaymentsSuperadminPaymentsGet>>>
-export type GetAllPaymentsSuperadminPaymentsGetQueryError = HTTPValidationError
+export type GetAllPaymentsApiV1SuperadminPaymentsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getAllPaymentsApiV1SuperadminPaymentsGet>>>
+export type GetAllPaymentsApiV1SuperadminPaymentsGetQueryError = HTTPValidationError
 
 
 /**
  * @summary Get All Payments
  */
 
-export function useGetAllPaymentsSuperadminPaymentsGet<TData = Awaited<ReturnType<typeof getAllPaymentsSuperadminPaymentsGet>>, TError = HTTPValidationError>(
- params?: GetAllPaymentsSuperadminPaymentsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllPaymentsSuperadminPaymentsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export function useGetAllPaymentsApiV1SuperadminPaymentsGet<TData = Awaited<ReturnType<typeof getAllPaymentsApiV1SuperadminPaymentsGet>>, TError = HTTPValidationError>(
+ params?: GetAllPaymentsApiV1SuperadminPaymentsGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllPaymentsApiV1SuperadminPaymentsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetAllPaymentsSuperadminPaymentsGetQueryOptions(params,options)
+  const queryOptions = getGetAllPaymentsApiV1SuperadminPaymentsGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -312,14 +316,14 @@ export function useGetAllPaymentsSuperadminPaymentsGet<TData = Awaited<ReturnTyp
 /**
  * @summary Get All Invoices
  */
-export const getAllInvoicesSuperadminInvoicesGet = (
-    params?: GetAllInvoicesSuperadminInvoicesGetParams,
+export const getAllInvoicesApiV1SuperadminInvoicesGet = (
+    params?: GetAllInvoicesApiV1SuperadminInvoicesGetParams,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<unknown>(
-      {url: `/superadmin/invoices`, method: 'GET',
+      {url: `/api/v1/superadmin/invoices`, method: 'GET',
         params, signal
     },
       options);
@@ -328,45 +332,45 @@ export const getAllInvoicesSuperadminInvoicesGet = (
 
 
 
-export const getGetAllInvoicesSuperadminInvoicesGetQueryKey = (params?: GetAllInvoicesSuperadminInvoicesGetParams,) => {
+export const getGetAllInvoicesApiV1SuperadminInvoicesGetQueryKey = (params?: GetAllInvoicesApiV1SuperadminInvoicesGetParams,) => {
     return [
-    `/superadmin/invoices`, ...(params ? [params]: [])
+    `/api/v1/superadmin/invoices`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getGetAllInvoicesSuperadminInvoicesGetQueryOptions = <TData = Awaited<ReturnType<typeof getAllInvoicesSuperadminInvoicesGet>>, TError = HTTPValidationError>(params?: GetAllInvoicesSuperadminInvoicesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllInvoicesSuperadminInvoicesGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getGetAllInvoicesApiV1SuperadminInvoicesGetQueryOptions = <TData = Awaited<ReturnType<typeof getAllInvoicesApiV1SuperadminInvoicesGet>>, TError = HTTPValidationError>(params?: GetAllInvoicesApiV1SuperadminInvoicesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllInvoicesApiV1SuperadminInvoicesGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAllInvoicesSuperadminInvoicesGetQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetAllInvoicesApiV1SuperadminInvoicesGetQueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllInvoicesSuperadminInvoicesGet>>> = ({ signal }) => getAllInvoicesSuperadminInvoicesGet(params, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllInvoicesApiV1SuperadminInvoicesGet>>> = ({ signal }) => getAllInvoicesApiV1SuperadminInvoicesGet(params, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllInvoicesSuperadminInvoicesGet>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAllInvoicesApiV1SuperadminInvoicesGet>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetAllInvoicesSuperadminInvoicesGetQueryResult = NonNullable<Awaited<ReturnType<typeof getAllInvoicesSuperadminInvoicesGet>>>
-export type GetAllInvoicesSuperadminInvoicesGetQueryError = HTTPValidationError
+export type GetAllInvoicesApiV1SuperadminInvoicesGetQueryResult = NonNullable<Awaited<ReturnType<typeof getAllInvoicesApiV1SuperadminInvoicesGet>>>
+export type GetAllInvoicesApiV1SuperadminInvoicesGetQueryError = HTTPValidationError
 
 
 /**
  * @summary Get All Invoices
  */
 
-export function useGetAllInvoicesSuperadminInvoicesGet<TData = Awaited<ReturnType<typeof getAllInvoicesSuperadminInvoicesGet>>, TError = HTTPValidationError>(
- params?: GetAllInvoicesSuperadminInvoicesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllInvoicesSuperadminInvoicesGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export function useGetAllInvoicesApiV1SuperadminInvoicesGet<TData = Awaited<ReturnType<typeof getAllInvoicesApiV1SuperadminInvoicesGet>>, TError = HTTPValidationError>(
+ params?: GetAllInvoicesApiV1SuperadminInvoicesGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAllInvoicesApiV1SuperadminInvoicesGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetAllInvoicesSuperadminInvoicesGetQueryOptions(params,options)
+  const queryOptions = getGetAllInvoicesApiV1SuperadminInvoicesGetQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -380,14 +384,14 @@ export function useGetAllInvoicesSuperadminInvoicesGet<TData = Awaited<ReturnTyp
 /**
  * @summary Get Tenant Billing
  */
-export const getTenantBillingSuperadminTenantTenantIdBillingGet = (
+export const getTenantBillingApiV1SuperadminTenantTenantIdBillingGet = (
     tenantId: string,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<unknown>(
-      {url: `/superadmin/tenant/${tenantId}/billing`, method: 'GET', signal
+      {url: `/api/v1/superadmin/tenant/${tenantId}/billing`, method: 'GET', signal
     },
       options);
     }
@@ -395,45 +399,45 @@ export const getTenantBillingSuperadminTenantTenantIdBillingGet = (
 
 
 
-export const getGetTenantBillingSuperadminTenantTenantIdBillingGetQueryKey = (tenantId?: string,) => {
+export const getGetTenantBillingApiV1SuperadminTenantTenantIdBillingGetQueryKey = (tenantId?: string,) => {
     return [
-    `/superadmin/tenant/${tenantId}/billing`
+    `/api/v1/superadmin/tenant/${tenantId}/billing`
     ] as const;
     }
 
     
-export const getGetTenantBillingSuperadminTenantTenantIdBillingGetQueryOptions = <TData = Awaited<ReturnType<typeof getTenantBillingSuperadminTenantTenantIdBillingGet>>, TError = HTTPValidationError>(tenantId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantBillingSuperadminTenantTenantIdBillingGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getGetTenantBillingApiV1SuperadminTenantTenantIdBillingGetQueryOptions = <TData = Awaited<ReturnType<typeof getTenantBillingApiV1SuperadminTenantTenantIdBillingGet>>, TError = HTTPValidationError>(tenantId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantBillingApiV1SuperadminTenantTenantIdBillingGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetTenantBillingSuperadminTenantTenantIdBillingGetQueryKey(tenantId);
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantBillingApiV1SuperadminTenantTenantIdBillingGetQueryKey(tenantId);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantBillingSuperadminTenantTenantIdBillingGet>>> = ({ signal }) => getTenantBillingSuperadminTenantTenantIdBillingGet(tenantId, requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantBillingApiV1SuperadminTenantTenantIdBillingGet>>> = ({ signal }) => getTenantBillingApiV1SuperadminTenantTenantIdBillingGet(tenantId, requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(tenantId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantBillingSuperadminTenantTenantIdBillingGet>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: !!(tenantId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantBillingApiV1SuperadminTenantTenantIdBillingGet>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetTenantBillingSuperadminTenantTenantIdBillingGetQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantBillingSuperadminTenantTenantIdBillingGet>>>
-export type GetTenantBillingSuperadminTenantTenantIdBillingGetQueryError = HTTPValidationError
+export type GetTenantBillingApiV1SuperadminTenantTenantIdBillingGetQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantBillingApiV1SuperadminTenantTenantIdBillingGet>>>
+export type GetTenantBillingApiV1SuperadminTenantTenantIdBillingGetQueryError = HTTPValidationError
 
 
 /**
  * @summary Get Tenant Billing
  */
 
-export function useGetTenantBillingSuperadminTenantTenantIdBillingGet<TData = Awaited<ReturnType<typeof getTenantBillingSuperadminTenantTenantIdBillingGet>>, TError = HTTPValidationError>(
- tenantId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantBillingSuperadminTenantTenantIdBillingGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export function useGetTenantBillingApiV1SuperadminTenantTenantIdBillingGet<TData = Awaited<ReturnType<typeof getTenantBillingApiV1SuperadminTenantTenantIdBillingGet>>, TError = HTTPValidationError>(
+ tenantId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantBillingApiV1SuperadminTenantTenantIdBillingGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetTenantBillingSuperadminTenantTenantIdBillingGetQueryOptions(tenantId,options)
+  const queryOptions = getGetTenantBillingApiV1SuperadminTenantTenantIdBillingGetQueryOptions(tenantId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -444,3 +448,69 @@ export function useGetTenantBillingSuperadminTenantTenantIdBillingGet<TData = Aw
 
 
 
+/**
+ * Hard delete a tenant:
+- Cancel active Stripe subscriptions
+- Delete Keycloak organization
+- Delete the tenant and associated records from the database
+ * @summary Delete Tenant
+ */
+export const deleteTenantApiV1SuperadminTenantTenantIdDelete = (
+    tenantId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/superadmin/tenant/${tenantId}`, method: 'DELETE'
+    },
+      options);
+    }
+  
+
+
+export const getDeleteTenantApiV1SuperadminTenantTenantIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTenantApiV1SuperadminTenantTenantIdDelete>>, TError,{tenantId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteTenantApiV1SuperadminTenantTenantIdDelete>>, TError,{tenantId: string}, TContext> => {
+
+const mutationKey = ['deleteTenantApiV1SuperadminTenantTenantIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteTenantApiV1SuperadminTenantTenantIdDelete>>, {tenantId: string}> = (props) => {
+          const {tenantId} = props ?? {};
+
+          return  deleteTenantApiV1SuperadminTenantTenantIdDelete(tenantId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteTenantApiV1SuperadminTenantTenantIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteTenantApiV1SuperadminTenantTenantIdDelete>>>
+    
+    export type DeleteTenantApiV1SuperadminTenantTenantIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Tenant
+ */
+export const useDeleteTenantApiV1SuperadminTenantTenantIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteTenantApiV1SuperadminTenantTenantIdDelete>>, TError,{tenantId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteTenantApiV1SuperadminTenantTenantIdDelete>>,
+        TError,
+        {tenantId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteTenantApiV1SuperadminTenantTenantIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    

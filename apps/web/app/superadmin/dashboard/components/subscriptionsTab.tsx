@@ -2,37 +2,21 @@
 
 import React, { useState } from "react";
 import { Loader2, Search, Filter, MoreVertical, CreditCard } from "lucide-react";
-import { useGetAllSubscriptionsSuperadminSubscriptionsGet } from "@repo/orval-config/src/api/superadmin/superadmin";
+import { useGetAllSubscriptionsApiV1SuperadminSubscriptionsGet } from "@repo/orval-config/src/api/superadmin/superadmin";
 
 import { SectionCard, AccentBar } from "@/components/_shared";
 import { Input } from "@repo/ui/components/ui/input";
 import { Button } from "@repo/ui/components/ui/button";
-
-// ── Status Helper ────────────────────────────────────────────────────────
-function getSubStatusBadge(status?: string) {
-  const s = status?.toLowerCase() || "";
-  if (["active"].includes(s)) {
-    return "bg-success/10 text-success border-success/20";
-  }
-  if (["canceled", "incomplete_expired", "past_due", "unpaid"].includes(s)) {
-    return "bg-destructive/10 text-destructive border-destructive/20";
-  }
-  if (["trialing", "incomplete"].includes(s)) {
-    return "bg-warning/10 text-warning-foreground border-warning/20";
-  }
-  return "bg-muted text-muted-foreground border-border";
-}
+import { getStatusBadge } from "../page";
 
 export default function SubscriptionsTab() {
-  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize] = useState(20);
 
   // Fetch data ONLY when this component renders
-  const { data: subsData, isLoading } = useGetAllSubscriptionsSuperadminSubscriptionsGet({
-    limit: pageSize,
-    offset: (page - 1) * pageSize,
-    search: search || undefined
+  const { data: subsData, isLoading } = useGetAllSubscriptionsApiV1SuperadminSubscriptionsGet({
+    page: page,
+    page_size: pageSize,
   });
 
   return (
@@ -44,16 +28,14 @@ export default function SubscriptionsTab() {
         <div className="relative max-w-md w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input 
-            placeholder="Search by customer ID or subscription ID..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search subscriptions..." 
             className="pl-9 h-10 border-input bg-background focus-visible:ring-1 focus-visible:ring-ring w-full"
           />
         </div>
         
         <div className="flex items-center gap-3">
           <Button variant="outline" className="h-10 border-border bg-card text-foreground hover:bg-muted hover:cursor-pointer">
-            <Filter className="size-4 mr-2" /> Filter Plans
+            <Filter className="size-4 mr-2" /> Filter
           </Button>
         </div>
       </div>
@@ -64,7 +46,7 @@ export default function SubscriptionsTab() {
           <thead className="bg-muted/40 text-xs uppercase text-muted-foreground font-semibold border-b border-border">
             <tr>
               <th className="px-6 py-4">Subscription ID</th>
-              <th className="px-6 py-4">Stripe Customer</th>
+              <th className="px-6 py-4">Customer ID</th>
               <th className="px-6 py-4">Plan</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Current Period</th>
@@ -88,9 +70,9 @@ export default function SubscriptionsTab() {
             ) : (
               subsData?.data?.map((sub: any) => (
                 <tr key={sub.id} className="hover:bg-muted/20 transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-foreground truncate max-w-[150px]">
+                  <td className="px-6 py-4 font-mono text-xs text-foreground truncate max-w-[180px]" title={sub.stripe_subscription_id}>
                     <div className="flex items-center gap-2">
-                      <CreditCard className="size-3 text-muted-foreground" />
+                      <CreditCard className="size-3 text-muted-foreground shrink-0" />
                       {sub.stripe_subscription_id}
                     </div>
                   </td>
@@ -101,7 +83,7 @@ export default function SubscriptionsTab() {
                     {sub.plan}
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getSubStatusBadge(sub.status)}`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusBadge(sub.status)}`}>
                       {sub.status || "Unknown"}
                     </span>
                   </td>
