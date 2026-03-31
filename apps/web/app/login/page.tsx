@@ -57,15 +57,26 @@ function LoginFormContent() {
         // 1. Set the cross-subdomain cookie
         setAuthToken(token);
         
-        // 2. Fire the activation endpoint silently before decoding the user
+        // 2. Decode the Keycloak JWT to extract the user's profile and roles
+        const decodedUser = jwtDecode<UserProfile>(token);
+
+        // ── NEW: Superadmin Intercept ─────────────────────────────────────
+        const isSuperAdmin = decodedUser.realm_access?.roles?.includes("superadmin");
+
+        if (isSuperAdmin) {
+          login(decodedUser);
+          toast.success("Welcome, Superadmin");
+          window.location.href = `http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000/superadmin/dashboard`;
+          return;
+        }
+        // ──────────────────────────────────────────────────────────────────
+
+        // 3. Fire the activation endpoint silently for normal employees/admins
         try {
           await activateMutation.mutateAsync();
         } catch (activationError) {
           console.warn("Employee activation skipped or failed (likely already active).");
         }
-
-        // 3. Decode the Keycloak JWT to extract the user's profile and organization
-        const decodedUser = jwtDecode<UserProfile>(token);
         
         // 4. Check subscription status BEFORE updating Zustand state
         let billingStatus = "inactive";

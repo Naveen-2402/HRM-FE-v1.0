@@ -13,6 +13,7 @@ export function setupAxiosInterceptors() {
       if (config.url && config.url.startsWith('/api/v1/')) {
         config.url = config.url.replace('/api/v1/', '/');
       }
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
