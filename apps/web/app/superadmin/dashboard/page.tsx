@@ -18,6 +18,7 @@ import { SectionCard, AccentBar } from "@/components/_shared";
 import { Input } from "@repo/ui/components/ui/input";
 import { Button } from "@repo/ui/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
+import { ConfirmModal } from "@/components/_shared/ConfirmModal"
 
 // ── Lazy Load Tab Components ─────────────────────────────────────────────
 const SubscriptionsTab = dynamic(() => import("./components/subscriptionsTab"), {
@@ -57,14 +58,21 @@ export function getStatusBadge(status?: string) {
 export default function SuperadminDashboard() {
   const [activeTab, setActiveTab] = useState<"tenants" | "subscriptions" | "payments">("tenants");
   const logout = useAuthStore((state) => state.logout);
+
+  const [deleteModalState, setDeleteModalState] = useState<{
+    isOpen: boolean;
+    tenantId: string;
+    tenantName: string;
+  }>({
+    isOpen: false,
+    tenantId: "",
+    tenantName: "",
+  });
   
   // Filtering & Pagination State for Tenants
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
-
-  // ── API Hooks ──
-  const { data: enums } = useGetEnumValuesApiV1SuperadminEnumsGet();
   
   // Using the exact param structure from your new OpenAPI spec
   const { data: tenantsData, isLoading: isLoadingTenants, refetch } = useGetAllTenantsApiV1SuperadminTenantsGet({
@@ -83,17 +91,24 @@ export default function SuperadminDashboard() {
     window.location.href = `http://${baseDomain}/login`;
   };
 
-  const handleDeleteTenant = async (tenantId: string, tenantName: string) => {
-    if (!window.confirm(`CRITICAL WARNING:\n\nAre you sure you want to permanently delete "${tenantName}"?\nThis will cancel their Stripe subscription, delete their Keycloak realm, and wipe their database schema. This action cannot be undone.`)) {
-      return;
-    }
+  // 1. Function to open the modal
+  const initiateDelete = (tenantId: string, tenantName: string) => {
+    setDeleteModalState({ isOpen: true, tenantId, tenantName });
+  };
 
+  // 2. Function to execute the delete (passed to the modal)
+  const executeDelete = async () => {
     try {
-      await deleteMutation.mutateAsync({ tenantId });
-      toast.success(`${tenantName} has been permanently deleted.`);
+      await deleteMutation.mutateAsync({ tenantId: deleteModalState.tenantId });
+      toast.success(`${deleteModalState.tenantName} has been permanently deleted.`);
+      
+      // Close modal & refresh
+      setDeleteModalState({ isOpen: false, tenantId: "", tenantName: "" });
       refetch();
     } catch (error: any) {
       toast.error(error?.response?.data?.detail || "Failed to delete tenant.");
+      // Note: We leave the modal open if it fails so they can see the error,
+      // or you can close it depending on preference.
     }
   };
 
@@ -231,7 +246,7 @@ export default function SuperadminDashboard() {
                             <div className="flex items-center justify-end gap-2">
                               {/* Delete Button */}
                               <button 
-                                onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
+                                onClick={() => initiateDelete(tenant.id, tenant.name)}
                                 disabled={deleteMutation.isPending}
                                 className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors hover:cursor-pointer opacity-0 group-hover:opacity-100 disabled:opacity-50"
                                 title="Delete Workspace"
@@ -285,6 +300,26 @@ export default function SuperadminDashboard() {
           {activeTab === "payments" && <PaymentsTab />}
         </div>
       </div>
+    
+      <ConfirmModal
+        isOpen={deleteModalState.isOpen}
+        onClose={() => setDeleteModalState({ isOpen: false, tenantId: "", tenantName: "" })}
+        onConfirm={executeDelete}
+        isLoading={deleteMutation.isPending}
+        isDestructive={true}
+        title="Delete Workspace"
+        confirmText="Yes, delete workspace"
+        description={
+          <span className="space-y-2 block text-left">
+            <span className="block">
+              Are you sure you want to permanently delete <strong className="text-foreground">{deleteModalState.tenantName}</strong>?
+            </span>
+            <span className="block text-destructive/90 bg-destructive/10 p-3 rounded-lg border border-destructive/20 mt-3">
+              This will instantly cancel their Stripe subscription, delete their Keycloak realm, and wipe their database schema. <strong>This action cannot be undone.</strong>
+            </span>
+          </span>
+        }
+      />
     </div>
   );
 }

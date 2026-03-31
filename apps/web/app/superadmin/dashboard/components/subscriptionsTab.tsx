@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { Loader2, Filter, MoreVertical, CreditCard, ChevronDown } from "lucide-react";
+import { Loader2, Filter, MoreVertical, CreditCard } from "lucide-react";
 import { 
   useGetAllSubscriptionsApiV1SuperadminSubscriptionsGet,
   useGetEnumValuesApiV1SuperadminEnumsGet 
 } from "@repo/orval-config/src/api/superadmin/superadmin";
 
 import { SectionCard, AccentBar } from "@/components/_shared";
+import { Dropdown } from "@/components/_shared/Dropdown";
+
 import { Button } from "@repo/ui/components/ui/button";
 import { getStatusBadge } from "../page";
 
@@ -22,6 +24,9 @@ export default function SubscriptionsTab() {
   // Fetch Enums for the dropdowns
   const { data: enums } = useGetEnumValuesApiV1SuperadminEnumsGet();
 
+  // Safely unwrap the Axios response if nested
+  const enumData = (enums as any)?.data || enums || {};
+
   // Fetch Subscriptions with active filters
   const { data: subsData, isLoading } = useGetAllSubscriptionsApiV1SuperadminSubscriptionsGet({
     page: page,
@@ -30,9 +35,22 @@ export default function SubscriptionsTab() {
     ...(planFilter && { plan: planFilter }),
   });
 
-  // Safe extract of enum arrays (with fallbacks if the backend schema changes)
-  const statusOptions: string[] = (enums as any)?.subscription_statuses || [];
-  const planOptions: string[] = (enums as any)?.subscription_plans || (enums as any)?.plans || ["monthly", "quarterly", "yearly"];
+  // Safe mapping of options
+  const planOptions = [
+    { label: "All Plans", value: "" },
+    ...(enumData.subscription_plans || ["monthly","quarterly", "yearly"]).map((p: string) => ({
+      label: p.charAt(0).toUpperCase() + p.slice(1),
+      value: p
+    }))
+  ];
+
+  const statusOptions = [
+    { label: "All Statuses", value: "" },
+    ...(enumData.subscription_statuses || []).map((s: string) => ({
+      label: s.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase()),
+      value: s
+    }))
+  ];
 
   return (
     <SectionCard className="flex flex-col overflow-hidden min-h-[600px] animate-in fade-in duration-300">
@@ -48,40 +66,26 @@ export default function SubscriptionsTab() {
         
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
           
-          {/* Plan Type Dropdown */}
-          <div className="relative w-full sm:w-48">
-            <select
+          <div className="w-full sm:w-48 z-20">
+            <Dropdown
+              options={planOptions}
               value={planFilter}
-              onChange={(e) => {
-                setPlanFilter(e.target.value);
-                setPage(1); // Reset to page 1 on filter change
+              onChange={(val) => {
+                setPlanFilter(val);
+                setPage(1);
               }}
-              className="flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:cursor-pointer pr-10 capitalize"
-            >
-              <option value="">All Plans</option>
-              {planOptions.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-3 size-4 text-muted-foreground pointer-events-none" />
+            />
           </div>
 
-          {/* Status Dropdown */}
-          <div className="relative w-full sm:w-48">
-            <select
+          <div className="w-full sm:w-48 z-10">
+            <Dropdown
+              options={statusOptions}
               value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1); // Reset to page 1 on filter change
+              onChange={(val) => {
+                setStatusFilter(val);
+                setPage(1);
               }}
-              className="flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:cursor-pointer pr-10 capitalize"
-            >
-              <option value="">All Statuses</option>
-              {statusOptions.map((s) => (
-                <option key={s} value={s}>{s.replace("_", " ")}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-3 size-4 text-muted-foreground pointer-events-none" />
+            />
           </div>
 
         </div>
