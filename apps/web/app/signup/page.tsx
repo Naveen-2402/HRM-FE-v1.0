@@ -3,230 +3,228 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
-import { Building2, Mail, ArrowRight, CheckCircle2, Loader2, Sparkles, AtSign } from "lucide-react";
+import {
+  Building2, Mail, ArrowRight, CheckCircle2,
+  Loader2, Sparkles, AtSign, AlertTriangle,
+} from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { Label } from "@repo/ui/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 
 import { useOnboardTenantTenantsOnboardPost } from "@repo/orval-config/src/api/default/default";
 import { emailSchema, tenantNameSchema, validateWith } from "@repo/ui/lib/validators";
+import { AccentBar } from "@/components/_shared";
 
+// ─── Reusable field wrapper ───────────────────────────────────────────────────
+function Field({
+  label,
+  icon: Icon,
+  placeholder,
+  field,
+  type = "text",
+}: {
+  label: string;
+  icon: React.ElementType;
+  placeholder: string;
+  field: any;
+  type?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label
+        htmlFor={field.name}
+        className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+      >
+        {label}
+      </Label>
+      <div className="relative">
+        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+        <Input
+          id={field.name}
+          name={field.name}
+          type={type}
+          value={field.state.value}
+          onBlur={field.handleBlur}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.target.value)}
+          placeholder={placeholder}
+          className="pl-10 h-11 border-input bg-background text-foreground focus-visible:ring-ring"
+        />
+      </div>
+      {field.state.meta.errors.length > 0 && (
+        <p className="text-xs text-destructive animate-in slide-in-from-top-1">
+          {field.state.meta.errors.join(", ")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 export default function TenantSignupPage() {
   const [isSuccess, setIsSuccess] = useState(false);
-  
+
   const onboardMutation = useOnboardTenantTenantsOnboardPost({
-    mutation: {
-      onSuccess: () => setIsSuccess(true),
-    }
+    mutation: { onSuccess: () => setIsSuccess(true) },
   });
 
   const form = useForm({
-    defaultValues: {
-      tenant_name: "",
-      email: "",
-      contact_email: "",
-    },
+    defaultValues: { tenant_name: "", email: "", contact_email: "" },
     onSubmit: async ({ value }) => {
-      // The backend now accepts contact_email as part of the TenantRequest payload
-      await onboardMutation.mutateAsync({ data: value as any }); 
+      await onboardMutation.mutateAsync({ data: value as any });
     },
   });
 
-  if (isSuccess) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
-        <div className="w-full max-w-md animate-in fade-in zoom-in duration-500">
-          <Card className="border border-border bg-card shadow-2xl text-center py-10 px-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-primary" />
-            
-            <CardContent className="flex flex-col items-center gap-6 p-0">
-              <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center ring-8 ring-primary/5">
-                <CheckCircle2 className="size-10 text-primary" />
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12">
+
+      {/* Logo + wordmark */}
+      <div className="mb-8 flex items-center gap-3">
+        <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-primary shadow-sm">
+          <Sparkles className="size-5 text-primary-foreground" />
+        </div>
+        <span className="text-lg font-semibold tracking-tight text-foreground">
+          AgentsFactory <span className="text-muted-foreground font-normal">HRM</span>
+        </span>
+      </div>
+
+      {/* Card */}
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card shadow-sm overflow-hidden
+                      animate-in fade-in slide-in-from-bottom-3 duration-300">
+        <AccentBar />
+
+        {/* ── Success state ──────────────────────────────────────────────── */}
+        {isSuccess ? (
+          <>
+            <div className="px-8 py-10 flex flex-col items-center text-center gap-5">
+              <div className="flex size-14 items-center justify-center rounded-full border border-success/25 bg-success-subtle">
+                <CheckCircle2 className="size-6 text-success" />
               </div>
-              <div className="space-y-2">
-                <CardTitle className="text-3xl font-bold tracking-tight text-card-foreground">Workspace Created!</CardTitle>
-                <CardDescription className="text-base text-muted-foreground max-w-sm mx-auto">
-                  We've sent an admin setup email to your <strong>contact email</strong> address. Click the link inside to set your password and access your dashboard.
-                </CardDescription>
+              <div className="space-y-1.5">
+                <h2 className="text-lg font-semibold text-card-foreground">Workspace Created!</h2>
+                <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+                  We've sent an admin setup email to your contact address. Click the link inside to
+                  set your password and access your dashboard.
+                </p>
               </div>
-              <Link href="/login?local=true" className="w-full mt-4">
-                <Button size="lg" className="w-full p-2 hover:cursor-pointer bg-primary text-primary-foreground">
-                  Go to Login <ArrowRight className="ml-2 size-4" />
+              <Link href="/login?local=true" className="w-full">
+                <Button
+                  size="lg"
+                  className="w-full h-11 font-semibold hover:cursor-pointer bg-primary text-primary-foreground
+                             hover:bg-primary/90 rounded-xl inline-flex items-center gap-2"
+                >
+                  Go to Login <ArrowRight className="size-4" />
                 </Button>
               </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+            </div>
 
-  return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
-      
-      {/* Brand Header */}
-      <div className="mb-5 text-center flex justify-center items-center gap-2">
-        <div className="size-12 rounded-xl bg-primary flex items-center justify-center shadow-lg">
-          <Sparkles className="size-6 text-primary-foreground" />
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight">AgentsFactory HRM</h1>
-      </div>
+            <div className="flex items-center justify-center border-t border-border bg-muted/30 px-8 py-4">
+              <p className="text-xs text-muted-foreground">
+                Already have an account?{" "}
+                <Link href="/login" className="font-semibold text-foreground hover:underline hover:cursor-pointer">
+                  Log in instead
+                </Link>
+              </p>
+            </div>
+          </>
+        ) : (
+          /* ── Signup form ──────────────────────────────────────────────── */
+          <>
+            {/* Header */}
+            <div className="border-b border-border px-8 py-6 space-y-1">
+              <h2 className="text-xl font-semibold text-card-foreground">Create your workspace</h2>
+              <p className="text-sm text-muted-foreground">
+                Set up your organization's hiring platform in less than a minute.
+              </p>
+            </div>
 
-      <Card className="py-2 w-full max-w-lg border border-border bg-card shadow-xl overflow-hidden">
-        <CardHeader className="space-y-3 pb-8 pt-8 px-8 border-b border-border bg-muted/30">
-          <CardTitle className="text-3xl font-bold tracking-tight text-card-foreground">
-            Create your workspace
-          </CardTitle>
-          <CardDescription className="text-base text-muted-foreground">
-            Set up your organization's hiring platform in less than a minute.
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="px-8 py-5">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              form.handleSubmit();
-            }}
-            className="space-y-5"
-          >
-            {/* Company Name Field */}
-            <form.Field
-              name="tenant_name"
-              validators={{ onChange: ({ value }) => validateWith(tenantNameSchema)(value) }}
-              children={(field) => (
-                <div className="space-y-2 relative">
-                  <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
-                    Company Name
-                  </Label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-3 size-5 text-muted-foreground" />
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+            {/* Form */}
+            <div className="px-8 py-6">
+              <form
+                onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); form.handleSubmit(); }}
+                className="space-y-5"
+              >
+                <form.Field
+                  name="tenant_name"
+                  validators={{ onChange: ({ value }) => validateWith(tenantNameSchema)(value) }}
+                >
+                  {(field) => (
+                    <Field
+                      label="Company Name"
+                      icon={Building2}
                       placeholder="Acme Corp"
-                      className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring transition-shadow"
+                      field={field}
                     />
-                  </div>
-                  <div className="h-5">
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="text-sm font-medium text-destructive animate-in slide-in-from-top-1">
-                        {field.state.meta.errors.join(", ")}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            />
+                  )}
+                </form.Field>
 
-            {/* Login Account / Username Field */}
-            <form.Field
-              name="email"
-              validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
-              children={(field) => (
-                <div className="space-y-2 relative">
-                  <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
-                    User Account (Login ID)
-                  </Label>
-                  <div className="relative">
-                    <AtSign className="absolute left-3 top-3 size-5 text-muted-foreground" />
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      placeholder="admin@acmecorp.com (e.g., Azure AD UPN)"
-                      className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring transition-shadow"
+                <form.Field
+                  name="email"
+                  validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
+                >
+                  {(field) => (
+                    <Field
+                      label="User Account (Login ID)"
+                      icon={AtSign}
+                      placeholder="admin@acmecorp.com"
+                      field={field}
                     />
-                  </div>
-                  <div className="h-5">
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="text-sm font-medium text-destructive animate-in slide-in-from-top-1">
-                        {field.state.meta.errors.join(", ")}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            />
+                  )}
+                </form.Field>
 
-            {/* Contact Email Field */}
-            <form.Field
-              name="contact_email"
-              validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
-              children={(field) => (
-                <div className="space-y-2 relative">
-                  <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
-                    Contact Email (For notifications)
-                  </Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 size-5 text-muted-foreground" />
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
+                <form.Field
+                  name="contact_email"
+                  validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
+                >
+                  {(field) => (
+                    <Field
+                      label="Contact Email (For notifications)"
+                      icon={Mail}
                       placeholder="personal.email@gmail.com"
-                      className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring transition-shadow"
+                      field={field}
                     />
-                  </div>
-                  <div className="h-5">
-                    {field.state.meta.errors.length > 0 && (
-                      <p className="text-sm font-medium text-destructive animate-in slide-in-from-top-1">
-                        {field.state.meta.errors.join(", ")}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            />
+                  )}
+                </form.Field>
 
-            {/* Backend Error Handling */}
-            {onboardMutation.isError && (
-              <div className="p-4 rounded-lg bg-destructive/10 border border-destructive text-destructive text-sm font-medium flex items-start gap-3">
-                 <div className="font-bold">!</div>
-                 <p>{(onboardMutation.error as any)?.response?.data?.detail || "An error occurred during onboarding. Please try again."}</p>
-              </div>
-            )}
+                {/* API error */}
+                {onboardMutation.isError && (
+                  <div className="flex items-start gap-2.5 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3">
+                    <AlertTriangle className="size-4 mt-0.5 shrink-0 text-destructive" />
+                    <p className="text-sm text-destructive">
+                      {(onboardMutation.error as any)?.response?.data?.detail ||
+                        "An error occurred during onboarding. Please try again."}
+                    </p>
+                  </div>
+                )}
 
-            <Button 
-              type="submit" 
-              size="lg"
-              className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground mt-0 group"
-              disabled={form.state.isSubmitting || onboardMutation.isPending}
-            >
-              {form.state.isSubmitting || onboardMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 size-5 animate-spin" />
-                  Creating Workspace...
-                </>
-              ) : (
-                <>
-                  Complete Setup
-                  <ArrowRight className="ml-2 size-4 opacity-70 group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-        
-        <CardFooter className="flex justify-center border-t border-border py-3 bg-muted/10">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline hover:cursor-pointer font-semibold">
-              Log in instead
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={form.state.isSubmitting || onboardMutation.isPending}
+                  className="w-full h-11 font-semibold hover:cursor-pointer bg-primary text-primary-foreground
+                             hover:bg-primary/90 rounded-xl inline-flex items-center gap-2 group mt-1"
+                >
+                  {form.state.isSubmitting || onboardMutation.isPending ? (
+                    <><Loader2 className="size-4 animate-spin" /> Creating Workspace…</>
+                  ) : (
+                    <>Complete Setup <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" /></>
+                  )}
+                </Button>
+              </form>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-center border-t border-border bg-muted/30 px-8 py-4">
+              <p className="text-xs text-muted-foreground">
+                Already have an account?{" "}
+                <Link href="/login" className="font-semibold text-foreground hover:underline hover:cursor-pointer">
+                  Log in instead
+                </Link>
+              </p>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -6,12 +6,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "react-toastify";
-import { Mail, Lock, Loader2, Briefcase, Eye, EyeOff, ArrowLeft, AlertTriangle } from "lucide-react";
+import {
+  Mail, Lock, Loader2, Briefcase,
+  Eye, EyeOff, ArrowLeft, AlertTriangle, ArrowRight,
+} from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { Label } from "@repo/ui/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
@@ -19,47 +21,41 @@ import { useActivateCurrentEmployeeApiV1EmployeesActivatePost } from "@repo/orva
 import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
-
 import { jwtDecode } from "jwt-decode";
 import { setAuthToken } from "@repo/utils";
+
+import { AccentBar } from "@/components/_shared";
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 function LoginFormContent() {
   const searchParams = useSearchParams();
   const { redirectToTenantDashboard } = useTenantRedirect();
-  
-  // Check if the URL has ?local=true
   const isLocalLogin = searchParams.get("local") === "true";
 
-  const [step, setStep] = useState<1 | 2>(1);
-  const [isChecking, setIsChecking] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [step, setStep]                       = useState<1 | 2>(1);
+  const [isChecking, setIsChecking]           = useState(false);
+  const [showPassword, setShowPassword]       = useState(false);
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
-  const [actionUrl, setActionUrl] = useState<string | null>(null);
+  const [actionUrl, setActionUrl]             = useState<string | null>(null);
 
-  const login = useAuthStore((state) => state.login);
-  const loginMutation = useLoginAuthLoginPost();
+  const login          = useAuthStore((s) => s.login);
+  const loginMutation  = useLoginAuthLoginPost();
   const activateMutation = useActivateCurrentEmployeeApiV1EmployeesActivatePost();
-  const router = useRouter();
+  const router         = useRouter();
 
   const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
     onSubmit: async ({ value }) => {
       try {
-        const response = await loginMutation.mutateAsync({ 
-          data: { username: value.email, password: value.password } 
+        const response = await loginMutation.mutateAsync({
+          data: { username: value.email, password: value.password },
         });
 
         const token = (response.data as any).access_token;
-        
-        // 1. Set the cross-subdomain cookie
         setAuthToken(token);
-        
-        // 2. Decode the Keycloak JWT to extract the user's profile and roles
-        const decodedUser = jwtDecode<UserProfile>(token);
 
+        const decodedUser = jwtDecode<UserProfile>(token);
         const isSuperAdmin = decodedUser.realm_access?.roles?.includes("superadmin");
 
         if (isSuperAdmin) {
@@ -67,33 +63,20 @@ function LoginFormContent() {
           const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
             ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
             : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`;
-
           window.location.href = `http://${baseDomain}/superadmin/dashboard`;
-          
-          setTimeout(() => {
-             login(decodedUser);
-          }, 500);
+          setTimeout(() => login(decodedUser), 500);
           return;
         }
 
-        // 3. Fire the activation endpoint silently for normal employees/admins
-        try {
-          await activateMutation.mutateAsync();
-        } catch (activationError) {
-          console.warn("Employee activation skipped or failed (likely already active).");
-        }
-        
-        // 4. Check subscription status BEFORE updating Zustand state
+        try { await activateMutation.mutateAsync(); } catch {}
+
         let billingStatus = "inactive";
-        
         try {
           const subscription = await getSubscriptionStatusApiV1BillingSubscriptionGet();
           billingStatus = subscription.status;
         } catch (billingError: any) {
           const errorDetail = billingError?.response?.data?.detail;
-          
           if (errorDetail === "No subscription found for this tenant." || billingError?.response?.status === 404) {
-            console.warn("New workspace detected: No subscription on file.");
             billingStatus = "none";
           } else {
             throw billingError;
@@ -103,316 +86,300 @@ function LoginFormContent() {
         const hasActiveAccess = billingStatus === "active" || billingStatus === "trialing";
 
         if (!hasActiveAccess) {
-          // No active subscription - handle without logging in
           const isAdmin = decodedUser.realm_access?.roles?.includes("tenant-admin");
-
           if (isAdmin) {
             toast.warning("Subscription required.");
             setSubscriptionError("Your workspace does not have an active subscription. Please select a plan to activate it.");
             setActionUrl(`http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000/pricing`);
-            return;
           } else {
-            setSubscriptionError("Your organization does not have an active subscription. Please contact your workspace administrator to unlock access.");
-            return;
+            setSubscriptionError("Your organization does not have an active subscription. Please contact your workspace administrator.");
           }
+          return;
         }
 
-        // Only update auth state if subscription is active
         login(decodedUser);
         toast.success("Login successful");
         redirectToTenantDashboard();
-
       } catch (error: any) {
         let errorMessage = "Invalid email or password.";
         const detail = error?.response?.data?.detail;
-
         if (detail) {
           if (typeof detail === "string") {
-            try {
-              // Keycloak errors often come back as stringified JSON inside the detail field
-              const parsedDetail = JSON.parse(detail);
-              errorMessage = parsedDetail.error_description || parsedDetail.error || detail;
-            } catch {
-              // If it's a regular plain text string, just use it
-              errorMessage = detail;
-            }
+            try { errorMessage = JSON.parse(detail).error_description || detail; } catch { errorMessage = detail; }
           } else if (typeof detail === "object") {
-            // If the backend eventually sends it as a proper object
             errorMessage = detail.error_description || detail.error || JSON.stringify(detail);
           }
         }
-
         toast.error(errorMessage);
       }
     },
   });
 
   const handleCheckDomain = async () => {
-    const currentEmail = form.getFieldValue("email");
-    if (!currentEmail) return;
-
-    // 2. If local=true, INSTANTLY bypass the SSO check and ask for password
-    if (isLocalLogin) {
-      setStep(2);
-      return;
-    }
-
+    const email = form.getFieldValue("email");
+    if (!email) return;
+    if (isLocalLogin) { setStep(2); return; }
     setIsChecking(true);
-
     try {
-      const response = await axios.get(`/auth/check-domain?email=${encodeURIComponent(currentEmail)}`);
-      
+      const response = await axios.get(`/auth/check-domain?email=${encodeURIComponent(email)}`);
       if (response.data.sso_enabled) {
         const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8082";
-        const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
-        const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID; 
+        const realm       = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
+        const clientId    = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID;
         const redirectUri = `${window.location.origin}/auth/callback`;
-        const idpAlias = response.data.idp_alias;
-
-        const authUrl = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20profile%20email%20organization&kc_idp_hint=${idpAlias}`;        
-        window.location.href = authUrl; 
+        const idpAlias    = response.data.idp_alias;
+        window.location.href = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20profile%20email%20organization&kc_idp_hint=${idpAlias}`;
       } else {
         setStep(2);
       }
-    } catch (error) {
-      setStep(2); // Fallback to password step if the check fails
+    } catch {
+      setStep(2);
     } finally {
       setIsChecking(false);
     }
   };
 
+  // ── Subscription error state ───────────────────────────────────────────────
+  if (subscriptionError) {
+    return (
+      <>
+        <AccentBar />
+        <div className="px-8 py-10 flex flex-col items-center text-center gap-5">
+          <div className="flex size-14 items-center justify-center rounded-full border border-destructive/20 bg-destructive/10">
+            <AlertTriangle className="size-6 text-destructive" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="text-lg font-semibold text-card-foreground">
+              {actionUrl ? "Subscription Required" : "Access Denied"}
+            </h2>
+            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+              {subscriptionError}
+            </p>
+          </div>
+          <Button
+            onClick={() => actionUrl ? window.location.href = actionUrl : router.push("/login")}
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90
+                       font-medium px-6 py-2 rounded-xl hover:cursor-pointer w-full"
+            size="lg"
+          >
+            {actionUrl ? "View Pricing Plans" : "Back to Login"}
+            <ArrowRight className="size-4" />
+          </Button>
+        </div>
+      </>
+    );
+  }
+
+  // ── Normal login form ──────────────────────────────────────────────────────
   return (
     <>
-      {subscriptionError ? (
-        // Subscription Error State
-        <div className="w-full">
-          <CardHeader className="space-y-3 pb-8 pt-5 px-8 border-b border-border bg-muted/30">
-            <div className="text-center">
-              <div className="size-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                {actionUrl ? (
-                  <AlertTriangle className="size-8 text-destructive" />
-                ) : (
-                  <span className="text-destructive font-bold text-2xl">!</span>
-                )}
-              </div>
-              <CardTitle className="text-2xl font-bold text-card-foreground">
-                {actionUrl ? "Subscription Required" : "Access Denied"}
-              </CardTitle>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="px-8 py-6">
-            <div className="space-y-4 text-center">
-              <p className="text-muted-foreground">{subscriptionError}</p>
-              
-              {actionUrl ? (
-                <Button 
-                  onClick={() => window.location.href = actionUrl}
-                  className="w-full p-2 text-primary-foreground bg-primary hover:cursor-pointer"
-                  size="lg"
-                >
-                  View Pricing Plans
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => router.push("/login")}
-                  className="w-full text-primary-foreground bg-primary hover:cursor-pointer"
-                  size="lg"
-                >
-                  Back to Login
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </div>
-      ) : (
-        // Normal Login Form
-        <>
-          <CardHeader className="space-y-3 pb-8 pt-5 px-8 border-b border-border bg-muted/30 relative">
-            {step === 2 && (
-              <button 
-                onClick={() => { 
-                  setStep(1); 
-                  form.setFieldValue("password", ""); 
-                }}
-                className="absolute left-6 top-6 text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer"
+      <AccentBar />
+
+      {/* Header */}
+      <div className="relative border-b border-border px-8 py-6 text-center space-y-1">
+        {step === 2 && (
+          <button
+            onClick={() => { setStep(1); form.setFieldValue("password", ""); }}
+            className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center justify-center
+                       size-8 rounded-lg border border-border bg-background text-muted-foreground
+                       hover:text-foreground hover:bg-muted transition-all hover:cursor-pointer"
+          >
+            <ArrowLeft className="size-4" />
+          </button>
+        )}
+        <h2 className="text-xl font-semibold text-card-foreground">
+          {step === 1 ? (isLocalLogin ? "Admin Login" : "Welcome back") : "Enter your password"}
+        </h2>
+        <form.Subscribe selector={(s) => s.values.email}>
+          {(email) => (
+            <p className="text-sm text-muted-foreground">
+              {step === 1
+                ? "Enter your work email to continue"
+                : <span>Signing in as <span className="font-medium text-foreground">{email}</span></span>}
+            </p>
+          )}
+        </form.Subscribe>
+      </div>
+
+      {/* Form body */}
+      <div className="px-8 py-6">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            step === 1 ? handleCheckDomain() : form.handleSubmit();
+          }}
+          className="space-y-5"
+        >
+          {/* Step 1 — Email */}
+          {step === 1 && (
+            <div className="animate-in fade-in slide-in-from-left-4 duration-200 space-y-5">
+              <form.Field
+                name="email"
+                validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
               >
-                <ArrowLeft className="size-5" />
-              </button>
-            )}
-            <CardTitle className="text-3xl font-bold tracking-tight text-card-foreground text-center">
-              {step === 1 ? (isLocalLogin ? "Admin Login" : "Sign in") : "Enter password"}
-            </CardTitle>
-            <form.Subscribe
-              selector={(state) => state.values.email}
-              children={(email) => (
-                <CardDescription className="text-base text-muted-foreground text-center">
-                  {step === 1 ? "Enter your work email to continue" : `Signing in as ${email}`}
-                </CardDescription>
-              )}
-            />
-          </CardHeader>
-          
-          <CardContent className="px-8 py-5">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (step === 1) {
-                  handleCheckDomain();
-                } else {
-                  form.handleSubmit();
-                }
-              }}
-              className="space-y-6"
-            >
-              {/* STEP 1 FORM: Email Only */}
-              {step === 1 && (
-                <div className="animate-in fade-in slide-in-from-left-4 space-y-6">
-                  <form.Field
-                    name="email"
-                    validators={{ onChange: ({ value }) => validateWith(emailSchema)(value) }}
-                    children={(field) => (
-                      <div className="space-y-2 relative">
-                        <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">Work Email</Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-3 size-5 text-muted-foreground" />
-                          <Input
-                            id={field.name}
-                            name={field.name}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            placeholder="admin@acmecorp.com"
-                            autoFocus
-                            className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring"
-                          />
-                        </div>
-                        <div className="h-4">
-                          {field.state.meta.errors.length > 0 && (
-                            <p className="text-xs font-medium text-destructive">
-                              {field.state.meta.errors.join(", ")}
-                            </p>
-                          )}
-                        </div>
-                      </div>
+                {(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Work Email
+                    </Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="admin@acmecorp.com"
+                        autoFocus
+                        className="pl-10 h-11 border-input bg-background text-foreground focus-visible:ring-ring"
+                      />
+                    </div>
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-xs text-destructive">{field.state.meta.errors.join(", ")}</p>
                     )}
-                  />
+                  </div>
+                )}
+              </form.Field>
 
-                  <form.Subscribe
-                    selector={(state) => state.values.email}
-                    children={(email) => (
-                      <Button 
-                        type="submit" 
-                        size="lg" 
-                        disabled={isChecking || !email} 
-                        className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground group"
+              <form.Subscribe selector={(s) => s.values.email}>
+                {(email) => (
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={isChecking || !email}
+                    className="w-full h-11 font-semibold hover:cursor-pointer bg-primary text-primary-foreground
+                               hover:bg-primary/90 rounded-xl inline-flex items-center gap-2"
+                  >
+                    {isChecking
+                      ? <><Loader2 className="size-4 animate-spin" /> Checking…</>
+                      : <>Continue <ArrowRight className="size-4" /></>}
+                  </Button>
+                )}
+              </form.Subscribe>
+            </div>
+          )}
+
+          {/* Step 2 — Password */}
+          {step === 2 && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-200 space-y-5">
+              <form.Field
+                name="password"
+                validators={{ onChange: ({ value }) => validateWith(ssoPasswordSchema)(value) }}
+              >
+                {(field) => (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor={field.name} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Password
+                      </Label>
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer"
                       >
-                        {isChecking ? <><Loader2 className="mr-2 size-5 animate-spin" /> Checking...</> : "Continue"}
-                      </Button>
-                    )}
-                  />
-                </div>
-              )}
-
-              {/* STEP 2 FORM: Password Only */}
-              {step === 2 && (
-                <div className="animate-in fade-in slide-in-from-right-4 space-y-6">
-                  <form.Field
-                    name="password"
-                    validators={{ onChange: ({ value }) => validateWith(ssoPasswordSchema)(value) }}
-                    children={(field) => (
-                      <div className="space-y-2 relative">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">Password</Label>
-                          <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline hover:cursor-pointer">Forgot password?</Link>
-                        </div>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 size-5 text-muted-foreground" />
-                          <Input
-                            id={field.name}
-                            name={field.name}
-                            type={showPassword ? "text" : "password"}
-                            value={field.state.value}
-                            onBlur={field.handleBlur}
-                            onChange={(e) => field.handleChange(e.target.value)}
-                            placeholder="••••••••"
-                            autoFocus
-                            className="pl-11 h-12 text-base border-input bg-background text-foreground focus-visible:ring-ring"
-                          />
-                          <button 
-                            type="button" 
-                            onClick={() => setShowPassword(!showPassword)} 
-                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer focus:outline-none"
-                          >
-                            {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
-                          </button>
-                        </div>
-                        <div className="h-4">
-                          {field.state.meta.errors.length > 0 && (
-                            <p className="text-xs font-medium text-destructive">
-                              {field.state.meta.errors.join(", ")}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  />
-
-                  <form.Subscribe
-                    selector={(state) => state.values.password}
-                    children={(password) => (
-                      <Button 
-                        type="submit" 
-                        size="lg" 
-                        disabled={loginMutation.isPending || !password} 
-                        className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground group"
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        type={showPassword ? "text" : "password"}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        placeholder="••••••••"
+                        autoFocus
+                        className="pl-10 pr-10 h-11 border-input bg-background text-foreground focus-visible:ring-ring"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer"
                       >
-                        {loginMutation.isPending ? <><Loader2 className="mr-2 size-5 animate-spin" /> Signing in...</> : "Sign In"}
-                      </Button>
+                        {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                      </button>
+                    </div>
+                    {field.state.meta.errors.length > 0 && (
+                      <p className="text-xs text-destructive">{field.state.meta.errors.join(", ")}</p>
                     )}
-                  />
-                </div>
-              )}
-            </form>
-          </CardContent>
-        </>
-      )}
+                  </div>
+                )}
+              </form.Field>
+
+              <form.Subscribe selector={(s) => s.values.password}>
+                {(password) => (
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={loginMutation.isPending || !password}
+                    className="w-full h-11 font-semibold hover:cursor-pointer bg-primary text-primary-foreground
+                               hover:bg-primary/90 rounded-xl inline-flex items-center gap-2"
+                  >
+                    {loginMutation.isPending
+                      ? <><Loader2 className="size-4 animate-spin" /> Signing in…</>
+                      : <>Sign In <ArrowRight className="size-4" /></>}
+                  </Button>
+                )}
+              </form.Subscribe>
+            </div>
+          )}
+        </form>
+      </div>
     </>
   );
 }
 
-// 3. The main page component wraps the form in a Suspense boundary
+// ─────────────────────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
-      <div className="mb-5 text-center flex justify-center items-center gap-2">
-        <div 
-          className="size-12 rounded-xl bg-primary flex items-center justify-center shadow-lg hover:cursor-pointer" 
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12">
+
+      {/* Logo + wordmark */}
+      <div className="mb-8 flex items-center gap-3">
+        <button
           onClick={() => router.push("/")}
+          className="flex size-10 items-center justify-center rounded-xl border border-border
+                     bg-primary shadow-sm transition-all hover:opacity-90 hover:cursor-pointer"
         >
-          <Briefcase className="size-6 text-primary-foreground" />
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight">AgentsFactory HRM</h1>
+          <Briefcase className="size-5 text-primary-foreground" />
+        </button>
+        <span className="text-lg font-semibold tracking-tight text-foreground">
+          AgentsFactory <span className="text-muted-foreground font-normal">HRM</span>
+        </span>
       </div>
 
-      <Card className="py-2 w-full max-w-lg border border-border bg-card shadow-xl overflow-hidden transition-all duration-300">
-        <Suspense fallback={
-          <div className="flex justify-center items-center h-48">
-            <Loader2 className="size-8 animate-spin text-muted-foreground" />
-          </div>
-        }>
+      {/* Card */}
+      <div className="w-full max-w-md rounded-2xl border border-border bg-card shadow-sm overflow-hidden
+                      animate-in fade-in slide-in-from-bottom-3 duration-300">
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
+          }
+        >
           <LoginFormContent />
         </Suspense>
-        
-        <CardFooter className="flex justify-center border-t border-border py-4 bg-muted/10">
-          <p className="text-sm text-muted-foreground">
-            Don't have a workspace? <Link href="/signup" className="text-primary hover:underline hover:cursor-pointer font-semibold">Create one</Link>
+
+        {/* Footer */}
+        <div className="flex items-center justify-center gap-1.5 border-t border-border bg-muted/30 px-8 py-4">
+          <p className="text-xs text-muted-foreground">
+            Don't have a workspace?{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-foreground hover:underline hover:cursor-pointer"
+            >
+              Create one
+            </Link>
           </p>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
+
     </div>
   );
 }
