@@ -117,7 +117,7 @@ export default function SuperadminDashboard() {
       <div className="mx-auto max-w-[1400px] space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
 
         {/* ── Page Header ───────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
+        {/* <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
           <div className="space-y-1">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-destructive">
               <ShieldAlert className="inline size-3 mr-1 -mt-0.5" /> Superadmin
@@ -139,7 +139,7 @@ export default function SuperadminDashboard() {
               <LogOut className="size-4 mr-2" /> Sign Out
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* ── Tab Navigation ────────────────────────────────────────────── */}
         <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted p-1 overflow-x-auto w-full sm:w-auto">
