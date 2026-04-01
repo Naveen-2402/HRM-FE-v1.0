@@ -151,7 +151,8 @@ export default function EmployeeInvitePage() {
       
       setTimeout(() => setIsSuccess(false), 3000);
     } catch (error: any) {
-      setGlobalError(error?.response?.data?.detail || "Failed to invite employees. Please try again.");
+      console.log(error.response.data)
+      setGlobalError(error?.response?.data?.errors[0]?.msg || "Failed to invite employees. Please try again.");
     }
   };
 

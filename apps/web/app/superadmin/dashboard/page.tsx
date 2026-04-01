@@ -232,7 +232,7 @@ export default function SuperadminDashboard() {
                             {tenant.subdomain}
                           </td>
                           <td className="px-6 py-4 text-muted-foreground truncate max-w-[150px]" title={tenant.admin_email}>
-                            {tenant.admin_email || "N/A"}
+                            {tenant.primary_email || "N/A"}
                           </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getStatusBadge(tenant.status)}`}>

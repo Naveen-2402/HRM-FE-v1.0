@@ -97,7 +97,7 @@ export default function SubscriptionsTab() {
           <thead className="bg-muted/40 text-xs uppercase text-muted-foreground font-semibold border-b border-border">
             <tr>
               <th className="px-6 py-4">Subscription ID</th>
-              <th className="px-6 py-4">Customer ID</th>
+              <th className="px-6 py-4">Tenant Name</th>
               <th className="px-6 py-4">Plan</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Current Period</th>
@@ -128,7 +128,7 @@ export default function SubscriptionsTab() {
                     </div>
                   </td>
                   <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
-                    {sub.stripe_customer_id}
+                    {sub.tenant_name}
                   </td>
                   <td className="px-6 py-4 capitalize font-medium text-foreground">
                     {sub.plan}

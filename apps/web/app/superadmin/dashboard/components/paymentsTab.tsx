@@ -40,7 +40,7 @@ export default function PaymentsTab() {
           <thead className="bg-muted/40 text-xs uppercase text-muted-foreground font-semibold border-b border-border">
             <tr>
               <th className="px-6 py-4">Charge ID</th>
-              <th className="px-6 py-4">Customer</th>
+              <th className="px-6 py-4">Tenant Name</th>
               <th className="px-6 py-4">Amount</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Date</th>
@@ -71,7 +71,7 @@ export default function PaymentsTab() {
                     </div>
                   </td>
                   <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
-                    {payment.billing_details.name || "N/A"}
+                    {payment.tenant_name || "N/A"}
                   </td>
                   <td className="px-6 py-4 font-medium text-foreground">
                     {/* Assuming Stripe standard amounts (cents) */}
