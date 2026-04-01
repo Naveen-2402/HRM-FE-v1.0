@@ -60,16 +60,21 @@ function LoginFormContent() {
         // 2. Decode the Keycloak JWT to extract the user's profile and roles
         const decodedUser = jwtDecode<UserProfile>(token);
 
-        // ── NEW: Superadmin Intercept ─────────────────────────────────────
         const isSuperAdmin = decodedUser.realm_access?.roles?.includes("superadmin");
 
         if (isSuperAdmin) {
-          login(decodedUser);
           toast.success("Welcome, Superadmin");
-          window.location.href = `http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000/superadmin/dashboard`;
+          const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
+            ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
+            : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`;
+
+          window.location.href = `http://${baseDomain}/superadmin/dashboard`;
+          
+          setTimeout(() => {
+             login(decodedUser);
+          }, 500);
           return;
         }
-        // ──────────────────────────────────────────────────────────────────
 
         // 3. Fire the activation endpoint silently for normal employees/admins
         try {

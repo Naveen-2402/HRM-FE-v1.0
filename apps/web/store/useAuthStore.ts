@@ -36,7 +36,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     clearAuthToken();
 
     // 2. Clear local state
-    set({ isAuthenticated: false, user: null });
+    setTimeout(() => {
+      set({ isAuthenticated: false, user: null });
+    }, 500);
 
     // 3. Hard redirect back to the root domain login page
     // if (typeof window !== "undefined") {

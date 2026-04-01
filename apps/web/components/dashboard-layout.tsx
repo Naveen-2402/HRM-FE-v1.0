@@ -33,7 +33,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const handleLogout = () => {
     logout();
     window.location.href = `http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000/login`;
-    return;
   };
 
   return (
