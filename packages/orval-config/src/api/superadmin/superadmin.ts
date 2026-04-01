@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CreatePriceRequest,
+  CreateProductRequest,
   EnumValuesResponse,
   GetAllInvoicesApiV1SuperadminInvoicesGetParams,
   GetAllPaymentsApiV1SuperadminPaymentsGetParams,
@@ -27,7 +29,10 @@ import type {
   GetAllTenantsApiV1SuperadminTenantsGetParams,
   HTTPValidationError,
   PaginatedResponseSubscriptionResponse,
-  PaginatedResponseTenantResponse
+  PaginatedResponseTenantResponse,
+  PlanResponse,
+  PriceResponse,
+  ProductResponse
 } from '.././model';
 
 import { customInstance } from '../../axios-setup';
@@ -513,4 +518,201 @@ export const useDeleteTenantApiV1SuperadminTenantTenantIdDelete = <TError = HTTP
 
       return useMutation(mutationOptions);
     }
+    /**
+ * Creates a new product in Stripe that represents either a subscription plan or a credit pack. Requires superadmin role.
+ * @summary Create a Stripe product (plan or credit pack)
+ */
+export const createProductApiV1SuperadminProductsPost = (
+    createProductRequest: CreateProductRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<ProductResponse>(
+      {url: `/api/v1/superadmin/products`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createProductRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCreateProductApiV1SuperadminProductsPostMutationOptions = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProductApiV1SuperadminProductsPost>>, TError,{data: CreateProductRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createProductApiV1SuperadminProductsPost>>, TError,{data: CreateProductRequest}, TContext> => {
+
+const mutationKey = ['createProductApiV1SuperadminProductsPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createProductApiV1SuperadminProductsPost>>, {data: CreateProductRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createProductApiV1SuperadminProductsPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateProductApiV1SuperadminProductsPostMutationResult = NonNullable<Awaited<ReturnType<typeof createProductApiV1SuperadminProductsPost>>>
+    export type CreateProductApiV1SuperadminProductsPostMutationBody = CreateProductRequest
+    export type CreateProductApiV1SuperadminProductsPostMutationError = void | void
+
+    /**
+ * @summary Create a Stripe product (plan or credit pack)
+ */
+export const useCreateProductApiV1SuperadminProductsPost = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createProductApiV1SuperadminProductsPost>>, TError,{data: CreateProductRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createProductApiV1SuperadminProductsPost>>,
+        TError,
+        {data: CreateProductRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateProductApiV1SuperadminProductsPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Attaches a new price to a Stripe product. For subscriptions, set type='subscription' and provide an interval. For credit packs, set type='credits' and provide the credits count. Requires superadmin role.
+ * @summary Create a Stripe price on an existing product
+ */
+export const createPriceApiV1SuperadminPricesPost = (
+    createPriceRequest: CreatePriceRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PriceResponse>(
+      {url: `/api/v1/superadmin/prices`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createPriceRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCreatePriceApiV1SuperadminPricesPostMutationOptions = <TError = void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPriceApiV1SuperadminPricesPost>>, TError,{data: CreatePriceRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPriceApiV1SuperadminPricesPost>>, TError,{data: CreatePriceRequest}, TContext> => {
+
+const mutationKey = ['createPriceApiV1SuperadminPricesPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPriceApiV1SuperadminPricesPost>>, {data: CreatePriceRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPriceApiV1SuperadminPricesPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePriceApiV1SuperadminPricesPostMutationResult = NonNullable<Awaited<ReturnType<typeof createPriceApiV1SuperadminPricesPost>>>
+    export type CreatePriceApiV1SuperadminPricesPostMutationBody = CreatePriceRequest
+    export type CreatePriceApiV1SuperadminPricesPostMutationError = void | void | void
+
+    /**
+ * @summary Create a Stripe price on an existing product
+ */
+export const useCreatePriceApiV1SuperadminPricesPost = <TError = void | void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPriceApiV1SuperadminPricesPost>>, TError,{data: CreatePriceRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPriceApiV1SuperadminPricesPost>>,
+        TError,
+        {data: CreatePriceRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCreatePriceApiV1SuperadminPricesPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Returns all active Stripe products with their associated prices. Results are cached for 30 seconds. Used by the frontend to render available plans and credit packs. Requires superadmin role.
+ * @summary List all products with prices
+ */
+export const listPlansApiV1SuperadminPlansGet = (
     
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PlanResponse[]>(
+      {url: `/api/v1/superadmin/plans`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getListPlansApiV1SuperadminPlansGetQueryKey = () => {
+    return [
+    `/api/v1/superadmin/plans`
+    ] as const;
+    }
+
+    
+export const getListPlansApiV1SuperadminPlansGetQueryOptions = <TData = Awaited<ReturnType<typeof listPlansApiV1SuperadminPlansGet>>, TError = void>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPlansApiV1SuperadminPlansGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPlansApiV1SuperadminPlansGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPlansApiV1SuperadminPlansGet>>> = ({ signal }) => listPlansApiV1SuperadminPlansGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPlansApiV1SuperadminPlansGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPlansApiV1SuperadminPlansGetQueryResult = NonNullable<Awaited<ReturnType<typeof listPlansApiV1SuperadminPlansGet>>>
+export type ListPlansApiV1SuperadminPlansGetQueryError = void
+
+
+/**
+ * @summary List all products with prices
+ */
+
+export function useListPlansApiV1SuperadminPlansGet<TData = Awaited<ReturnType<typeof listPlansApiV1SuperadminPlansGet>>, TError = void>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPlansApiV1SuperadminPlansGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPlansApiV1SuperadminPlansGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+

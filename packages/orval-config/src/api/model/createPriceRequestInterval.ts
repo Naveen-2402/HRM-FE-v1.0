@@ -5,15 +5,9 @@
  * Production-ready multi-tenant HRM/ATS backend with Keycloak SSO
  * OpenAPI spec version: 1.0.0
  */
+import type { BillingIntervalEnum } from './billingIntervalEnum';
 
-export type GetAllPaymentsApiV1SuperadminPaymentsGetParams = {
 /**
- * @minimum 1
- * @maximum 100
+ * Billing interval — required when type is 'subscription'
  */
-limit?: number;
-/**
- * Cursor for next page (last charge ID)
- */
-starting_after?: string | null;
-};
+export type CreatePriceRequestInterval = BillingIntervalEnum | null;

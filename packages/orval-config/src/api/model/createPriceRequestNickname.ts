@@ -6,14 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetAllPaymentsApiV1SuperadminPaymentsGetParams = {
 /**
- * @minimum 1
- * @maximum 100
+ * Optional label shown on Stripe invoices (e.g. 'Pro Monthly')
  */
-limit?: number;
-/**
- * Cursor for next page (last charge ID)
- */
-starting_after?: string | null;
-};
+export type CreatePriceRequestNickname = string | null;

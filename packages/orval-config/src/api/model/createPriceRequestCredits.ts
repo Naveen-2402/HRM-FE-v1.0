@@ -6,14 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetAllPaymentsApiV1SuperadminPaymentsGetParams = {
 /**
- * @minimum 1
- * @maximum 100
+ * Number of credits this pack provides — required when type is 'credits'
  */
-limit?: number;
-/**
- * Cursor for next page (last charge ID)
- */
-starting_after?: string | null;
-};
+export type CreatePriceRequestCredits = number | null;

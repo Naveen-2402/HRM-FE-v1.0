@@ -5,6 +5,7 @@
  * Production-ready multi-tenant HRM/ATS backend with Keycloak SSO
  * OpenAPI spec version: 1.0.0
  */
+import type { TenantResponseContactEmail } from './tenantResponseContactEmail';
 import type { TenantResponseStripeCustomerId } from './tenantResponseStripeCustomerId';
 import type { TenantResponseTrialStartedAt } from './tenantResponseTrialStartedAt';
 import type { TenantResponseTrialEndsAt } from './tenantResponseTrialEndsAt';
@@ -17,6 +18,8 @@ export interface TenantResponse {
   schema_name: string;
   status: string;
   sso_configured: boolean;
+  primary_email: string;
+  contact_email?: TenantResponseContactEmail;
   stripe_customer_id?: TenantResponseStripeCustomerId;
   migration_state: string;
   trial_started_at?: TenantResponseTrialStartedAt;

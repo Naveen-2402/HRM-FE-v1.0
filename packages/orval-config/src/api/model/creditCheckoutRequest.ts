@@ -10,10 +10,6 @@
  * Request body for creating a Stripe credit purchase checkout session.
  */
 export interface CreditCheckoutRequest {
-  /** Stripe Price ID for the credit package */
+  /** Stripe Price ID for the credit package (credits count is read from Stripe price metadata) */
   price_id: string;
-  /**
-   * Amount of credits being purchased
-   */
-  credits: number;
 }
