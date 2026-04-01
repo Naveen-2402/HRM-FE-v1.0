@@ -306,6 +306,68 @@ export const useDisableEmployeeApiV1EmployeesEmployeeIdDisablePatch = <TError = 
       return useMutation(mutationOptions);
     }
     /**
+ * Restores a previously disabled employee's access to the workspace. Also enables their identity in the Identity Provider to allow login. Requires admin role.
+ * @summary Enable employee access
+ */
+export const enableEmployeeApiV1EmployeesEmployeeIdEnablePatch = (
+    employeeId: string,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<EmployeeStatusResponse>(
+      {url: `/api/v1/employees/${employeeId}/enable`, method: 'PATCH'
+    },
+      options);
+    }
+  
+
+
+export const getEnableEmployeeApiV1EmployeesEmployeeIdEnablePatchMutationOptions = <TError = ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableEmployeeApiV1EmployeesEmployeeIdEnablePatch>>, TError,{employeeId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof enableEmployeeApiV1EmployeesEmployeeIdEnablePatch>>, TError,{employeeId: string}, TContext> => {
+
+const mutationKey = ['enableEmployeeApiV1EmployeesEmployeeIdEnablePatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof enableEmployeeApiV1EmployeesEmployeeIdEnablePatch>>, {employeeId: string}> = (props) => {
+          const {employeeId} = props ?? {};
+
+          return  enableEmployeeApiV1EmployeesEmployeeIdEnablePatch(employeeId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EnableEmployeeApiV1EmployeesEmployeeIdEnablePatchMutationResult = NonNullable<Awaited<ReturnType<typeof enableEmployeeApiV1EmployeesEmployeeIdEnablePatch>>>
+    
+    export type EnableEmployeeApiV1EmployeesEmployeeIdEnablePatchMutationError = ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError
+
+    /**
+ * @summary Enable employee access
+ */
+export const useEnableEmployeeApiV1EmployeesEmployeeIdEnablePatch = <TError = ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | ErrorResponse | HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof enableEmployeeApiV1EmployeesEmployeeIdEnablePatch>>, TError,{employeeId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof enableEmployeeApiV1EmployeesEmployeeIdEnablePatch>>,
+        TError,
+        {employeeId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getEnableEmployeeApiV1EmployeesEmployeeIdEnablePatchMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
  * Called by the frontend after an employee successfully logs in for the first time. Transitions the employee's status from 'invited' to 'active'. Requires a valid JWT token.
  * @summary Activate employee post-login
  */

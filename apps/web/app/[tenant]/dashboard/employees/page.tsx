@@ -4,13 +4,14 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { 
-  Search, ChevronUp, ChevronDown, Loader2, UserPlus, Ban 
+  Search, ChevronUp, ChevronDown, Loader2, UserPlus, Ban, UserCheck 
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import { 
   useListEmployeesApiV1EmployeesGet,
   useDisableEmployeeApiV1EmployeesEmployeeIdDisablePatch,
+  useEnableEmployeeApiV1EmployeesEmployeeIdEnablePatch,
   getListEmployeesApiV1EmployeesGetQueryKey
 } from "@repo/orval-config/src/api/employees/employees";
 import { useEmployeeStore } from "@/store/useEmployeeStore";
@@ -36,8 +37,18 @@ export default function EmployeesPage() {
   const { searchQuery, sortField, sortOrder, skip, limit, setSearchQuery, setSort, setPage } = useEmployeeStore();
   const router = useRouter();
 
-  // ── Modal State ──
+  // ── Modal States ──
   const [disableModalState, setDisableModalState] = useState<{
+    isOpen: boolean;
+    employeeId: string;
+    employeeName: string;
+  }>({
+    isOpen: false,
+    employeeId: "",
+    employeeName: "",
+  });
+
+  const [enableModalState, setEnableModalState] = useState<{
     isOpen: boolean;
     employeeId: string;
     employeeName: string;
@@ -55,6 +66,7 @@ export default function EmployeesPage() {
 
   // Mutations
   const disableMutation = useDisableEmployeeApiV1EmployeesEmployeeIdDisablePatch();
+  const enableMutation = useEnableEmployeeApiV1EmployeesEmployeeIdEnablePatch();
 
   // ── Handlers ──
   const initiateDisable = (employeeId: string, employeeName: string) => {
@@ -67,15 +79,34 @@ export default function EmployeesPage() {
       await disableMutation.mutateAsync({ employeeId });
       toast.success(`${employeeName}'s access has been disabled.`);
       
-      // Close modal immediately on success
       setDisableModalState({ isOpen: false, employeeId: "", employeeName: "" });
       
-      // Invalidate the list query to instantly refresh the table data
       queryClient.invalidateQueries({
         queryKey: getListEmployeesApiV1EmployeesGetQueryKey({ skip, limit })
       });
     } catch (error: any) {
       const errorMessage = error.response?.data?.detail || "Failed to disable employee.";
+      toast.error(errorMessage);
+    }
+  };
+
+  const initiateEnable = (employeeId: string, employeeName: string) => {
+    setEnableModalState({ isOpen: true, employeeId, employeeName });
+  };
+
+  const executeEnable = async () => {
+    const { employeeId, employeeName } = enableModalState;
+    try {
+      await enableMutation.mutateAsync({ employeeId });
+      toast.success(`${employeeName}'s access has been restored.`);
+      
+      setEnableModalState({ isOpen: false, employeeId: "", employeeName: "" });
+      
+      queryClient.invalidateQueries({
+        queryKey: getListEmployeesApiV1EmployeesGetQueryKey({ skip, limit })
+      });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.detail || "Failed to restore employee.";
       toast.error(errorMessage);
     }
   };
@@ -199,6 +230,7 @@ export default function EmployeesPage() {
                   const s = employee.status?.toLowerCase();
                   const isDisabledStatus = s === "disabled" || s === "inactive";
                   const statusCfg = getEmployeeStatusConfig(s);
+                  const isRoleAdmin = employee.tenant_role === "admin" || employee.tenant_role === "tenant-admin";
                   
                   return (
                     <tr key={employee.id} className="hover:bg-muted/30 transition-colors group">
@@ -217,14 +249,25 @@ export default function EmployeesPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => initiateDisable(employee.id, `${employee.first_name} ${employee.last_name}`)}
-                          disabled={isDisabledStatus || employee.tenant_role === "admin" || employee.tenant_role === "tenant-admin"}
-                          className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors hover:cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:cursor-not-allowed opacity-0 group-hover:opacity-100"
-                          title="Disable Access"
-                        >
-                          <Ban className="size-4" />
-                        </button>
+                        {isDisabledStatus ? (
+                          <button
+                            onClick={() => initiateEnable(employee.id, `${employee.first_name} ${employee.last_name}`)}
+                            disabled={isRoleAdmin}
+                            className="p-2 rounded-md text-muted-foreground hover:text-success hover:bg-success/10 transition-colors hover:cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:cursor-not-allowed opacity-0 group-hover:opacity-100"
+                            title="Restore Access"
+                          >
+                            <UserCheck className="size-4" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => initiateDisable(employee.id, `${employee.first_name} ${employee.last_name}`)}
+                            disabled={isRoleAdmin}
+                            className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors hover:cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:cursor-not-allowed opacity-0 group-hover:opacity-100"
+                            title="Disable Access"
+                          >
+                            <Ban className="size-4" />
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -276,6 +319,27 @@ export default function EmployeesPage() {
             </span>
             <span className="block text-destructive/90 bg-destructive/10 p-3 rounded-lg border border-destructive/20 mt-3">
               They will be immediately logged out and blocked from signing back into this workspace. Their data will remain intact.
+            </span>
+          </span>
+        }
+      />
+
+      {/* ── Confirm Enable Modal ── */}
+      <ConfirmModal
+        isOpen={enableModalState.isOpen}
+        onClose={() => setEnableModalState({ isOpen: false, employeeId: "", employeeName: "" })}
+        onConfirm={executeEnable}
+        isLoading={enableMutation.isPending}
+        isDestructive={false}
+        title="Restore Access"
+        confirmText="Yes, restore access"
+        description={
+          <span className="space-y-2 block text-left">
+            <span className="block">
+              Are you sure you want to restore access for <strong className="text-foreground">{enableModalState.employeeName}</strong>?
+            </span>
+            <span className="block text-muted-foreground mt-2">
+              They will regain the ability to log in and access this workspace using their existing credentials.
             </span>
           </span>
         }

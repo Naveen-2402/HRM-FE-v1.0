@@ -52,7 +52,7 @@ export function ConfirmModal({
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               onClick={stopPropagation}
-              className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-xl pointer-events-auto"
+              className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-card shadow-xl pointer-events-auto"
             >
               <div className="p-6 sm:p-8 space-y-4">
                 {/* Header/Icon */}
