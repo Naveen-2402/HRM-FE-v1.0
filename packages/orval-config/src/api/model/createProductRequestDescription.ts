@@ -5,6 +5,5 @@
  * Production-ready multi-tenant HRM/ATS backend with Keycloak SSO
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateProductRequestMetadataAnyOf } from './createProductRequestMetadataAnyOf';
 
-export type CreateProductRequestMetadata = CreateProductRequestMetadataAnyOf | null;
+export type CreateProductRequestDescription = string | null;

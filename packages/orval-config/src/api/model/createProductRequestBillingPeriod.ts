@@ -5,6 +5,5 @@
  * Production-ready multi-tenant HRM/ATS backend with Keycloak SSO
  * OpenAPI spec version: 1.0.0
  */
-import type { CreateProductRequestMetadataAnyOf } from './createProductRequestMetadataAnyOf';
 
-export type CreateProductRequestMetadata = CreateProductRequestMetadataAnyOf | null;
+export type CreateProductRequestBillingPeriod = 'monthly' | 'yearly' | 'every_3_months' | 'every_6_months' | null;

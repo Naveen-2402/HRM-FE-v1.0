@@ -5,7 +5,10 @@
  * Production-ready multi-tenant HRM/ATS backend with Keycloak SSO
  * OpenAPI spec version: 1.0.0
  */
-import type { ProductTypeEnum } from './productTypeEnum';
+import type { CreateProductRequestDescription } from './createProductRequestDescription';
+import type { CreateProductRequestProductType } from './createProductRequestProductType';
+import type { CreateProductRequestPricingType } from './createProductRequestPricingType';
+import type { CreateProductRequestBillingPeriod } from './createProductRequestBillingPeriod';
 import type { CreateProductRequestMetadata } from './createProductRequestMetadata';
 
 /**
@@ -18,14 +21,12 @@ export interface CreateProductRequest {
    * @maxLength 250
    */
   name: string;
-  /**
-   * Short description of the product
-   * @minLength 1
-   * @maxLength 500
-   */
-  description: string;
-  /** Product category: 'subscription' for recurring plans, 'credits' for one-time credit packs */
-  type: ProductTypeEnum;
-  /** Optional extra metadata key–value pairs (all values must be strings) */
+  description?: CreateProductRequestDescription;
+  product_type: CreateProductRequestProductType;
+  pricing_type: CreateProductRequestPricingType;
+  /** Amount e.g. 99.00 */
+  default_price: number;
+  currency?: string;
+  billing_period?: CreateProductRequestBillingPeriod;
   metadata?: CreateProductRequestMetadata;
 }
