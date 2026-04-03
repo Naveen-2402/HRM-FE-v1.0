@@ -81,6 +81,16 @@ export default function CreateCouponModal(props: any){
       icon: plan.type === "credits" ? <Layers className="size-4" /> : <Package className="size-4" />
     }))
   ];
+  
+  const currencyOptions = [
+    { label: "INR", value: "inr"},
+    { label: "USD", value: "usd"},
+  ];
+  
+  const couponTypeOptions = [
+    { label: "% Off", value: "percentage"},
+    { label: "Fixed Amount", value: "fixed_amount"},
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
@@ -115,7 +125,7 @@ export default function CreateCouponModal(props: any){
                         value={field.state.value} 
                         onBlur={field.handleBlur}
                         onChange={e => field.handleChange(e.target.value)} 
-                        className="bg-background border-input focus-visible:ring-ring" 
+                        className="bg-background h-10 border-input focus-visible:ring-ring" 
                         placeholder="e.g. Diwali Sale" 
                       />
                       {field.state.meta.errors.length > 0 && (
@@ -143,7 +153,7 @@ export default function CreateCouponModal(props: any){
                         value={field.state.value} 
                         onBlur={field.handleBlur}
                         onChange={e => field.handleChange(e.target.value)} 
-                        className="bg-background border-input focus-visible:ring-ring" 
+                        className="bg-background h-10 border-input focus-visible:ring-ring" 
                         placeholder="48" 
                       />
                       {field.state.meta.errors.length > 0 && (
@@ -159,20 +169,16 @@ export default function CreateCouponModal(props: any){
                   name="discount_type"
                   children={(field) => (
                     <div className="space-y-2 col-span-3 sm:col-span-1">
-                      <label htmlFor={field.name} className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Type</label>
-                      <select 
-                        id={field.name}
-                        value={field.state.value} 
-                        onBlur={field.handleBlur}
-                        onChange={e => {
-                          field.handleChange(e.target.value as DiscountType);
-                          form.validateAllFields("change"); // Revalidate discount_value when type changes
-                        }}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:cursor-pointer"
-                      >
-                        <option value="percentage">% Off</option>
-                        <option value="fixed_amount">Fixed Amount</option>
-                      </select>
+                      <Dropdown
+                            label="Type"
+                            options={couponTypeOptions}
+                            value={field.state.value} 
+                            onBlur={field.handleBlur}
+                            onChange={(val) => {
+                              field.handleChange(val as DiscountType);
+                              form.validateAllFields("change"); 
+                            }}
+                          />
                     </div>
                   )}
                 />
@@ -223,19 +229,14 @@ export default function CreateCouponModal(props: any){
                       name="currency"
                       children={(field) => (
                         <div className="space-y-2 col-span-1 sm:col-span-1">
-                          <label htmlFor={field.name} className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Currency</label>
-                          
-                          <select 
-                            id={field.name}
+                          <Dropdown
+                            label="Currency"
+                            options={currencyOptions}
                             disabled={discountType === "percentage"}
                             value={field.state.value} 
                             onBlur={field.handleBlur}
-                            onChange={e => field.handleChange(e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:cursor-pointer uppercase disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <option value="inr">INR</option>
-                            <option value="usd">USD</option>
-                          </select>
+                            onChange={(val) => field.handleChange(val)}
+                          />
                         </div>
                       )}
                     />
