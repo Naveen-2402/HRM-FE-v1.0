@@ -94,7 +94,7 @@ export function Dropdown({
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute left-0 top-full z-50 mt-1.5 w-full min-w-[10rem] overflow-hidden rounded-md border border-border bg-card shadow-lg"
           >
-            <div className="max-h-60 overflow-y-auto p-1.5 space-y-0.5">
+            <div className="max-h-[180px] overflow-y-auto p-1.5 space-y-0.5">
               {options.length === 0 ? (
                 <div className="py-3 px-2 text-center text-sm text-muted-foreground">
                   No options

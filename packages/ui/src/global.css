@@ -5,6 +5,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Add to your globals.css */
+.custom-scrollbar::-webkit-scrollbar {
+	width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background-color: var(--muted-foreground);
+	border-radius: 20px;
+	opacity: 0.5;
+}
+
 :root {
 	/* 1. Darker, crisp background (similar to Tailwind gray-100) */
 	--background: oklch(0.96 0 0);

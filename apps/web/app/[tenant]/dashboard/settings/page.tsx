@@ -4,7 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Loader2, CreditCard, Calendar, Clock,
-  AlertTriangle, ArrowRight, ShieldCheck, Zap, Sparkles, CheckCircle2,
+  AlertTriangle, ArrowRight, ShieldCheck, Zap, Sparkles, CheckCircle2, CircleDollarSign
 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 
@@ -25,6 +25,19 @@ const SecurityTab = dynamic(() => import("./components/securityTab"), {
   ssr: false, // auth state is client-only; skip SSR for this chunk
 });
 
+const CreditsTab = dynamic(() => import("./components/creditsTab"), {
+  loading: () => (
+    <div className="rounded-2xl border border-border bg-card shadow-sm">
+      <div className="h-[3px] w-full rounded-t-2xl bg-success/40 animate-pulse" />
+      <div className="flex items-center justify-center gap-3 py-20">
+        <Loader2 className="size-6 animate-spin text-success" />
+        <p className="text-sm text-muted-foreground">Loading credit packages…</p>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 function getStatusConfig(status?: string) {
   const s = status?.toLowerCase() ?? "";
@@ -39,7 +52,7 @@ function getStatusConfig(status?: string) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("subscription");
+  const [activeTab, setActiveTab] = useState("Subscription");
 
   const { data: subscription, isLoading, isError } =
     useGetSubscriptionStatusApiV1BillingSubscriptionGet();
@@ -70,7 +83,7 @@ export default function SettingsPage() {
 
         {/* ── Tab Bar ───────────────────────────────────────────────────── */}
         <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted p-1">
-          {(["subscription", "security"] as const).map((tab) => (
+          {(["Subscription", "Credits", "Security"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -81,10 +94,12 @@ export default function SettingsPage() {
                   : "text-muted-foreground hover:text-foreground hover:bg-card/60",
               ].join(" ")}
             >
-              {tab === "subscription"
+              {tab === "Subscription"
                 ? <CreditCard className="size-4" />
+                : tab === "Credits"
+                ? <CircleDollarSign className="size-4"/>
                 : <ShieldCheck className="size-4" />}
-              {tab === "subscription" ? "Subscription" : "Security"}
+              {tab}
             </button>
           ))}
         </div>
@@ -92,7 +107,7 @@ export default function SettingsPage() {
         {/* ══════════════════════════════════════════════════════════════════
             TAB: SUBSCRIPTION  (rendered eagerly — first tab)
         ══════════════════════════════════════════════════════════════════ */}
-        {activeTab === "subscription" && (
+        {activeTab === "Subscription" && (
           <SectionCard>
             <AccentBar />
 
@@ -207,9 +222,14 @@ export default function SettingsPage() {
         )}
 
         {/* ══════════════════════════════════════════════════════════════════
+            TAB: CREDITS (lazy-loaded)
+        ══════════════════════════════════════════════════════════════════ */}
+        {activeTab === "Credits" && <CreditsTab />}
+
+        {/* ══════════════════════════════════════════════════════════════════
             TAB: SECURITY  (lazy-loaded on first click)
         ══════════════════════════════════════════════════════════════════ */}
-        {activeTab === "security" && <SecurityTab />}
+        {activeTab === "Security" && <SecurityTab />}
 
       </div>
     </div>
