@@ -27,6 +27,7 @@ import type {
   HTTPValidationError,
   PortalResponse,
   ReconcileResponse,
+  StripeWebhookApiV1BillingWebhookPost200,
   TrialResponse
 } from '.././model';
 
@@ -366,8 +367,7 @@ export const useCreatePortalSessionApiV1BillingPortalPost = <TError = void | voi
       return useMutation(mutationOptions);
     }
     /**
- * Listens for Stripe events.
-Specifically handles 'checkout.session.completed' to log coupon redemptions.
+ * Receives and processes Stripe webhook events. Validates the webhook signature using STRIPE_WEBHOOK_SECRET. This endpoint is public (no JWT required).
  * @summary Stripe webhook receiver
  */
 export const stripeWebhookApiV1BillingWebhookPost = (
@@ -376,7 +376,7 @@ export const stripeWebhookApiV1BillingWebhookPost = (
 ) => {
       
       
-      return customInstance<unknown>(
+      return customInstance<StripeWebhookApiV1BillingWebhookPost200>(
       {url: `/api/v1/billing/webhook`, method: 'POST', signal
     },
       options);
@@ -384,7 +384,7 @@ export const stripeWebhookApiV1BillingWebhookPost = (
   
 
 
-export const getStripeWebhookApiV1BillingWebhookPostMutationOptions = <TError = unknown,
+export const getStripeWebhookApiV1BillingWebhookPostMutationOptions = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
 ): UseMutationOptions<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>, TError,void, TContext> => {
 
@@ -411,12 +411,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type StripeWebhookApiV1BillingWebhookPostMutationResult = NonNullable<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>>
     
-    export type StripeWebhookApiV1BillingWebhookPostMutationError = unknown
+    export type StripeWebhookApiV1BillingWebhookPostMutationError = void
 
     /**
  * @summary Stripe webhook receiver
  */
-export const useStripeWebhookApiV1BillingWebhookPost = <TError = unknown,
+export const useStripeWebhookApiV1BillingWebhookPost = <TError = void,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof stripeWebhookApiV1BillingWebhookPost>>,
