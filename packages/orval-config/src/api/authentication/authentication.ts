@@ -24,7 +24,8 @@ import type {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   HTTPValidationError,
-  LoginRequest
+  LoginRequest,
+  RefreshTokenRequest
 } from '.././model';
 
 import { customInstance } from '../../axios-setup';
@@ -241,6 +242,70 @@ export const useLoginForAccessTokenApiV1AuthLoginPost = <TError = HTTPValidation
       > => {
 
       const mutationOptions = getLoginForAccessTokenApiV1AuthLoginPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * @summary Refresh access token
+ */
+export const refreshAccessTokenApiV1AuthRefreshPost = (
+    refreshTokenRequest: RefreshTokenRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/auth/refresh`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: refreshTokenRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getRefreshAccessTokenApiV1AuthRefreshPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshAccessTokenApiV1AuthRefreshPost>>, TError,{data: RefreshTokenRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof refreshAccessTokenApiV1AuthRefreshPost>>, TError,{data: RefreshTokenRequest}, TContext> => {
+
+const mutationKey = ['refreshAccessTokenApiV1AuthRefreshPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshAccessTokenApiV1AuthRefreshPost>>, {data: RefreshTokenRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  refreshAccessTokenApiV1AuthRefreshPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RefreshAccessTokenApiV1AuthRefreshPostMutationResult = NonNullable<Awaited<ReturnType<typeof refreshAccessTokenApiV1AuthRefreshPost>>>
+    export type RefreshAccessTokenApiV1AuthRefreshPostMutationBody = RefreshTokenRequest
+    export type RefreshAccessTokenApiV1AuthRefreshPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Refresh access token
+ */
+export const useRefreshAccessTokenApiV1AuthRefreshPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof refreshAccessTokenApiV1AuthRefreshPost>>, TError,{data: RefreshTokenRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof refreshAccessTokenApiV1AuthRefreshPost>>,
+        TError,
+        {data: RefreshTokenRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getRefreshAccessTokenApiV1AuthRefreshPostMutationOptions(options);
 
       return useMutation(mutationOptions);
     }

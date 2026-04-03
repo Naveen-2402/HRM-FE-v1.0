@@ -6,4 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type SubscriptionResponseCurrentPeriodEnd = string | null;
+/**
+ * Required if fixed_amount (e.g., 'inr', 'usd')
+ */
+export type CouponCreateRequestCurrency = string | null;

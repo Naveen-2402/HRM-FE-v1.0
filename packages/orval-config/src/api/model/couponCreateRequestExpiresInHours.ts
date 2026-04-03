@@ -6,4 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type SubscriptionResponseCurrentPeriodEnd = string | null;
+/**
+ * Number of hours until the coupon expires (e.g., 72)
+ */
+export type CouponCreateRequestExpiresInHours = number | null;

@@ -10,4 +10,5 @@ export interface EnumValuesResponse {
   tenant_statuses: string[];
   subscription_statuses: string[];
   migration_states: string[];
+  tenant_roles: string[];
 }

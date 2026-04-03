@@ -2,11 +2,13 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/useAuthStore';
 import { getClientAuthToken } from '@repo/utils';
+// 1. Import the isolated Orval instance
+import { AXIOS_INSTANCE } from '@repo/orval-config/src/axios-setup';
 
 export function setupAxiosInterceptors() {
   axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-  // Request Interceptor
+  // ── Global Axios Request Interceptor ──
   axios.interceptors.request.use(
     (config) => {
       const token = getClientAuthToken();
@@ -22,20 +24,23 @@ export function setupAxiosInterceptors() {
     (error) => Promise.reject(error)
   );
 
-  // Response Interceptor
-  axios.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      if (error.response?.status === 401) {
-        // Always clear the store on a 401
-        useAuthStore.getState().logout();
+  // ── 401 Redirect Logic ──
+  const handleUnauthorized = (error: any) => {
+    if (error.response?.status === 401) {
+      // Always clear the store on a 401
+      useAuthStore.getState().logout();
 
-        // ONLY redirect if they are not already on the login page
-        if (typeof window !== "undefined" && window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
+      // ONLY redirect if they are not already on the login page
+      if (typeof window !== "undefined" && window.location.pathname !== '/login') {
+        window.location.href = '/login';
       }
-      return Promise.reject(error);
     }
-  );
+    return Promise.reject(error);
+  };
+
+  // 2. Attach the response interceptor to Global Axios (for manual calls)
+  axios.interceptors.response.use((response) => response, handleUnauthorized);
+
+  // 3. Attach the exact SAME interceptor to Orval's instance (for generated hooks)
+  AXIOS_INSTANCE.interceptors.response.use((response) => response, handleUnauthorized);
 }

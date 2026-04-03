@@ -6,7 +6,4 @@
  * OpenAPI spec version: 1.0.0
  */
 
-/**
- * Current billing period start
- */
 export type SubscriptionResponseCurrentPeriodStart = string | null;

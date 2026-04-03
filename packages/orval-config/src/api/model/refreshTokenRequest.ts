@@ -6,4 +6,6 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type SubscriptionResponseCurrentPeriodEnd = string | null;
+export interface RefreshTokenRequest {
+  refresh_token: string;
+}

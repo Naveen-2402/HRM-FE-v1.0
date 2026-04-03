@@ -5,26 +5,21 @@
  * Production-ready multi-tenant HRM/ATS backend with Keycloak SSO
  * OpenAPI spec version: 1.0.0
  */
-import type { SubscriptionResponseStripeSubscriptionId } from './subscriptionResponseStripeSubscriptionId';
+import type { SubscriptionResponseTenantName } from './subscriptionResponseTenantName';
 import type { SubscriptionResponseCurrentPeriodStart } from './subscriptionResponseCurrentPeriodStart';
 import type { SubscriptionResponseCurrentPeriodEnd } from './subscriptionResponseCurrentPeriodEnd';
-import type { SubscriptionResponseTrialRemainingHours } from './subscriptionResponseTrialRemainingHours';
+import type { SubscriptionResponseTrialEndsAt } from './subscriptionResponseTrialEndsAt';
 
-/**
- * Subscription status response.
- */
 export interface SubscriptionResponse {
-  tenant_id: string;
-  /** Subscription status: active, canceled, past_due, incomplete, trialing */
+  id: string;
+  tenant_name?: SubscriptionResponseTenantName;
+  stripe_customer_id: string;
+  stripe_subscription_id: string;
   status: string;
-  /** Plan name / price nickname */
   plan: string;
-  /** Stripe Subscription ID */
-  stripe_subscription_id?: SubscriptionResponseStripeSubscriptionId;
-  /** Current billing period start */
   current_period_start?: SubscriptionResponseCurrentPeriodStart;
-  /** Current billing period end */
   current_period_end?: SubscriptionResponseCurrentPeriodEnd;
-  /** Remaining hours of trial if trialing */
-  trial_remaining_hours?: SubscriptionResponseTrialRemainingHours;
+  trial_ends_at?: SubscriptionResponseTrialEndsAt;
+  created_at: string;
+  updated_at: string;
 }

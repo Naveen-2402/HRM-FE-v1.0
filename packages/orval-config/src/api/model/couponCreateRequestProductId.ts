@@ -6,4 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type SubscriptionResponseCurrentPeriodEnd = string | null;
+/**
+ * Stripe Product ID to restrict this coupon to
+ */
+export type CouponCreateRequestProductId = string | null;
