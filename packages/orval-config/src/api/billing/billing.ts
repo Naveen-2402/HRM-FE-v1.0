@@ -20,7 +20,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  ReconcileResponse
+  AppSchemasBillingSubscriptionResponse,
+  CheckoutRequest,
+  CheckoutResponse,
+  CreditCheckoutRequest,
+  HTTPValidationError,
+  PortalResponse,
+  ReconcileResponse,
+  TrialResponse
 } from '.././model';
 
 import { customInstance } from '../../axios-setup';
@@ -35,6 +42,330 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * Creates a Stripe Checkout Session for the tenant. Rejects if active subscription exists. Idempotent via request-scoped idempotency key. Requires tenant-admin role.
+ * @summary Create Stripe checkout session
+ */
+export const createCheckoutSessionApiV1BillingCheckoutPost = (
+    checkoutRequest: CheckoutRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CheckoutResponse>(
+      {url: `/api/v1/billing/checkout`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: checkoutRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCreateCheckoutSessionApiV1BillingCheckoutPostMutationOptions = <TError = void | HTTPValidationError | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, TError,{data: CheckoutRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, TError,{data: CheckoutRequest}, TContext> => {
+
+const mutationKey = ['createCheckoutSessionApiV1BillingCheckoutPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, {data: CheckoutRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCheckoutSessionApiV1BillingCheckoutPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCheckoutSessionApiV1BillingCheckoutPostMutationResult = NonNullable<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>>
+    export type CreateCheckoutSessionApiV1BillingCheckoutPostMutationBody = CheckoutRequest
+    export type CreateCheckoutSessionApiV1BillingCheckoutPostMutationError = void | HTTPValidationError | void
+
+    /**
+ * @summary Create Stripe checkout session
+ */
+export const useCreateCheckoutSessionApiV1BillingCheckoutPost = <TError = void | HTTPValidationError | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>, TError,{data: CheckoutRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCheckoutSessionApiV1BillingCheckoutPost>>,
+        TError,
+        {data: CheckoutRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateCheckoutSessionApiV1BillingCheckoutPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Creates a Stripe Checkout Session for buying specific credits top-ups. Independent of active subscriptions. Requires tenant-admin role.
+ * @summary Create Stripe credit purchase checkout session
+ */
+export const createCreditCheckoutSessionApiV1BillingCreditsCheckoutPost = (
+    creditCheckoutRequest: CreditCheckoutRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CheckoutResponse>(
+      {url: `/api/v1/billing/credits/checkout`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: creditCheckoutRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCreateCreditCheckoutSessionApiV1BillingCreditsCheckoutPostMutationOptions = <TError = HTTPValidationError | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCreditCheckoutSessionApiV1BillingCreditsCheckoutPost>>, TError,{data: CreditCheckoutRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCreditCheckoutSessionApiV1BillingCreditsCheckoutPost>>, TError,{data: CreditCheckoutRequest}, TContext> => {
+
+const mutationKey = ['createCreditCheckoutSessionApiV1BillingCreditsCheckoutPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCreditCheckoutSessionApiV1BillingCreditsCheckoutPost>>, {data: CreditCheckoutRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCreditCheckoutSessionApiV1BillingCreditsCheckoutPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCreditCheckoutSessionApiV1BillingCreditsCheckoutPostMutationResult = NonNullable<Awaited<ReturnType<typeof createCreditCheckoutSessionApiV1BillingCreditsCheckoutPost>>>
+    export type CreateCreditCheckoutSessionApiV1BillingCreditsCheckoutPostMutationBody = CreditCheckoutRequest
+    export type CreateCreditCheckoutSessionApiV1BillingCreditsCheckoutPostMutationError = HTTPValidationError | void
+
+    /**
+ * @summary Create Stripe credit purchase checkout session
+ */
+export const useCreateCreditCheckoutSessionApiV1BillingCreditsCheckoutPost = <TError = HTTPValidationError | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCreditCheckoutSessionApiV1BillingCreditsCheckoutPost>>, TError,{data: CreditCheckoutRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCreditCheckoutSessionApiV1BillingCreditsCheckoutPost>>,
+        TError,
+        {data: CreditCheckoutRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateCreditCheckoutSessionApiV1BillingCreditsCheckoutPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Creates a Stripe 24-hour trial subscription. Rejects if: (a) trial already activated, or (b) active subscription exists. Requires tenant-admin role.
+ * @summary Start a 24-hour free trial
+ */
+export const createTrialApiV1BillingTrialPost = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<TrialResponse>(
+      {url: `/api/v1/billing/trial`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getCreateTrialApiV1BillingTrialPostMutationOptions = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>, TError,void, TContext> => {
+
+const mutationKey = ['createTrialApiV1BillingTrialPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>, void> = () => {
+          
+
+          return  createTrialApiV1BillingTrialPost(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTrialApiV1BillingTrialPostMutationResult = NonNullable<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>>
+    
+    export type CreateTrialApiV1BillingTrialPostMutationError = void | void
+
+    /**
+ * @summary Start a 24-hour free trial
+ */
+export const useCreateTrialApiV1BillingTrialPost = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTrialApiV1BillingTrialPost>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getCreateTrialApiV1BillingTrialPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Returns the current subscription status for the tenant. Any authenticated user can check the subscription status.
+ * @summary Get subscription status
+ */
+export const getSubscriptionStatusApiV1BillingSubscriptionGet = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<AppSchemasBillingSubscriptionResponse>(
+      {url: `/api/v1/billing/subscription`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetSubscriptionStatusApiV1BillingSubscriptionGetQueryKey = () => {
+    return [
+    `/api/v1/billing/subscription`
+    ] as const;
+    }
+
+    
+export const getGetSubscriptionStatusApiV1BillingSubscriptionGetQueryOptions = <TData = Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError = void>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSubscriptionStatusApiV1BillingSubscriptionGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>> = ({ signal }) => getSubscriptionStatusApiV1BillingSubscriptionGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSubscriptionStatusApiV1BillingSubscriptionGetQueryResult = NonNullable<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>>
+export type GetSubscriptionStatusApiV1BillingSubscriptionGetQueryError = void
+
+
+/**
+ * @summary Get subscription status
+ */
+
+export function useGetSubscriptionStatusApiV1BillingSubscriptionGet<TData = Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError = void>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSubscriptionStatusApiV1BillingSubscriptionGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSubscriptionStatusApiV1BillingSubscriptionGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Creates a Stripe Billing Portal session for the tenant to manage their subscription, payment methods, and invoices. Requires tenant-admin role.
+ * @summary Create Stripe billing portal session
+ */
+export const createPortalSessionApiV1BillingPortalPost = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<PortalResponse>(
+      {url: `/api/v1/billing/portal`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getCreatePortalSessionApiV1BillingPortalPostMutationOptions = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, TError,void, TContext> => {
+
+const mutationKey = ['createPortalSessionApiV1BillingPortalPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, void> = () => {
+          
+
+          return  createPortalSessionApiV1BillingPortalPost(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePortalSessionApiV1BillingPortalPostMutationResult = NonNullable<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>>
+    
+    export type CreatePortalSessionApiV1BillingPortalPostMutationError = void | void
+
+    /**
+ * @summary Create Stripe billing portal session
+ */
+export const useCreatePortalSessionApiV1BillingPortalPost = <TError = void | void,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPortalSessionApiV1BillingPortalPost>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getCreatePortalSessionApiV1BillingPortalPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
  * Listens for Stripe events.
 Specifically handles 'checkout.session.completed' to log coupon redemptions.
  * @summary Stripe webhook receiver

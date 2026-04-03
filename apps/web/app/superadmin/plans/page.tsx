@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
-  Plus, Package, DollarSign, Loader2, Tag, Layers, 
-  CalendarClock, Coins, CreditCard, ArrowRight
+  Plus, Package, Loader2, Layers, 
+  CalendarClock, Coins, ArrowRight, DollarSign
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -17,7 +17,6 @@ import {
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
-import { SectionCard, AccentBar } from "@/components/_shared";
 
 // ─────────────────────────────────────────────────────────────────────────────
 type ProductType = "subscription" | "credits";
@@ -44,13 +43,20 @@ export default function SubscriptionPlansPage() {
 
   // Form States
   const [productForm, setProductForm] = useState({ name: "", description: "", type: "subscription" as ProductType });
-  const [priceForm, setPriceForm] = useState({ amount: "", currency: "inr", interval: "month" as IntervalType, interval_count: 1, credits: "" });
+  const [priceForm, setPriceForm] = useState({ amount: "", currency: "inr", interval: "month" as IntervalType, credits: "", nickname: "" });
 
   // ── Handlers ──
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createProductMutation.mutateAsync({ data: productForm as any });
+      const payload = {
+        name: productForm.name,
+        description: productForm.description,
+        type: productForm.type,
+        metadata: {} 
+      };
+
+      await createProductMutation.mutateAsync({ data: payload as any });
       toast.success("Product created successfully in Stripe.");
       setIsProductModalOpen(false);
       setProductForm({ name: "", description: "", type: "subscription" });
@@ -67,24 +73,26 @@ export default function SubscriptionPlansPage() {
     try {
       const payload: any = {
         product_id: priceModalFor.id,
-        amount: Math.round(parseFloat(priceForm.amount) * 100), // Convert to cents
+        amount: Math.round(parseFloat(priceForm.amount)), 
         currency: priceForm.currency,
+        type: priceModalFor.type, 
       };
+
+      if (priceForm.nickname) payload.nickname = priceForm.nickname;
 
       if (priceModalFor.type === "subscription") {
         payload.interval = priceForm.interval;
-        payload.interval_count = Number(priceForm.interval_count) || 1;
       } else {
-        payload.credits = parseInt(priceForm.credits);
+        payload.credits = parseInt(priceForm.credits, 10);
       }
 
       await createPriceMutation.mutateAsync({ data: payload });
       toast.success("Price added successfully.");
       setPriceModalFor(null);
-      setPriceForm({ amount: "", currency: "inr", interval: "month", interval_count: 1, credits: "" });
+      setPriceForm({ amount: "", currency: "inr", interval: "month", credits: "", nickname: "" });
       queryClient.invalidateQueries({ queryKey: getListPlansApiV1SuperadminPlansGetQueryKey() });
     } catch (error: any) {
-      toast.error(error?.response?.data?.detail || "Failed to add price.");
+      toast.error(error?.response?.data?.errors[0]?.msg || error?.response?.data?.detail || "Failed to add price.");
     }
   };
 
@@ -98,7 +106,7 @@ export default function SubscriptionPlansPage() {
   };
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-3 duration-300">
+    <div className="p-8 max-w-[1400px] mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-3 duration-300">
       
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-6">
@@ -119,83 +127,86 @@ export default function SubscriptionPlansPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 border border-border rounded-xl bg-card">
+        <div className="flex flex-col items-center justify-center py-32">
           <Loader2 className="size-8 animate-spin text-primary mb-4" />
           <p className="text-muted-foreground font-medium">Loading catalog from Stripe...</p>
         </div>
       ) : (
-        <div className="space-y-12">
+        <div className="space-y-16">
           
           {/* ════════════════════════════════════════════════════════════════════
               SECTION 1: RECURRING SUBSCRIPTIONS
           ════════════════════════════════════════════════════════════════════ */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                <CalendarClock className="size-5" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Recurring Plans</h2>
+          <section className="space-y-8">
+            <div className="flex items-center gap-3 border-b border-border pb-2">
+              <CalendarClock className="size-6 text-primary" />
+              <h2 className="text-2xl font-bold text-foreground">Recurring Subscriptions</h2>
             </div>
             
             {subscriptions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 border border-border rounded-xl bg-card border-dashed">
-                <Package className="size-10 text-muted-foreground/50 mb-3" />
+              <div className="text-center py-12 border border-border border-dashed rounded-xl bg-muted/20">
                 <p className="text-muted-foreground text-sm font-medium">No subscription products configured.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="space-y-12">
                 {subscriptions.map((plan: any) => (
-                  <SectionCard key={plan.product_id} className="flex flex-col h-full overflow-hidden">
-                    <AccentBar />
-                    <div className="p-6 border-b border-border bg-muted/10">
-                      <h3 className="text-xl font-bold text-foreground mb-1">{plan.name}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
-                        {plan.description || "No description provided."}
-                      </p>
-                    </div>
-
-                    <div className="p-6 flex-1 bg-card">
-                      <h4 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-4 flex items-center gap-1.5">
-                        <Tag className="size-3" /> Pricing Tiers
-                      </h4>
-                      <div className="space-y-3">
-                        {plan.prices?.length > 0 ? (
-                          plan.prices.map((price: any) => (
-                            <div key={price.price_id} className="flex items-center justify-between p-3 rounded-lg border border-border bg-background shadow-sm">
-                              <div>
-                                <p className="text-lg font-bold text-foreground">
-                                  {formatCurrency(price.amount, price.currency)}
-                                  <span className="text-xs text-muted-foreground font-normal ml-1 uppercase">
-                                    {price.currency}
-                                  </span>
-                                </p>
-                                <p className="text-xs text-muted-foreground font-medium capitalize">
-                                  {price.interval_count > 1 ? `Every ${price.interval_count} ${price.interval}s` : `Billed ${price.interval}ly`}
-                                </p>
-                              </div>
-                              <div className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded border border-border truncate max-w-[100px]" title={price.price_id}>
-                                {price.price_id.replace("price_", "")}
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div className="text-center py-4 bg-muted/50 rounded-lg border border-border border-dashed">
-                            <p className="text-sm text-muted-foreground">No active prices</p>
-                          </div>
-                        )}
+                  <div key={plan.product_id} className="space-y-4">
+                    
+                    {/* Product Header (Clean, no card) */}
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Package className="size-4 text-muted-foreground" />
+                          <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground max-w-2xl">
+                          {plan.description || "No description provided."}
+                        </p>
                       </div>
-                    </div>
-
-                    <div className="p-4 border-t border-border bg-muted/10">
                       <Button 
                         variant="outline" 
-                        className="w-full bg-background hover:bg-muted text-foreground hover:cursor-pointer border-border shadow-sm"
+                        size="sm"
+                        className="bg-background hover:bg-muted text-foreground border-border shadow-sm hover:cursor-pointer shrink-0"
                         onClick={() => setPriceModalFor({ id: plan.product_id, name: plan.name, type: plan.type })}
                       >
-                        <DollarSign className="size-4 mr-2" /> Add Subscription Tier
+                        <Plus className="size-4 mr-2" /> Add Tier
                       </Button>
                     </div>
-                  </SectionCard>
+
+                    {/* Price Cards Grid */}
+                    {plan.prices?.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {plan.prices.map((price: any) => (
+                          <div key={price.price_id} className="relative flex flex-col p-6 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/40 transition-all group">
+                            
+                            {/* Top row: ID badge */}
+                            <div className="flex justify-end mb-2">
+                              <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-1 rounded-md border border-border">
+                                {price.price_id.replace("price_", "")}
+                              </span>
+                            </div>
+                            
+                            {/* Center: Amount */}
+                            <div className="my-2">
+                              <p className="text-3xl font-extrabold text-foreground tracking-tight">
+                                {formatCurrency(price.amount, price.currency)}
+                                <span className="text-sm font-medium text-muted-foreground uppercase ml-1 tracking-normal">
+                                  {price.currency}
+                                </span>
+                              </p>
+                              <p className="text-sm font-medium text-muted-foreground mt-1 capitalize">
+                                {price.nickname ? `${price.nickname} • Billed ${price.interval}ly` : `Billed ${price.interval}ly`}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground italic py-2 bg-muted/20 px-4 rounded-lg border border-border border-dashed inline-block">
+                        No pricing tiers added yet.
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -204,68 +215,69 @@ export default function SubscriptionPlansPage() {
           {/* ════════════════════════════════════════════════════════════════════
               SECTION 2: CREDIT PACKAGES
           ════════════════════════════════════════════════════════════════════ */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-success/10 rounded-lg text-success border border-success/20">
-                <Coins className="size-5" />
-              </div>
+          <section className="space-y-8 pt-6">
+            <div className="flex items-center gap-3 border-b border-border pb-2">
+              <Coins className="size-6 text-success" />
               <h2 className="text-2xl font-bold text-foreground">Credit Packages</h2>
             </div>
             
             {credits.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 border border-border rounded-xl bg-card border-dashed">
-                <Layers className="size-10 text-muted-foreground/50 mb-3" />
+              <div className="text-center py-12 border border-border border-dashed rounded-xl bg-muted/20">
                 <p className="text-muted-foreground text-sm font-medium">No credit packages configured.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-6">
+              <div className="space-y-12">
                 {credits.map((plan: any) => (
-                  <SectionCard key={plan.product_id} className="flex flex-col sm:flex-row overflow-hidden">
+                  <div key={plan.product_id} className="space-y-4">
                     
-                    {/* Left Info Panel */}
-                    <div className="p-6 sm:w-1/3 border-b sm:border-b-0 sm:border-r border-border bg-muted/10 flex flex-col justify-center">
-                      <h3 className="text-xl font-bold text-foreground mb-1">{plan.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {plan.description || "One-time purchase credit bundles."}
-                      </p>
+                    {/* Product Header (Clean, no card) */}
+                    <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Layers className="size-4 text-success" />
+                          <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground max-w-2xl">
+                          {plan.description || "One-time purchase credit bundles."}
+                        </p>
+                      </div>
                       <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="bg-background hover:bg-success/10 text-success border-success/30 shadow-sm hover:cursor-pointer shrink-0"
                         onClick={() => setPriceModalFor({ id: plan.product_id, name: plan.name, type: plan.type })}
-                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer shadow-sm"
                       >
-                        <Plus className="size-4 mr-2" /> Add Credit Bundle
+                        <Plus className="size-4 mr-2" /> Add Bundle
                       </Button>
                     </div>
 
-                    {/* Right Prices Panel */}
-                    <div className="p-6 sm:w-2/3 bg-card flex-1">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {plan.prices?.length > 0 ? (
-                          plan.prices.map((price: any) => (
-                            <div key={price.price_id} className="flex items-center justify-between p-4 rounded-xl border border-border bg-background shadow-sm hover:border-success/30 transition-colors group">
-                              <div className="flex items-center gap-4">
-                                <div className="size-10 rounded-full bg-success/10 flex items-center justify-center border border-success/20 text-success group-hover:bg-success group-hover:text-success-foreground transition-colors">
-                                  <Layers className="size-5" />
-                                </div>
-                                <div>
-                                  <p className="text-base font-bold text-foreground">
-                                    {price.metadata?.credits || price.nickname?.split(" ")[0] || "---"} Credits
-                                  </p>
-                                  <p className="text-sm text-muted-foreground font-medium">
-                                    {formatCurrency(price.amount, price.currency)}
-                                  </p>
-                                </div>
+                    {/* Price Cards Grid */}
+                    {plan.prices?.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {plan.prices.map((price: any) => (
+                          <div key={price.price_id} className="flex items-center justify-between p-5 rounded-2xl border border-border bg-card shadow-sm hover:border-success/50 hover:shadow-md transition-all group">
+                            <div className="flex items-center gap-4">
+                              <div className="size-12 rounded-full bg-success/10 flex items-center justify-center border border-success/20 text-success group-hover:bg-success group-hover:text-success-foreground transition-colors shrink-0">
+                                <Layers className="size-5" />
                               </div>
-                              <ArrowRight className="size-4 text-muted-foreground opacity-50" />
+                              <div className="min-w-0">
+                                <p className="text-lg font-bold text-foreground truncate">
+                                  {`${price.metadata?.credits} Credits` || price.nickname}
+                                </p>
+                                <p className="text-sm text-muted-foreground font-medium truncate">
+                                  {formatCurrency(price.amount, price.currency)} {price.currency.toUpperCase()}
+                                </p>
+                              </div>
                             </div>
-                          ))
-                        ) : (
-                          <div className="col-span-full text-center py-8 text-muted-foreground text-sm">
-                            No credit bundles created for this product yet.
                           </div>
-                        )}
+                        ))}
                       </div>
-                    </div>
-                  </SectionCard>
+                    ) : (
+                      <div className="text-sm text-muted-foreground italic py-2 bg-muted/20 px-4 rounded-lg border border-border border-dashed inline-block">
+                        No credit bundles added yet.
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -305,7 +317,7 @@ export default function SubscriptionPlansPage() {
                 </select>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-border mt-6">
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-border mt-6">
                 <Button type="button" variant="outline" onClick={() => setIsProductModalOpen(false)} className="w-full hover:cursor-pointer border-border">Cancel</Button>
                 <Button type="submit" disabled={createProductMutation.isPending} className="w-full bg-primary text-primary-foreground hover:cursor-pointer">
                   {createProductMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : "Create Product"}
@@ -329,11 +341,19 @@ export default function SubscriptionPlansPage() {
             
             <form onSubmit={handleCreatePrice} className="p-6 space-y-5">
               
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Internal Nickname</label>
+                <Input value={priceForm.nickname} onChange={e => setPriceForm({...priceForm, nickname: e.target.value})} className="bg-background border-input focus-visible:ring-ring" placeholder="e.g. 500 Credits Promo" />
+              </div>
+
               {/* Common Fields */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Amount</label>
-                  <Input required type="number" step="0.01" min="0" value={priceForm.amount} onChange={e => setPriceForm({...priceForm, amount: e.target.value})} className="bg-background border-input focus-visible:ring-ring" placeholder="99.00" />
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                    <Input required type="number" step="0.01" min="0" value={priceForm.amount} onChange={e => setPriceForm({...priceForm, amount: e.target.value})} className="pl-9 bg-background border-input focus-visible:ring-ring" placeholder="99.00" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Currency</label>
@@ -351,22 +371,16 @@ export default function SubscriptionPlansPage() {
 
               {/* Conditional Fields based on Product Type */}
               {priceModalFor.type === "subscription" ? (
-                <div className="grid grid-cols-2 gap-4 animate-in fade-in duration-200">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Interval</label>
-                    <select 
-                      value={priceForm.interval} 
-                      onChange={e => setPriceForm({...priceForm, interval: e.target.value as IntervalType})}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:cursor-pointer"
-                    >
-                      <option value="month">Month</option>
-                      <option value="year">Year</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Interval Count</label>
-                    <Input required type="number" min="1" max="12" value={priceForm.interval_count} onChange={e => setPriceForm({...priceForm, interval_count: parseInt(e.target.value)})} className="bg-background border-input focus-visible:ring-ring" />
-                  </div>
+                <div className="space-y-2 animate-in fade-in duration-200">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Billing Interval</label>
+                  <select 
+                    value={priceForm.interval} 
+                    onChange={e => setPriceForm({...priceForm, interval: e.target.value as IntervalType})}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:cursor-pointer"
+                  >
+                    <option value="month">Monthly</option>
+                    <option value="year">Annually</option>
+                  </select>
                 </div>
               ) : (
                 <div className="space-y-2 animate-in fade-in duration-200">
@@ -378,7 +392,7 @@ export default function SubscriptionPlansPage() {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4 border-t border-border mt-6">
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-border mt-6">
                 <Button type="button" variant="outline" onClick={() => setPriceModalFor(null)} className="w-full hover:cursor-pointer border-border">Cancel</Button>
                 <Button type="submit" disabled={createPriceMutation.isPending} className="w-full bg-primary text-primary-foreground hover:cursor-pointer">
                   {createPriceMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : "Create Price"}

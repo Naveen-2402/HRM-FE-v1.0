@@ -5,10 +5,10 @@
  * Production-ready multi-tenant HRM/ATS backend with Keycloak SSO
  * OpenAPI spec version: 1.0.0
  */
-import type { SubscriptionResponse } from './subscriptionResponse';
+import type { AppSchemasSuperadminSubscriptionResponse } from './appSchemasSuperadminSubscriptionResponse';
 import type { PaginationMeta } from './paginationMeta';
 
 export interface PaginatedResponseSubscriptionResponse {
-  data: SubscriptionResponse[];
+  data: AppSchemasSuperadminSubscriptionResponse[];
   pagination: PaginationMeta;
 }

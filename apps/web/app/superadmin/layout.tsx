@@ -9,7 +9,8 @@ import {
   LogOut, 
   ShieldAlert,
   Briefcase,
-  Bell
+  Bell,
+  Tag
 } from "lucide-react";
 
 import { useAuthStore } from "@/store/useAuthStore";
@@ -30,6 +31,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
   const navLinks = [
     { name: "Platform Overview", href: "/superadmin/dashboard", icon: LayoutDashboard },
     { name: "Subscription Plans", href: "/superadmin/plans", icon: Package },
+    { name: "Coupons", href: "/superadmin/coupons", icon: Tag },
   ];
 
   return (
