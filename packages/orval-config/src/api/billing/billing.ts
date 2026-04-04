@@ -304,6 +304,74 @@ export function useGetSubscriptionStatusApiV1BillingSubscriptionGet<TData = Awai
 
 
 /**
+ * Returns the current credit balance for the authenticated tenant.
+ * @summary Get tenant credit balance
+ */
+export const getCreditBalanceApiV1BillingCreditsGet = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/billing/credits`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetCreditBalanceApiV1BillingCreditsGetQueryKey = () => {
+    return [
+    `/api/v1/billing/credits`
+    ] as const;
+    }
+
+    
+export const getGetCreditBalanceApiV1BillingCreditsGetQueryOptions = <TData = Awaited<ReturnType<typeof getCreditBalanceApiV1BillingCreditsGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreditBalanceApiV1BillingCreditsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCreditBalanceApiV1BillingCreditsGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCreditBalanceApiV1BillingCreditsGet>>> = ({ signal }) => getCreditBalanceApiV1BillingCreditsGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCreditBalanceApiV1BillingCreditsGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCreditBalanceApiV1BillingCreditsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCreditBalanceApiV1BillingCreditsGet>>>
+export type GetCreditBalanceApiV1BillingCreditsGetQueryError = unknown
+
+
+/**
+ * @summary Get tenant credit balance
+ */
+
+export function useGetCreditBalanceApiV1BillingCreditsGet<TData = Awaited<ReturnType<typeof getCreditBalanceApiV1BillingCreditsGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreditBalanceApiV1BillingCreditsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCreditBalanceApiV1BillingCreditsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
  * Creates a Stripe Billing Portal session for the tenant to manage their subscription, payment methods, and invoices. Requires tenant-admin role.
  * @summary Create Stripe billing portal session
  */
