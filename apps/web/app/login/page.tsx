@@ -8,18 +8,19 @@ import { useForm } from "@tanstack/react-form";
 import { toast } from "react-toastify";
 import {
   Mail, Lock, Loader2, Briefcase,
-  Eye, EyeOff, ArrowLeft, AlertTriangle, ArrowRight,
+  Eye, EyeOff, ArrowLeft, AlertTriangle, ArrowRight, CheckCircle2,
 } from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { Label } from "@repo/ui/components/ui/label";
-import { Checkbox } from "@repo/ui/components/ui/checkbox"; // Added Checkbox
+import { Checkbox } from "@repo/ui/components/ui/checkbox";
 
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
 import { useActivateCurrentEmployeeApiV1EmployeesActivatePost } from "@repo/orval-config/src/api/employees/employees";
 import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
+import { useForgotPasswordApiV1AuthForgotPasswordPost } from "@repo/orval-config/src/api/authentication/authentication"; 
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 import { jwtDecode } from "jwt-decode";
@@ -34,19 +35,20 @@ function LoginFormContent() {
   const { redirectToTenantDashboard } = useTenantRedirect();
   const isLocalLogin = searchParams.get("local") === "true";
 
-  const [step, setStep]                       = useState<1 | 2>(1);
-  const [isChecking, setIsChecking]           = useState(false);
-  const [showPassword, setShowPassword]       = useState(false);
+  // Added Step 3 for "Forgot Password Success"
+  const [step, setStep]                           = useState<1 | 2 | 3>(1);
+  const [isChecking, setIsChecking]               = useState(false);
+  const [showPassword, setShowPassword]           = useState(false);
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
-  const [actionUrl, setActionUrl]             = useState<string | null>(null);
+  const [actionUrl, setActionUrl]                 = useState<string | null>(null);
 
-  const login          = useAuthStore((s) => s.login);
-  const loginMutation  = useLoginAuthLoginPost();
-  const activateMutation = useActivateCurrentEmployeeApiV1EmployeesActivatePost();
-  const router         = useRouter();
+  const login                  = useAuthStore((s) => s.login);
+  const loginMutation          = useLoginAuthLoginPost();
+  const activateMutation       = useActivateCurrentEmployeeApiV1EmployeesActivatePost();
+  const forgotPasswordMutation = useForgotPasswordApiV1AuthForgotPasswordPost();
+  const router                 = useRouter();
 
   const form = useForm({
-    // Added rememberMe to defaultValues
     defaultValues: { email: "", password: "", rememberMe: false },
     onSubmit: async ({ value }) => {
       try {
@@ -54,15 +56,9 @@ function LoginFormContent() {
           data: { username: value.email, password: value.password },
         });
 
-        const {
-          access_token,
-          refresh_token,
-          id_token,
-          session_state
-        } = response.data as any;
+        const { access_token, refresh_token, id_token, session_state } = response.data as any;
         
-        // Pass the rememberMe flag to your utility
-        setAuthTokens(access_token, refresh_token,id_token, session_state, value.rememberMe);
+        setAuthTokens(access_token, refresh_token, id_token, session_state, value.rememberMe);
 
         const decodedUser = jwtDecode<UserProfile>(access_token);
         const isSuperAdmin = decodedUser.realm_access?.roles?.includes("superadmin");
@@ -148,6 +144,21 @@ function LoginFormContent() {
     }
   };
 
+  // ── Forgot Password Handler ──
+  const handleForgotPassword = async () => {
+    const email = form.getFieldValue("email");
+    if (!email) return;
+    
+    try {
+      await forgotPasswordMutation.mutateAsync({
+        data: { email }
+      });
+      setStep(3); // Move to success screen
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || "Failed to send reset link. Please try again.");
+    }
+  };
+
   if (subscriptionError) {
     return (
       <>
@@ -183,7 +194,7 @@ function LoginFormContent() {
       <AccentBar />
 
       <div className="relative border-b border-border px-8 py-6 text-center space-y-1">
-        {step === 2 && (
+        {step !== 1 && (
           <button
             onClick={() => { setStep(1); form.setFieldValue("password", ""); }}
             className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center justify-center
@@ -194,14 +205,17 @@ function LoginFormContent() {
           </button>
         )}
         <h2 className="text-xl font-semibold text-card-foreground">
-          {step === 1 ? (isLocalLogin ? "Admin Login" : "Welcome back") : "Enter your password"}
+          {step === 1 ? (isLocalLogin ? "Admin Login" : "Welcome back") 
+           : step === 2 ? "Enter your password" 
+           : "Check your inbox"}
         </h2>
+        
         <form.Subscribe selector={(s) => s.values.email}>
           {(email) => (
             <p className="text-sm text-muted-foreground">
-              {step === 1
-                ? "Enter your work email to continue"
-                : <span>Signing in as <span className="font-medium text-foreground">{email}</span></span>}
+              {step === 1 ? "Enter your work email to continue"
+               : step === 2 ? <span>Signing in as <span className="font-medium text-foreground">{email}</span></span>
+               : "Password reset link sent"}
             </p>
           )}
         </form.Subscribe>
@@ -212,10 +226,12 @@ function LoginFormContent() {
           onSubmit={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            step === 1 ? handleCheckDomain() : form.handleSubmit();
+            if (step === 1) handleCheckDomain();
+            else if (step === 2) form.handleSubmit();
           }}
           className="space-y-5"
         >
+          {/* Step 1 — Email */}
           {step === 1 && (
             <div className="animate-in fade-in slide-in-from-left-4 duration-200 space-y-5">
               <form.Field
@@ -265,6 +281,7 @@ function LoginFormContent() {
             </div>
           )}
 
+          {/* Step 2 — Password */}
           {step === 2 && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-200 space-y-5">
               <form.Field
@@ -277,12 +294,16 @@ function LoginFormContent() {
                       <Label htmlFor={field.name} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Password
                       </Label>
-                      <Link
-                        href="/forgot-password"
-                        className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer"
+                      
+                      {/* Converted Link to Action Button */}
+                      <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        disabled={forgotPasswordMutation.isPending}
+                        className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors hover:cursor-pointer disabled:opacity-50"
                       >
-                        Forgot password?
-                      </Link>
+                        {forgotPasswordMutation.isPending ? "Sending..." : "Forgot password?"}
+                      </button>
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -312,7 +333,6 @@ function LoginFormContent() {
                 )}
               </form.Field>
 
-              {/* Added Remember Me Checkbox */}
               <form.Field name="rememberMe">
                 {(field) => (
                   <div className="flex items-center space-x-2 pt-1">
@@ -349,6 +369,28 @@ function LoginFormContent() {
               </form.Subscribe>
             </div>
           )}
+
+          {/* Step 3 — Forgot Password Success */}
+          {step === 3 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 flex flex-col items-center text-center space-y-4 py-4">
+              <div className="flex size-14 items-center justify-center rounded-full border border-success/20 bg-success/10">
+                <CheckCircle2 className="size-6 text-success" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-foreground max-w-[280px] leading-relaxed mx-auto">
+                  An email has been sent to your registered email address with instructions to reset your password.
+                </p>
+              </div>
+              <Button
+                type="button"
+                onClick={() => { setStep(1); form.setFieldValue("password", ""); }}
+                className="w-full mt-4 h-11 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl hover:cursor-pointer"
+              >
+                Back to Login
+              </Button>
+            </div>
+          )}
+
         </form>
       </div>
     </>
