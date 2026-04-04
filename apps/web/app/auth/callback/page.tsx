@@ -6,7 +6,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { Loader2, AlertTriangle } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
-import { setAuthToken } from "@repo/utils";
+import { setAuthTokens } from "@repo/utils";
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
 import { useActivateCurrentEmployeeApiV1EmployeesActivatePost } from "@repo/orval-config/src/api/employees/employees";
@@ -61,14 +61,20 @@ export default function AuthCallbackPage() {
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
 
-        const token = (response.data as any).access_token;
-
-        if (!token) {
-          throw new Error("No access token returned from Identity Provider.");
+        const {
+          access_token,
+          refresh_token,
+          id_token,
+          session_state
+        } = response.data as any;
+        
+        if (!access_token || !refresh_token || !id_token) {
+          throw new Error("Tokens returned from Identity Provider.");
         }
-
-        setAuthToken(token);
-        const decodedUser = jwtDecode<UserProfile>(token);
+        
+        setAuthTokens(access_token, refresh_token, id_token, session_state);
+        
+        const decodedUser = jwtDecode<UserProfile>(access_token);
         login(decodedUser);
 
         try {

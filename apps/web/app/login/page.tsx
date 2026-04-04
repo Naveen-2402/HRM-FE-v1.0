@@ -14,6 +14,7 @@ import {
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { Label } from "@repo/ui/components/ui/label";
+import { Checkbox } from "@repo/ui/components/ui/checkbox"; // Added Checkbox
 
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
@@ -22,7 +23,7 @@ import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-co
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 import { jwtDecode } from "jwt-decode";
-import { setAuthToken } from "@repo/utils";
+import { setAuthTokens } from "@repo/utils";
 
 import { AccentBar } from "@/components/_shared";
 
@@ -45,17 +46,25 @@ function LoginFormContent() {
   const router         = useRouter();
 
   const form = useForm({
-    defaultValues: { email: "", password: "" },
+    // Added rememberMe to defaultValues
+    defaultValues: { email: "", password: "", rememberMe: false },
     onSubmit: async ({ value }) => {
       try {
         const response = await loginMutation.mutateAsync({
           data: { username: value.email, password: value.password },
         });
 
-        const token = (response.data as any).access_token;
-        setAuthToken(token);
+        const {
+          access_token,
+          refresh_token,
+          id_token,
+          session_state
+        } = response.data as any;
+        
+        // Pass the rememberMe flag to your utility
+        setAuthTokens(access_token, refresh_token,id_token, session_state, value.rememberMe);
 
-        const decodedUser = jwtDecode<UserProfile>(token);
+        const decodedUser = jwtDecode<UserProfile>(access_token);
         const isSuperAdmin = decodedUser.realm_access?.roles?.includes("superadmin");
 
         if (isSuperAdmin) {
@@ -139,7 +148,6 @@ function LoginFormContent() {
     }
   };
 
-  // ── Subscription error state ───────────────────────────────────────────────
   if (subscriptionError) {
     return (
       <>
@@ -170,12 +178,10 @@ function LoginFormContent() {
     );
   }
 
-  // ── Normal login form ──────────────────────────────────────────────────────
   return (
     <>
       <AccentBar />
 
-      {/* Header */}
       <div className="relative border-b border-border px-8 py-6 text-center space-y-1">
         {step === 2 && (
           <button
@@ -201,7 +207,6 @@ function LoginFormContent() {
         </form.Subscribe>
       </div>
 
-      {/* Form body */}
       <div className="px-8 py-6">
         <form
           onSubmit={(e) => {
@@ -211,7 +216,6 @@ function LoginFormContent() {
           }}
           className="space-y-5"
         >
-          {/* Step 1 — Email */}
           {step === 1 && (
             <div className="animate-in fade-in slide-in-from-left-4 duration-200 space-y-5">
               <form.Field
@@ -261,7 +265,6 @@ function LoginFormContent() {
             </div>
           )}
 
-          {/* Step 2 — Password */}
           {step === 2 && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-200 space-y-5">
               <form.Field
@@ -309,6 +312,26 @@ function LoginFormContent() {
                 )}
               </form.Field>
 
+              {/* Added Remember Me Checkbox */}
+              <form.Field name="rememberMe">
+                {(field) => (
+                  <div className="flex items-center space-x-2 pt-1">
+                    <Checkbox
+                      id={field.name}
+                      checked={field.state.value}
+                      onCheckedChange={(checked) => field.handleChange(checked === true)}
+                      className="hover:cursor-pointer border-border data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                    />
+                    <label
+                      htmlFor={field.name}
+                      className="text-sm font-medium leading-none text-muted-foreground hover:cursor-pointer select-none"
+                    >
+                      Remember me for 14 days
+                    </label>
+                  </div>
+                )}
+              </form.Field>
+
               <form.Subscribe selector={(s) => s.values.password}>
                 {(password) => (
                   <Button
@@ -332,14 +355,11 @@ function LoginFormContent() {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter();
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12">
-
-      {/* Logo + wordmark */}
       <div className="mb-8 flex items-center gap-3">
         <button
           onClick={() => router.push("/")}
@@ -353,7 +373,6 @@ export default function LoginPage() {
         </span>
       </div>
 
-      {/* Card */}
       <div className="w-full max-w-md rounded-2xl border border-border bg-card shadow-sm overflow-hidden
                       animate-in fade-in slide-in-from-bottom-3 duration-300">
         <Suspense
@@ -366,7 +385,6 @@ export default function LoginPage() {
           <LoginFormContent />
         </Suspense>
 
-        {/* Footer */}
         <div className="flex items-center justify-center gap-1.5 border-t border-border bg-muted/30 px-8 py-4">
           <p className="text-xs text-muted-foreground">
             Don't have a workspace?{" "}
@@ -379,7 +397,6 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
-
     </div>
   );
 }

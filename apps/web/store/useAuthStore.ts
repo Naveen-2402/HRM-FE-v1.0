@@ -4,8 +4,10 @@ import { clearAuthToken, getClientAuthToken } from "@repo/utils";
 export interface UserProfile {
   sub: string;
   name: string;
-  first_name?: string;
   email: string;
+  first_name?: string;
+  given_name: string;
+  family_name: string;
   preferred_username: string;
   realm_access?: { roles: string[] };
   organization?: Record<string, any> | string[];
