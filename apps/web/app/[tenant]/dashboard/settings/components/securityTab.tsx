@@ -139,8 +139,8 @@ export default function SecurityTab() {
         } else {
           setSelectedMethod("password");
         }
-      } catch {
-        toast.error("Failed to load authentication settings.");
+      } catch(error) {
+        toast.error(error?.response?.data?.detail || "Failed to load auth settings");
         setSelectedMethod("password");
       } finally {
         setInitializing(false);

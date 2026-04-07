@@ -130,7 +130,7 @@ function LoginFormContent() {
       if (response.data.sso_enabled) {
         const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8082";
         const realm       = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
-        const clientId    = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID;
+        const clientId    = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "hrm-frontend";
         const redirectUri = `${window.location.origin}/auth/callback`;
         const idpAlias    = response.data.idp_alias;
         window.location.href = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20profile%20email%20organization&kc_idp_hint=${idpAlias}`;

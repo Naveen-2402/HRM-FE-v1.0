@@ -46,7 +46,7 @@ export default function AuthCallbackPage() {
       try {
         const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8082";
         const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
-        const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || ""; 
+        const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "hrm-frontend"; 
         const redirectUri = `${window.location.origin}/auth/callback`; 
 
         const tokenEndpoint = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/token`;
