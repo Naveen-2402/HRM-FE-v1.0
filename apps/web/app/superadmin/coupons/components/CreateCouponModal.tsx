@@ -140,7 +140,7 @@ export default function CreateCouponModal(props: any){
                   validators={{
                     onChange: ({ value }) => {
                       if (!value) return undefined;
-                      const res = z.coerce.number().min(1, "Must be ≥ 1 hour").safeParse(value);
+                      const res:any = z.coerce.number().min(1, "Must be ≥ 1 hour").safeParse(value);
                       return res.success ? undefined : res.error.errors[0].message;
                     }
                   }}
@@ -173,7 +173,6 @@ export default function CreateCouponModal(props: any){
                             label="Type"
                             options={couponTypeOptions}
                             value={field.state.value} 
-                            onBlur={field.handleBlur}
                             onChange={(val) => {
                               field.handleChange(val as DiscountType);
                               form.validateAllFields("change"); 
@@ -234,7 +233,6 @@ export default function CreateCouponModal(props: any){
                             options={currencyOptions}
                             disabled={discountType === "percentage"}
                             value={field.state.value} 
-                            onBlur={field.handleBlur}
                             onChange={(val) => field.handleChange(val)}
                           />
                         </div>
@@ -267,7 +265,7 @@ export default function CreateCouponModal(props: any){
                   validators={{
                     onChange: ({ value }) => {
                       if (!value) return undefined;
-                      const res = z.coerce.number().min(0, "Cannot be negative").safeParse(value);
+                      const res:any = z.coerce.number().min(0, "Cannot be negative").safeParse(value);
                       return res.success ? undefined : res.error.errors[0].message;
                     }
                   }}
@@ -294,7 +292,7 @@ export default function CreateCouponModal(props: any){
                   validators={{
                     onChange: ({ value }) => {
                       if (!value) return undefined;
-                      const res = z.coerce.number().min(0, "Cannot be negative").safeParse(value);
+                      const res: any = z.coerce.number().min(0, "Cannot be negative").safeParse(value);
                       return res.success ? undefined : res.error.errors[0].message;
                     }
                   }}
