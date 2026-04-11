@@ -1,0 +1,54 @@
+import { create } from "zustand";
+import { clearAuthToken, getClientAuthToken } from "@repo/utils";
+
+export interface UserProfile {
+  sub: string;
+  name: string;
+  email: string;
+  first_name?: string;
+  given_name: string;
+  family_name: string;
+  preferred_username: string;
+  realm_access?: { roles: string[] };
+  organization?: Record<string, any> | string[];
+  tenant_id?: string;
+}
+
+interface AuthState {
+  isAuthenticated: boolean;
+  user: UserProfile | null;
+  login: (user: UserProfile) => void;
+  setUser: (user: UserProfile) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  // Initialize auth state directly from the cross-domain cookie
+  isAuthenticated: !!getClientAuthToken(),
+  user: null,
+
+  login: (user: UserProfile) =>
+    set({ user, isAuthenticated: true }),
+
+  setUser: (user: UserProfile) =>
+    set({ user }),
+
+  logout: () => {
+    // 1. Clear the cross-domain cookie
+    clearAuthToken();
+
+    // 2. Clear local state
+    setTimeout(() => {
+      set({ isAuthenticated: false, user: null });
+    }, 500);
+
+    // 3. Hard redirect back to the root domain login page
+    // if (typeof window !== "undefined") {
+    //   const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
+    //     ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
+    //     : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`
+
+    //   window.location.href = `http://${baseDomain}/login`;
+    // }
+  },
+}));
