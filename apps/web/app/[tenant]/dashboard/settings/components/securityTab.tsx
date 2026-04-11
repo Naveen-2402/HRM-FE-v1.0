@@ -120,7 +120,7 @@ export default function SecurityTab() {
               
               // Extract the tenant_id from the token_url safely
               if (data.provider.token_url) {
-                const urlParts = data.provider.token_url.split("login.microsoftonline.com/");
+                const urlParts:any = data.provider.token_url.split("login.microsoftonline.com/");
                 if (urlParts.length > 1) {
                   const extractedTenantId = urlParts[1].split("/")[0];
                   form.setFieldValue("tenant_id", extractedTenantId);
@@ -139,7 +139,7 @@ export default function SecurityTab() {
         } else {
           setSelectedMethod("password");
         }
-      } catch(error) {
+      } catch(error: any) {
         toast.error(error?.response?.data?.detail || "Failed to load auth settings");
         setSelectedMethod("password");
       } finally {

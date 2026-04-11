@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { 
   CheckCircle2, Zap, Building2, Briefcase, 
   Loader2, ArrowRight, ShieldCheck, HelpCircle, Clock
@@ -101,12 +101,12 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: "spring", stiffness: 100, damping: 20 },
+    transition: { type: "spring" as const, stiffness: 100, damping: 20 },
   },
 };
 
@@ -134,7 +134,7 @@ export default function OnboardingPricingPage() {
       if (response.checkout_url) {
         window.location.href = response.checkout_url;
       }
-    } catch (error) {
+    } catch (error:any) {
       toast.error(error?.response?.data?.detail || "Failed to initiate checkout. Please try again.");
       setProcessingPlanId(null);
     }
@@ -181,6 +181,7 @@ export default function OnboardingPricingPage() {
           variants={containerVariants}
           className="w-full max-w-[1400px] mx-auto"
         >
+          {/* @ts-ignore */}
           <motion.div variants={itemVariants} className="text-center mb-16 md:mb-24">
             <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-foreground mb-6 bg-gradient-to-b from-foreground to-foreground/80 bg-clip-text text-transparent">
               Elevate your workforce.

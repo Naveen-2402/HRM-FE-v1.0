@@ -17,7 +17,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useBulkOnboardEmployeesTenantsEmployeesBulkOnboardPost } from "@repo/orval-config/src/api/default/default";
 
 // Import the shared aesthetic components you use in settings
-import { AccentBar, SectionCard } from "@/components/_shared"; 
+import { AccentBar, TestSectionCard } from "@/components/_shared"; 
 
 // ── Validation Helpers ────────────────────────────────────────────────────────
 const validateRequired = (val: string, fieldName: string) => {
@@ -195,7 +195,7 @@ export default function EmployeeInvitePage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 xl:gap-8">  
           {/* ── Left Column: Input Methods ─────────────────────────────── */}
           <div className="lg:col-span-3 space-y-6">
-            <SectionCard>
+            <TestSectionCard>
               <AccentBar />
               
               <div className="border-b border-border px-6 py-5 space-y-0.5">
@@ -385,12 +385,12 @@ export default function EmployeeInvitePage() {
                   </Button>
                 </div>
               )}
-            </SectionCard>
+            </TestSectionCard>
           </div>
 
           {/* ── Right Column: Staging Area ─────────────────────────────────── */}
           <div className="lg:col-span-2">
-            <SectionCard className="h-[550px] flex flex-col relative overflow-hidden">
+            <TestSectionCard>
               <AccentBar />
               
               <AnimatePresence>
@@ -476,7 +476,7 @@ export default function EmployeeInvitePage() {
                   )}
                 </Button>
               </div>
-            </SectionCard>
+            </TestSectionCard>
           </div>
           
         </div>

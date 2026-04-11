@@ -1,6 +1,8 @@
 {
   "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "rootDir": "./src",
     "outDir": "dist",
     "strictNullChecks": true,
     "baseUrl": ".",

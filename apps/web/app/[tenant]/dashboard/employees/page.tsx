@@ -230,7 +230,7 @@ export default function EmployeesPage() {
                   const s = employee.status?.toLowerCase();
                   const isDisabledStatus = s === "disabled" || s === "inactive";
                   const statusCfg = getEmployeeStatusConfig(s);
-                  const isRoleAdmin = employee.tenant_role === "admin" || employee.tenant_role === "tenant-admin";
+                  const isRoleAdmin = employee.tenant_role === "tenant-admin";
                   
                   return (
                     <tr key={employee.id} className="hover:bg-muted/30 transition-colors group">

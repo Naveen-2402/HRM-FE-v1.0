@@ -14,7 +14,7 @@ export type TenantRole = typeof TenantRole[keyof typeof TenantRole];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const TenantRole = {
-  admin: 'admin',
+  tenantadmin: 'tenant-admin',
   recruiter: 'recruiter',
   employee: 'employee',
   manager: 'manager',

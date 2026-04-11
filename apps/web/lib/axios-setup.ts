@@ -106,7 +106,7 @@ export function setupAxiosInterceptors() {
         const newRefreshToken = response.data.refresh_token;
 
         // Save new tokens. We default rememberMe to true here so it maintains the existing cookie's lifespan rules
-        setAuthTokens(newAccessToken, newRefreshToken, true);
+        setAuthTokens(newAccessToken, newRefreshToken, "", "", true);
 
         // Update the original request with the new token
         if (originalRequest.headers) {
