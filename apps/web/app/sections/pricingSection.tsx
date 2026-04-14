@@ -4,7 +4,8 @@ import { motion, Variants } from "framer-motion";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@repo/ui/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import { useListPlansApiV1SuperadminPlansGet } from "@repo/orval-config/src/api/superadmin/superadmin";
 
 // Reusable animation variants
 const fadeInUp: Variants = {
@@ -21,6 +22,56 @@ const staggerContainer: Variants = {
 };
 
 export default function PricingSection() {
+  const { data: plansData, isLoading: plansLoading } = useListPlansApiV1SuperadminPlansGet();
+
+  // Filter only subscription plans
+  const subscriptionPlans = plansData?.filter((plan: any) => plan.type === 'subscription') || [];
+
+  // Find prices for each interval
+  const monthlyPrice = subscriptionPlans.find((plan: any) => 
+    plan.prices?.some((p: any) => p.interval === 'month' && p.interval_count === 1)
+  )?.prices?.find((p: any) => p.interval === 'month' && p.interval_count === 1);
+
+  const quarterlyPrice = subscriptionPlans.find((plan: any) => 
+    plan.prices?.some((p: any) => p.interval === 'month' && p.interval_count === 3)
+  )?.prices?.find((p: any) => p.interval === 'month' && p.interval_count === 3);
+
+  const yearlyPrice = subscriptionPlans.find((plan: any) => 
+    plan.prices?.some((p: any) => p.interval === 'year')
+  )?.prices?.find((p: any) => p.interval === 'year');
+
+  // Map API plans to landing page format
+  const landingPlans = [
+    {
+      name: "Starter",
+      description: "Perfect for small teams",
+      price: monthlyPrice ? `Rs ${monthlyPrice.amount / 100}` : "Rs 0",
+      interval: "/mo",
+      features: ["Up to 3 active jobs", "Basic pipeline management"],
+      buttonText: "Get Started",
+      buttonVariant: "outline" as const
+    },
+    {
+      name: "Growth",
+      description: "For scaling companies",
+      price: quarterlyPrice ? `Rs ${quarterlyPrice.amount / 100}` : "Rs 2799",
+      interval: "/quarter",
+      features: ["Unlimited active jobs", "Automated scheduling", "Custom pipelines"],
+      buttonText: "Start Free Trial",
+      buttonVariant: "default" as const,
+      popular: true
+    },
+    {
+      name: "Enterprise",
+      description: "Advanced needs & security",
+      price: yearlyPrice ? `Rs ${yearlyPrice.amount / 100}` : "Custom",
+      interval: yearlyPrice ? "/yr" : "",
+      features: ["SSO & Advanced Security", "Dedicated Account Manager"],
+      buttonText: "Contact Sales",
+      buttonVariant: "outline" as const
+    }
+  ];
+
   return (
     <section id="pricing" className="bg-muted/30 py-24">
       <div className="container mx-auto px-4">
@@ -40,67 +91,43 @@ export default function PricingSection() {
             </motion.p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-center mt-8">
-            
-            {/* Starter Tier */}
-            <motion.div variants={fadeInUp}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Starter</CardTitle>
-                  <CardDescription>Perfect for small teams</CardDescription>
-                  <div className="text-4xl font-bold pt-4">$0<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Up to 3 active jobs</p>
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Basic pipeline management</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full hover:cursor-pointer">Get Started</Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
-
-            {/* Growth Tier (Most Popular) */}
-            <motion.div variants={fadeInUp}>
-              <Card className="border-primary relative shadow-xl md:scale-105 z-10 bg-background">
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-full whitespace-nowrap uppercase tracking-wider">
-                  Most Popular
-                </div>
-                <CardHeader>
-                  <CardTitle>Growth</CardTitle>
-                  <CardDescription>For scaling companies</CardDescription>
-                  <div className="text-4xl font-bold pt-4">$99<span className="text-lg text-muted-foreground font-normal">/mo</span></div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Unlimited active jobs</p>
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Automated scheduling</p>
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Custom pipelines</p>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full hover:cursor-pointer">Start Free Trial</Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
-
-            {/* Enterprise Tier */}
-            <motion.div variants={fadeInUp}>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Enterprise</CardTitle>
-                  <CardDescription>Advanced needs & security</CardDescription>
-                  <div className="text-4xl font-bold pt-4">Custom</div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> SSO & Advanced Security</p>
-                  <p className="flex items-center gap-2 text-sm"><CheckCircle2 className="size-4 text-primary"/> Dedicated Account Manager</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="outline" className="w-full hover:cursor-pointer">Contact Sales</Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
-            
-          </div>
+          {plansLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader2 className="size-8 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading plans...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto items-center mt-8">
+              {landingPlans.map((plan, index) => (
+                <motion.div key={plan.name} variants={fadeInUp}>
+                  <Card className={plan.popular ? "border-primary relative shadow-xl md:scale-105 z-10 bg-background" : ""}>
+                    {plan.popular && (
+                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-4 py-1.5 rounded-full whitespace-nowrap uppercase tracking-wider">
+                        Most Popular
+                      </div>
+                    )}
+                    <CardHeader>
+                      <CardTitle>{plan.name}</CardTitle>
+                      <CardDescription>{plan.description}</CardDescription>
+                      <div className="text-4xl font-bold pt-4">{plan.price}{plan.interval && <span className="text-lg text-muted-foreground font-normal">{plan.interval}</span>}</div>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {plan.features.map((feature, idx) => (
+                        <p key={idx} className="flex items-center gap-2 text-sm">
+                          <CheckCircle2 className="size-4 text-primary"/> {feature}
+                        </p>
+                      ))}
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant={plan.buttonVariant} className="w-full hover:cursor-pointer">
+                        {plan.buttonText}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </motion.div>
       </div>
     </section>

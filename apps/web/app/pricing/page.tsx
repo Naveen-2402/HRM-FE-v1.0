@@ -12,83 +12,8 @@ import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 
 import { useCreateCheckoutSessionApiV1BillingCheckoutPost, useCreateTrialApiV1BillingTrialPost } from "@repo/orval-config/src/api/billing/billing";
+import { useListPlansApiV1SuperadminPlansGet } from "@repo/orval-config/src/api/superadmin/superadmin";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
-
-const PRICING_PLANS = [
-  {
-    name: "Free Trial",
-    description: "Experience the full power of our platform firsthand. No credit card required.",
-    price: "Rs 0",
-    interval: "/24 hours",
-    priceId: "trial",
-    isTrial: true,
-    icon: Clock,
-    features: [
-      "Full access to Pro features",
-      "Instant activation",
-      "No credit card required",
-      "Invite team members",
-      "Explore integrations"
-    ],
-    recommended: false,
-    gradient: "from-accent via-accent/50 to-transparent"
-  },
-  {
-    name: "Basic",
-    description: "Perfect for growing teams scaling their HR operations.",
-    price: "Rs 999",
-    interval: "/month",
-    priceId: process.env.NEXT_PUBLIC_MONTHLY_PRICE_ID,
-    isTrial: false,
-    icon: Zap,
-    features: [
-      "Up to 50 employees",
-      "Standard support",
-      "Advanced reporting",
-      "Custom roles",
-      "Payroll integration"
-    ],
-    recommended: false,
-    gradient: "from-primary/10 via-primary/5 to-transparent"
-  },
-  {
-    name: "Pro",
-    description: "Unlock advanced security, control, and performance.",
-    price: "Rs 2700",
-    interval: "/quarter",
-    priceId: process.env.NEXT_PUBLIC_QUARTERLY_PRICE_ID,
-    isTrial: false,
-    icon: Building2,
-    features: [
-      "Unlimited employees",
-      "24/7 priority support",
-      "Single Sign-On (SSO)",
-      "Custom integrations",
-      "Dedicated account manager",
-      "Advanced compliance tools"
-    ],
-    recommended: true,
-    gradient: "from-primary/20 via-primary/10 to-transparent"
-  },
-  {
-    name: "Enterprise",
-    description: "Bespoke solutions for very large, complex organizations.",
-    price: "Rs 9000",
-    interval: "/year",
-    priceId: process.env.NEXT_PUBLIC_YEARLY_PRICE_ID || "enterprise_contact",
-    isTrial: false,
-    icon: ShieldCheck,
-    features: [
-      "Everything in Pro",
-      "On-premise deployment",
-      "Custom SLA",
-      "White-labeling",
-      "Dedicated success engineer"
-    ],
-    recommended: false,
-    gradient: "from-secondary via-secondary/50 to-transparent"
-  }
-];
 
 // Staggered animation container
 const containerVariants = {
@@ -110,14 +35,116 @@ const itemVariants: Variants = {
   },
 };
 
+// Function to map API plans to UI format
+const mapPlansToUI = (plansData: any[]) => {
+  if (!plansData) return [];
+
+  // Filter only subscription plans
+  const subscriptionPlans = plansData.filter((plan: any) => plan.type === 'subscription');
+
+  // Find prices for each plan type
+  const monthlyPlan = subscriptionPlans.find((plan: any) => 
+    plan.prices?.some((p: any) => p.interval === 'month' && p.interval_count === 1)
+  );
+  const quarterlyPlan = subscriptionPlans.find((plan: any) => 
+    plan.prices?.some((p: any) => p.interval === 'month' && p.interval_count === 3)
+  );
+  const yearlyPlan = subscriptionPlans.find((plan: any) => 
+    plan.prices?.some((p: any) => p.interval === 'year')
+  );
+
+  const monthlyPrice = monthlyPlan?.prices?.find((p: any) => p.interval === 'month' && p.interval_count === 1);
+  const quarterlyPrice = quarterlyPlan?.prices?.find((p: any) => p.interval === 'month' && p.interval_count === 3);
+  const yearlyPrice = yearlyPlan?.prices?.find((p: any) => p.interval === 'year');
+
+  return [
+    {
+      name: "Free Trial",
+      description: "Experience the full power of our platform firsthand. No credit card required.",
+      price: "Rs 0",
+      interval: "/24 hours",
+      priceId: "trial",
+      isTrial: true,
+      icon: Clock,
+      features: [
+        "Full access to Pro features",
+        "Instant activation",
+        "No credit card required",
+        "Invite team members",
+        "Explore integrations"
+      ],
+      recommended: false,
+      gradient: "from-accent via-accent/50 to-transparent"
+    },
+    {
+      name: "Basic",
+      description: "Perfect for growing teams scaling their HR operations.",
+      price: monthlyPrice ? `Rs ${monthlyPrice.amount / 100}` : "Rs 999",
+      interval: "/month",
+      priceId: monthlyPrice?.price_id || process.env.NEXT_PUBLIC_MONTHLY_PRICE_ID,
+      isTrial: false,
+      icon: Zap,
+      features: [
+        "Up to 50 employees",
+        "Standard support",
+        "Advanced reporting",
+        "Custom roles",
+        "Payroll integration"
+      ],
+      recommended: false,
+      gradient: "from-primary/10 via-primary/5 to-transparent"
+    },
+    {
+      name: "Pro",
+      description: "Unlock advanced security, control, and performance.",
+      price: quarterlyPrice ? `Rs ${quarterlyPrice.amount / 100}` : "Rs 2700",
+      interval: "/quarter",
+      priceId: quarterlyPrice?.price_id || process.env.NEXT_PUBLIC_QUARTERLY_PRICE_ID,
+      isTrial: false,
+      icon: Building2,
+      features: [
+        "Unlimited employees",
+        "24/7 priority support",
+        "Single Sign-On (SSO)",
+        "Custom integrations",
+        "Dedicated account manager",
+        "Advanced compliance tools"
+      ],
+      recommended: true,
+      gradient: "from-primary/20 via-primary/10 to-transparent"
+    },
+    {
+      name: "Enterprise",
+      description: "Bespoke solutions for very large, complex organizations.",
+      price: yearlyPrice ? `Rs ${yearlyPrice.amount / 100}` : "Rs 9000",
+      interval: "/year",
+      priceId: yearlyPrice?.price_id || process.env.NEXT_PUBLIC_YEARLY_PRICE_ID || "enterprise_contact",
+      isTrial: false,
+      icon: ShieldCheck,
+      features: [
+        "Everything in Pro",
+        "On-premise deployment",
+        "Custom SLA",
+        "White-labeling",
+        "Dedicated success engineer"
+      ],
+      recommended: false,
+      gradient: "from-secondary via-secondary/50 to-transparent"
+    }
+  ];
+};
+
 export default function OnboardingPricingPage() {
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
   const [isTrialLoading, setIsTrialLoading] = useState(false);
 
   const checkoutMutation = useCreateCheckoutSessionApiV1BillingCheckoutPost();
   const trialMutation = useCreateTrialApiV1BillingTrialPost();
+  const { data: plansData, isLoading: plansLoading } = useListPlansApiV1SuperadminPlansGet();
 
   const { redirectToTenantDashboard } = useTenantRedirect();
+
+  const pricingPlans = mapPlansToUI(plansData || []);
 
   const handleSelectPlan = async (priceId: string | undefined) => {
     if (!priceId) return;
@@ -192,8 +219,14 @@ export default function OnboardingPricingPage() {
           </motion.div>
 
           {/* Pricing Grid - Updated to 4 columns */}
-          <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8 items-stretch">
-            {PRICING_PLANS.map((plan) => (
+          {plansLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <Loader2 className="size-8 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading plans...</span>
+            </div>
+          ) : (
+            <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8 items-stretch">
+              {pricingPlans.map((plan) => (
               <motion.div key={plan.name} variants={itemVariants} className="h-full">
                 <Card 
                   className={`group relative flex flex-col h-full bg-card/60 backdrop-blur-sm transition-all duration-300 ${
@@ -267,6 +300,7 @@ export default function OnboardingPricingPage() {
               </motion.div>
             ))}
           </motion.div>
+          )}
         </motion.div>
       </main>
     </div>
