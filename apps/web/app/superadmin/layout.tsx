@@ -12,6 +12,7 @@ import {
   Bell,
   Tag
 } from "lucide-react";
+import { getRootOrigin } from "@repo/utils/src/domain";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { ModeToggle } from "@/components/theme-toggle"; 
@@ -22,10 +23,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
 
   const handleLogout = () => {
     logout();
-    const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
-      ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
-      : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`;
-    window.location.href = `http://${baseDomain}/login`;
+    window.location.href = `${getRootOrigin()}/login`;
   };
 
   const navLinks = [

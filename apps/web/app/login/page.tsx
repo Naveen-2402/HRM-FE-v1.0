@@ -25,6 +25,7 @@ import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/valid
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 import { jwtDecode } from "jwt-decode";
 import { setAuthTokens } from "@repo/utils";
+import { getRootOrigin } from "@repo/utils/src/domain";
 
 import { AccentBar } from "@/components/_shared";
 
@@ -65,10 +66,8 @@ function LoginFormContent() {
 
         if (isSuperAdmin) {
           toast.success("Welcome, Superadmin");
-          const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
-            ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
-            : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`;
-          window.location.href = `http://${baseDomain}/superadmin/dashboard`;
+          const origin = getRootOrigin(); // "http://hrm.test:3000" or "https://hrm-fe-1-0.vercel.app"
+          window.location.href = `${origin}/superadmin/dashboard`;
           setTimeout(() => login(decodedUser), 500);
           return;
         }
@@ -95,7 +94,7 @@ function LoginFormContent() {
           if (isAdmin) {
             toast.warning("Subscription required.");
             setSubscriptionError("Your workspace does not have an active subscription. Please select a plan to activate it.");
-            setActionUrl(`http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000/pricing`);
+            setActionUrl(`${getRootOrigin()}/pricing`);
           } else {
             setSubscriptionError("Your organization does not have an active subscription. Please contact your workspace administrator.");
           }

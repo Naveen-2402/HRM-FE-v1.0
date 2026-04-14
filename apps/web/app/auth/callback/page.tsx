@@ -12,6 +12,7 @@ import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-co
 import { useActivateCurrentEmployeeApiV1EmployeesActivatePost } from "@repo/orval-config/src/api/employees/employees";
 import { Button } from "@repo/ui/components/ui/button";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
+import { getRootOrigin } from "@repo/utils/src/domain";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -124,7 +125,7 @@ export default function AuthCallbackPage() {
         if (isAdmin) {
           toast.warning("Subscription required.");
           setError("Your workspace does not have an active subscription. Please select a plan to activate it.");
-          setActionUrl(`http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000/pricing`);
+          setActionUrl(`${getRootOrigin()}/pricing`);
           return;
         } else {
           setError("Your organization does not have an active subscription. Please contact your workspace administrator to unlock access.");

@@ -3,10 +3,10 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { 
-  Building2, CreditCard, Receipt, 
-  ShieldAlert, LogOut, Loader2, MoreVertical, Search, Filter, Trash2
+  Building2, CreditCard, Receipt, Loader2, MoreVertical, Search, Trash2
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { getRootOrigin } from "@repo/utils/src/domain";
 
 import { 
   useGetAllTenantsApiV1SuperadminTenantsGet,
@@ -85,10 +85,7 @@ export default function SuperadminDashboard() {
 
   const handleLogout = () => {
     logout();
-    const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
-      ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
-      : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`;
-    window.location.href = `http://${baseDomain}/login`;
+    window.location.href = `${getRootOrigin()}/login`;
   };
 
   // 1. Function to open the modal

@@ -10,6 +10,7 @@ import {
 import { Button } from "@repo/ui/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
 import { ModeToggle } from "@/components/theme-toggle";
+import { getRootOrigin } from "@repo/utils/src/domain";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -32,7 +33,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     logout();
-    window.location.href = `http://${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000/login`;
+    window.location.href = `${getRootOrigin()}/login`;
   };
 
   return (

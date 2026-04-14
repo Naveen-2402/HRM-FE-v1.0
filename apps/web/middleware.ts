@@ -6,26 +6,23 @@ import { UserProfile } from '@/store/useAuthStore';
 export function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const hostname = req.headers.get('host') || '';
+  const hostWithoutPort = hostname.split(':')[0];
   const currentPath = url.pathname;
 
-  const hostedDomain = process.env.NEXT_PUBLIC_HOSTED_DOMAIN;
-  const localDomain = process.env.NEXT_PUBLIC_LOCAL_DOMAIN;
-
-  if (!hostedDomain || !localDomain) {
-    console.error('[middleware] Missing NEXT_PUBLIC_HOSTED_DOMAIN or NEXT_PUBLIC_LOCAL_DOMAIN');
+  const rawDomain = process.env.NEXT_PUBLIC_DOMAIN;
+  if (!rawDomain) {
+    console.error('[middleware] Missing NEXT_PUBLIC_DOMAIN');
     return NextResponse.next();
   }
 
-  // --- Resolve base domain ---
-  let baseDomain = hostedDomain;
-  if (hostname.includes(localDomain)) {
-    const port = hostname.split(':')[1];
-    baseDomain = port ? `${localDomain}:${port}` : localDomain;
-  }
+  const domainUrl = new URL(rawDomain);
+  const rootHostname = domainUrl.hostname;
+  const rootPort = domainUrl.port;
+  const baseDomain = rootPort ? `${rootHostname}:${rootPort}` : rootHostname;
 
   // --- 1. GENERAL AUTH PROTECTION ---
   if (currentPath.startsWith('/dashboard')) {
-    const token = req.cookies.get('auth_token')?.value
+    const token = req.cookies.get('auth_token')?.value;
     if (!token) return NextResponse.redirect(new URL('/login', req.url));
 
     // --- 2. ADMIN-ONLY RBAC ---
@@ -45,12 +42,12 @@ export function middleware(req: NextRequest) {
 
   // --- 3. SUBDOMAIN ROUTING ---
   const isSubdomain =
-    hostname !== baseDomain && hostname.endsWith(`.${baseDomain}`);
+    hostWithoutPort !== rootHostname && hostWithoutPort?.endsWith(`.${rootHostname}`);
 
   if (isSubdomain) {
-    const tenant = hostname.replace(`.${baseDomain}`, '');
+    const tenant = hostWithoutPort?.replace(`.${rootHostname}`, '');
     return NextResponse.rewrite(
-      new URL(`/${tenant}${url.pathname}${url.search}`, req.url)
+      new URL(`/${tenant}${currentPath}${url.search}`, req.url)
     );
   }
 

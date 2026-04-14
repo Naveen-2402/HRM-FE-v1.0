@@ -1,18 +1,11 @@
 import Cookies from "js-cookie";
+import { getCookieRootDomain } from "./domain";
 
-// Helper to safely get the domain, whether on client or server
 const getCookieDomain = () => {
-  // If we are on the server, we can't read window.location. 
-  // We default to a safe fallback or let the browser handle standard cookie scoping.
   if (typeof window === "undefined") {
     return process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined;
   }
-
-  const hostname = window.location.hostname;
-  if (hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)) return `.${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`;
-
-  // if (hostname.includes("localhost")) return "localhost";
-  return `.${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`;
+  return getCookieRootDomain(); // e.g. ".hrm.test" or ".hrm-fe-1-0.vercel.app"
 };
 
 export const setAuthTokens = (
