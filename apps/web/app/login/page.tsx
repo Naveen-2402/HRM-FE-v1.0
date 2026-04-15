@@ -42,6 +42,7 @@ function LoginFormContent() {
   const [showPassword, setShowPassword]           = useState(false);
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
   const [actionUrl, setActionUrl]                 = useState<string | null>(null);
+  const [isSubscriptionStatusPending, setIsSubscriptionStatusPending] = useState(false);
 
   const login                  = useAuthStore((s) => s.login);
   const loginMutation          = useLoginAuthLoginPost();
@@ -73,11 +74,13 @@ function LoginFormContent() {
         }
 
         try { await activateMutation.mutateAsync(); } catch {}
-
+        
+        setIsSubscriptionStatusPending(true);
         let billingStatus = "inactive";
         try {
           const subscription = await getSubscriptionStatusApiV1BillingSubscriptionGet();
           billingStatus = subscription.status;
+          setIsSubscriptionStatusPending(false);
         } catch (billingError: any) {
           const errorDetail = billingError?.response?.data?.detail;
           if (errorDetail === "No subscription found for this tenant." || billingError?.response?.status === 404) {
@@ -356,11 +359,11 @@ function LoginFormContent() {
                   <Button
                     type="submit"
                     size="lg"
-                    disabled={loginMutation.isPending || !password}
+                    disabled={loginMutation.isPending || activateMutation.isPending || isSubscriptionStatusPending || !password}
                     className="w-full h-11 font-semibold hover:cursor-pointer bg-primary text-primary-foreground
                                hover:bg-primary/90 rounded-xl inline-flex items-center gap-2"
                   >
-                    {loginMutation.isPending
+                    {loginMutation.isPending || activateMutation.isPending || isSubscriptionStatusPending
                       ? <><Loader2 className="size-4 animate-spin" /> Signing in…</>
                       : <>Sign In <ArrowRight className="size-4" /></>}
                   </Button>
