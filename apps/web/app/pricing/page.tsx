@@ -81,7 +81,7 @@ const mapPlansToUI = (plansData: any[]) => {
       description: "Perfect for growing teams scaling their HR operations.",
       price: monthlyPrice ? `Rs ${monthlyPrice.amount / 100}` : "Rs 999",
       interval: "/month",
-      priceId: monthlyPrice?.price_id || process.env.NEXT_PUBLIC_MONTHLY_PRICE_ID,
+      priceId: monthlyPrice?.price_id,
       isTrial: false,
       icon: Zap,
       features: [
@@ -99,7 +99,7 @@ const mapPlansToUI = (plansData: any[]) => {
       description: "Unlock advanced security, control, and performance.",
       price: quarterlyPrice ? `Rs ${quarterlyPrice.amount / 100}` : "Rs 2700",
       interval: "/quarter",
-      priceId: quarterlyPrice?.price_id || process.env.NEXT_PUBLIC_QUARTERLY_PRICE_ID,
+      priceId: quarterlyPrice?.price_id,
       isTrial: false,
       icon: Building2,
       features: [
@@ -118,7 +118,7 @@ const mapPlansToUI = (plansData: any[]) => {
       description: "Bespoke solutions for very large, complex organizations.",
       price: yearlyPrice ? `Rs ${yearlyPrice.amount / 100}` : "Rs 9000",
       interval: "/year",
-      priceId: yearlyPrice?.price_id || process.env.NEXT_PUBLIC_YEARLY_PRICE_ID || "enterprise_contact",
+      priceId: yearlyPrice?.price_id || "enterprise_contact",
       isTrial: false,
       icon: ShieldCheck,
       features: [
