@@ -27,7 +27,7 @@ export default function ShortlistJobModal({ isOpen, onClose, job }: ShortlistJob
 
   // Candidates list
   const { data: candidatesRaw, isLoading: loadingCandidates } = useGetCandidatesApiV1CandidatesGet({
-    query: { enabled: isOpen },
+    query: { enabled: isOpen } as any,
   });
   const candidates: any[] = Array.isArray(candidatesRaw) ? candidatesRaw : [];
   const readyCandidates = candidates.filter((c) => c.status === "completed");

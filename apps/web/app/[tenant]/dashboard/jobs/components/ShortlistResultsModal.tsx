@@ -26,7 +26,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
     {
       query: {
         enabled: isOpen && !!job?.id,
-      },
+      } as any,
     }
   );
 

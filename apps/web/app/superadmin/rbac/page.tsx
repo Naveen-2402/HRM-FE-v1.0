@@ -63,12 +63,13 @@ export default function RBACManagementPage() {
   );
 
   const groupedPermissions = filteredPermissions.reduce((acc: Record<string, any[]>, curr: any) => {
-    if (!acc[curr.role_name]) {
-      acc[curr.role_name] = [];
+    const roleName = curr.role_name;
+    if (!acc[roleName]) {
+      acc[roleName] = [];
     }
-    acc[curr.role_name].push(curr);
+    acc[roleName]!.push(curr);
     return acc;
-  }, {});
+  }, {} as Record<string, any[]>);
 
   return (
     <div className="p-8 max-w-[1400px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">

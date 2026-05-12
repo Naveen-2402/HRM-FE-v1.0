@@ -52,7 +52,7 @@ function LoginFormContent() {
     onSubmit: async ({ value }) => {
       try {
         const response = await loginMutation.mutateAsync({
-          data: { email: value.email, password: value.password },
+          data: { username: value.email, password: value.password },
         });
 
         const { access_token, refresh_token, id_token, session_state } = response.data as any;
