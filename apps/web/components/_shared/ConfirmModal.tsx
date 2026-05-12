@@ -66,7 +66,7 @@ export function ConfirmModal({
                   >
                     <AlertTriangle className="size-6" />
                   </div>
-                  <h2 className="text-xl font-bold tracking-tight text-card-foreground">
+                  <h2 className="text-xl font-bold tracking-wide text-card-foreground">
                     {title}
                   </h2>
                 </div>

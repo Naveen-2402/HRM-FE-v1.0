@@ -4,6 +4,12 @@ import { ThemeProvider } from "../components/theme-provider";
 import { Providers } from "./providers";
 import { ToastContainer } from 'react-toastify';
 import { AuthGuard } from "@/components/auth-guard";
+import { Plus_Jakarta_Sans } from "next/font/google";
+
+const fontSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+});
 
 export const metadata: Metadata = {
   title: "HRM Platform",
@@ -17,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${fontSans.variable} font-sans tracking-wide antialiased bg-background text-foreground`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

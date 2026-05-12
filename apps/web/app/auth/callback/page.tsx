@@ -206,7 +206,7 @@ export default function AuthCallbackPage() {
             </div>
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">{statusText}</h1>
+            <h1 className="text-2xl font-bold text-foreground tracking-wide">{statusText}</h1>
             <p className="text-muted-foreground">Please wait while we prepare your workspace.</p>
           </div>
         </div>

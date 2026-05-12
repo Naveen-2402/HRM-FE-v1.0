@@ -4,8 +4,10 @@ import {
   getClientAuthToken,
   getClientRefreshToken,
   setAuthTokens,
-  clearAuthToken
+  clearAuthToken,
+  getClientIdToken
 } from '@repo/utils';
+import { jwtDecode } from 'jwt-decode';
 
 // 1. Import the isolated Orval instance
 import { AXIOS_INSTANCE } from '@repo/orval-config/src/axios-setup';
@@ -78,6 +80,9 @@ export function setupAxiosInterceptors() {
       originalRequest._retry = true;
       isRefreshing = true;
 
+      // DEBUG: log which URL triggered the 401
+      console.warn('[Auth] 401 received on:', originalRequest.url, '— attempting token refresh');
+
       const refreshToken = getClientRefreshToken();
 
       // If no refresh token exists, immediately log out
@@ -87,6 +92,24 @@ export function setupAxiosInterceptors() {
         if (typeof window !== "undefined" && window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
+        return Promise.reject(error);
+      }
+
+      try {
+        const decoded: { exp: number } = jwtDecode(refreshToken);
+        if (decoded.exp * 1000 < Date.now()) {
+          // Refresh token is already expired — no point calling the endpoint
+          clearAuthToken();
+          useAuthStore.getState().logout();
+          if (typeof window !== "undefined" && window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+          return Promise.reject(error);
+        }
+      } catch {
+        // Malformed token — clear and bail
+        clearAuthToken();
+        useAuthStore.getState().logout();
         return Promise.reject(error);
       }
 
@@ -104,9 +127,10 @@ export function setupAxiosInterceptors() {
 
         const newAccessToken = response.data.access_token;
         const newRefreshToken = response.data.refresh_token;
+        const idToken: any = getClientIdToken();
 
         // Save new tokens. We default rememberMe to true here so it maintains the existing cookie's lifespan rules
-        setAuthTokens(newAccessToken, newRefreshToken, "", "", true);
+        setAuthTokens(newAccessToken, newRefreshToken, idToken, "", true);
 
         // Update the original request with the new token
         if (originalRequest.headers) {

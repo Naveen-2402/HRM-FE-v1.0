@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "@tanstack/react-form";
@@ -15,9 +15,20 @@ import { Label } from "@repo/ui/components/ui/label";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { useBulkOnboardEmployeesTenantsEmployeesBulkOnboardPost } from "@repo/orval-config/src/api/default/default";
+import { useGetEnumValuesApiV1SuperadminEnumsGet } from "@repo/orval-config/src/api/superadmin/superadmin";
 
 // Import the shared aesthetic components you use in settings
 import { AccentBar, TestSectionCard } from "@/components/_shared"; 
+import { Dropdown } from "@/components/_shared/Dropdown";
+
+// ── Role Label Mapping ───────────────────────────────────────────────────────
+const roleLabels: Record<string, string> = {
+  "employee": "Employee",
+  "manager": "Manager",
+  "tenant-admin": "Administrator",
+  "admin": "Administrator",
+  "recruiter": "Recruiter",
+};
 
 // ── Validation Helpers ────────────────────────────────────────────────────────
 const validateRequired = (val: string, fieldName: string) => {
@@ -68,6 +79,19 @@ export default function EmployeeInvitePage() {
   const orgId = Object.keys(orgClaim)[0] || "";
 
   const inviteMutation = useBulkOnboardEmployeesTenantsEmployeesBulkOnboardPost();
+  const { data: enums } = useGetEnumValuesApiV1SuperadminEnumsGet();
+  
+  // Safely unwrap the Axios response if nested
+  const enumData = (enums as any)?.data || enums || {};
+
+  const roleOptions = useMemo(() => {
+    const roles = (enumData?.tenant_roles || ["employee", "manager", "tenant-admin"]);
+    return roles.map((role: string) => ({
+      label: roleLabels[role] || role.charAt(0).toUpperCase() + role.slice(1),
+      value: role,
+      icon: <Shield className="size-4" />
+    }));
+  }, [enumData]);
 
   const form = useForm({
     defaultValues: {
@@ -165,7 +189,7 @@ export default function EmployeeInvitePage() {
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Onboarding
           </p>
-          <h1 className="text-[28px] font-semibold tracking-tight text-foreground flex items-center gap-3">
+          <h1 className="text-[28px] font-semibold tracking-wide text-foreground flex items-center gap-3">
             Invite Team
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -319,21 +343,12 @@ export default function EmployeeInvitePage() {
                       name="tenant_role"
                       children={(field) => (
                         <div className="space-y-2">
-                          <Label htmlFor={field.name} className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Workspace Role</Label>
-                          <div className="relative">
-                            <select
-                              id={field.name}
-                              value={field.state.value}
-                              onBlur={field.handleBlur}
-                              onChange={(e) => field.handleChange(e.target.value)}
-                              className="flex h-10 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:cursor-pointer pr-10"
-                            >
-                              <option value="employee">Employee</option>
-                              <option value="manager">Manager</option>
-                              <option value="tenant-admin">Admin</option>
-                            </select>
-                            <Shield className="absolute right-3 top-3 size-4 text-muted-foreground pointer-events-none" />
-                          </div>
+                          <Dropdown
+                            label="Workspace Role"
+                            options={roleOptions}
+                            value={field.state.value}
+                            onChange={(val) => field.handleChange(val)}
+                          />
                         </div>
                       )}
                     />
@@ -436,7 +451,7 @@ export default function EmployeeInvitePage() {
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-semibold text-sm text-foreground truncate">{emp.first_name} {emp.last_name}</span>
                             <span className="text-[9px] uppercase tracking-wider bg-secondary/50 border border-border text-secondary-foreground px-2 py-0.5 rounded-full font-bold shrink-0">
-                              {emp.tenant_role}
+                              {roleLabels[emp.tenant_role] || emp.tenant_role}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground truncate" title={`Work: ${emp.email}`}>

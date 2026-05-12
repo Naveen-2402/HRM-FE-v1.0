@@ -83,9 +83,9 @@ export default function CreditsTab() {
                 <span className="text-sm text-muted-foreground">Loading balance...</span>
               </div>
             ) : (
-              <h2 className="text-4xl font-extrabold text-foreground tracking-tight mt-1 flex items-baseline gap-2">
+              <h2 className="text-4xl font-extrabold text-foreground tracking-wide mt-1 flex items-baseline gap-2">
                 {currentBalance.toLocaleString()}
-                <span className="text-lg font-medium text-muted-foreground tracking-normal">
+                <span className="text-lg font-medium text-muted-foreground tracking-wide">
                   Credits
                 </span>
               </h2>
@@ -131,7 +131,7 @@ export default function CreditsTab() {
                         <Layers className="size-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xl font-bold text-foreground truncate tracking-tight">
+                        <p className="text-xl font-bold text-foreground truncate tracking-wide">
                           {price.metadata?.credits ? `${price.metadata.credits} Credits` : (price.nickname || price.planName)}
                         </p>
                         <p className="text-sm text-muted-foreground font-medium truncate">
@@ -151,9 +151,9 @@ export default function CreditsTab() {
                       </div>
 
                       <div className="border-t border-border pt-4 mt-2 flex items-center justify-between">
-                        <p className="text-2xl font-extrabold text-foreground tracking-tight">
+                        <p className="text-2xl font-extrabold text-foreground tracking-wide">
                           {formatCurrency(price.amount, price.currency)}
-                          <span className="text-xs font-medium text-muted-foreground uppercase ml-1 tracking-normal">
+                          <span className="text-xs font-medium text-muted-foreground uppercase ml-1 tracking-wide">
                             {price.currency}
                           </span>
                         </p>

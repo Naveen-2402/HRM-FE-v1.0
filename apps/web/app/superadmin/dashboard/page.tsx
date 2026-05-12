@@ -119,7 +119,7 @@ export default function SuperadminDashboard() {
             <p className="text-[11px] font-semibold uppercase tracking-widest text-destructive">
               <ShieldAlert className="inline size-3 mr-1 -mt-0.5" /> Superadmin
             </p>
-            <h1 className="text-[28px] font-semibold tracking-tight text-foreground flex items-center gap-3">
+            <h1 className="text-[28px] font-semibold tracking-wide text-foreground flex items-center gap-3">
               Platform Overview
             </h1>
             <p className="text-sm text-muted-foreground">

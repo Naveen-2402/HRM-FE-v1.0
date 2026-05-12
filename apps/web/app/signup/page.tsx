@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useForm } from "@tanstack/react-form";
 import {
   Building2, Mail, ArrowRight, CheckCircle2,
-  Loader2, Sparkles, AtSign, AlertTriangle,
+  Loader2, AtSign, AlertTriangle,
 } from "lucide-react";
 
 import { Button } from "@repo/ui/components/ui/button";
@@ -14,9 +14,8 @@ import { Label } from "@repo/ui/components/ui/label";
 
 import { useOnboardTenantTenantsOnboardPost } from "@repo/orval-config/src/api/default/default";
 import { emailSchema, tenantNameSchema, validateWith } from "@repo/ui/lib/validators";
-import { AccentBar } from "@/components/_shared";
 
-// ─── Reusable field wrapper ───────────────────────────────────────────────────
+// ─── Reusable Glassmorphic Field Wrapper ───────────────────────────────────────
 function Field({
   label,
   icon: Icon,
@@ -31,15 +30,15 @@ function Field({
   type?: string;
 }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <Label
         htmlFor={field.name}
-        className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"
+        className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground ml-1"
       >
         {label}
       </Label>
-      <div className="relative">
-        <Icon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+      <div className="relative group">
+        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/70 group-focus-within:text-primary transition-colors pointer-events-none" />
         <Input
           id={field.name}
           name={field.name}
@@ -48,11 +47,11 @@ function Field({
           onBlur={field.handleBlur}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.target.value)}
           placeholder={placeholder}
-          className="pl-10 h-11 border-input bg-background text-foreground focus-visible:ring-ring"
+          className="pl-11 h-12 rounded-2xl border-border/40 bg-background/30 backdrop-blur-md text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary/30 focus-visible:border-primary/50 transition-all hover:bg-background/50 shadow-inner"
         />
       </div>
       {field.state.meta.errors.length > 0 && (
-        <p className="text-xs text-destructive animate-in slide-in-from-top-1">
+        <p className="text-xs text-destructive font-medium animate-in slide-in-from-top-1 ml-1">
           {field.state.meta.errors.join(", ")}
         </p>
       )}
@@ -76,53 +75,63 @@ export default function TenantSignupPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden z-0">
+      
+      {/* ── Ambient Background Orbs ── */}
+      <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-primary/10 blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute bottom-1/4 right-1/4 w-[30vw] h-[30vw] bg-secondary/20 blur-[100px] rounded-full pointer-events-none -z-10" />
 
-      {/* Logo + wordmark */}
-      <div className="mb-8 flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-xl border border-border bg-primary shadow-sm">
-          <Sparkles className="size-5 text-primary-foreground" />
+      {/* Logo + Wordmark */}
+      <Link href="/" className="mb-10 flex items-center gap-3 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="size-12 flex items-center justify-center bg-card/20 backdrop-blur-md border border-border/30 rounded-2xl shadow-sm">
+          <img 
+            src="/logo.svg" 
+            alt="AgentsFactory HRM Logo" 
+            className="size-8" 
+          />
         </div>
-        <span className="text-lg font-semibold tracking-tight text-foreground">
-          AgentsFactory <span className="text-muted-foreground font-normal">HRM</span>
+        <span className="text-2xl font-bold tracking-wide text-foreground">
+          AgentsFactory <span className="text-muted-foreground font-medium">HRM</span>
         </span>
-      </div>
+      </Link>
 
-      {/* Card */}
-      <div className="w-full max-w-md rounded-2xl border border-border bg-card shadow-sm overflow-hidden
-                      animate-in fade-in slide-in-from-bottom-3 duration-300">
-        <AccentBar />
+      {/* Glassmorphic Card */}
+      <div className="w-full max-w-xl rounded-[2.5rem] border border-border/30 bg-background/20 backdrop-blur-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] relative overflow-hidden
+                      animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150 fill-mode-both">
+        
+        {/* Subtle glass reflection edge */}
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-50" />
 
         {/* ── Success state ──────────────────────────────────────────────── */}
         {isSuccess ? (
           <>
-            <div className="px-8 py-10 flex flex-col items-center text-center gap-5">
-              <div className="flex size-14 items-center justify-center rounded-full border border-success/25 bg-success-subtle">
-                <CheckCircle2 className="size-6 text-success" />
+            <div className="px-10 py-16 flex flex-col items-center text-center gap-6">
+              <div className="flex size-20 items-center justify-center rounded-3xl border border-success/30 bg-success-subtle shadow-[0_0_30px_-5px_rgba(var(--success),0.2)]">
+                <CheckCircle2 className="size-10 text-success" />
               </div>
-              <div className="space-y-1.5">
-                <h2 className="text-lg font-semibold text-card-foreground">Workspace Created!</h2>
-                <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+              <div className="space-y-3">
+                <h2 className="text-2xl font-bold text-foreground tracking-tight">Workspace Created!</h2>
+                <p className="text-base text-muted-foreground max-w-sm leading-relaxed">
                   We've sent an admin setup email to your contact address. Click the link inside to
                   set your password and access your dashboard.
                 </p>
               </div>
-              <Link href="/login?local=true" className="w-full">
+              <Link href="/login?local=true" className="w-full mt-4">
                 <Button
                   size="lg"
-                  className="w-full h-11 font-semibold hover:cursor-pointer bg-primary text-primary-foreground
-                             hover:bg-primary/90 rounded-xl inline-flex items-center gap-2"
+                  className="w-full h-14 font-semibold hover:cursor-pointer bg-primary text-primary-foreground
+                             hover:bg-primary/90 rounded-full inline-flex items-center gap-2 shadow-[0_0_20px_-5px_rgba(var(--primary),0.5)] transition-all hover:scale-[1.02]"
                 >
-                  Go to Login <ArrowRight className="size-4" />
+                  Go to Login <ArrowRight className="size-5" />
                 </Button>
               </Link>
             </div>
 
-            <div className="flex items-center justify-center border-t border-border bg-muted/30 px-8 py-4">
-              <p className="text-xs text-muted-foreground">
-                Already have an account?{" "}
-                <Link href="/login" className="font-semibold text-foreground hover:underline hover:cursor-pointer">
-                  Log in instead
+            <div className="flex items-center justify-center border-t border-border/30 bg-muted/10 backdrop-blur-md px-8 py-5">
+              <p className="text-sm text-muted-foreground">
+                Need to access a different workspace?{" "}
+                <Link href="/login" className="font-semibold text-primary hover:underline hover:cursor-pointer transition-colors">
+                  Log in here
                 </Link>
               </p>
             </div>
@@ -131,18 +140,19 @@ export default function TenantSignupPage() {
           /* ── Signup form ──────────────────────────────────────────────── */
           <>
             {/* Header */}
-            <div className="border-b border-border px-8 py-6 space-y-1">
-              <h2 className="text-xl font-semibold text-card-foreground">Create your workspace</h2>
-              <p className="text-sm text-muted-foreground">
-                Set up your organization's hiring platform in less than a minute.
+            <div className="border-b border-border/30 px-10 py-8 space-y-2 relative">
+              <div className="absolute left-0 bottom-0 w-1/3 h-[1px] bg-gradient-to-r from-primary/40 to-transparent" />
+              <h2 className="text-2xl font-bold text-foreground tracking-tight">Provision your workspace</h2>
+              <p className="text-base text-muted-foreground">
+                Set up your organization's isolated environment in seconds.
               </p>
             </div>
 
             {/* Form */}
-            <div className="px-8 py-6">
+            <div className="px-10 py-8">
               <form
                 onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); form.handleSubmit(); }}
-                className="space-y-5"
+                className="space-y-6"
               >
                 <form.Field
                   name="tenant_name"
@@ -150,7 +160,7 @@ export default function TenantSignupPage() {
                 >
                   {(field) => (
                     <Field
-                      label="Company Name"
+                      label="Organization Name"
                       icon={Building2}
                       placeholder="Acme Corp"
                       field={field}
@@ -164,7 +174,7 @@ export default function TenantSignupPage() {
                 >
                   {(field) => (
                     <Field
-                      label="User Account (Login ID)"
+                      label="Admin Account (Login ID)"
                       icon={AtSign}
                       placeholder="admin@acmecorp.com"
                       field={field}
@@ -188,36 +198,38 @@ export default function TenantSignupPage() {
 
                 {/* API error */}
                 {onboardMutation.isError && (
-                  <div className="flex items-start gap-2.5 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3">
-                    <AlertTriangle className="size-4 mt-0.5 shrink-0 text-destructive" />
-                    <p className="text-sm text-destructive">
+                  <div className="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 backdrop-blur-sm px-5 py-4">
+                    <AlertTriangle className="size-5 mt-0.5 shrink-0 text-destructive" />
+                    <p className="text-sm font-medium text-destructive/90 leading-relaxed">
                       {(onboardMutation.error as any)?.response?.data?.detail ||
-                        "An error occurred during onboarding. Please try again."}
+                        "An error occurred during provisioning. Please try again."}
                     </p>
                   </div>
                 )}
 
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={form.state.isSubmitting || onboardMutation.isPending}
-                  className="w-full h-11 font-semibold hover:cursor-pointer bg-primary text-primary-foreground
-                             hover:bg-primary/90 rounded-xl inline-flex items-center gap-2 group mt-1"
-                >
-                  {form.state.isSubmitting || onboardMutation.isPending ? (
-                    <><Loader2 className="size-4 animate-spin" /> Creating Workspace…</>
-                  ) : (
-                    <>Complete Setup <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" /></>
-                  )}
-                </Button>
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={form.state.isSubmitting || onboardMutation.isPending}
+                    className="w-full h-14 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground
+                               hover:bg-primary/90 rounded-full inline-flex items-center justify-center gap-2 group transition-all shadow-[0_0_20px_-5px_rgba(var(--primary),0.4)] hover:shadow-[0_0_30px_-5px_rgba(var(--primary),0.6)] hover:scale-[1.01]"
+                  >
+                    {form.state.isSubmitting || onboardMutation.isPending ? (
+                      <><Loader2 className="size-5 animate-spin" /> Provisioning Schema…</>
+                    ) : (
+                      <>Deploy Workspace <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" /></>
+                    )}
+                  </Button>
+                </div>
               </form>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-center border-t border-border bg-muted/30 px-8 py-4">
-              <p className="text-xs text-muted-foreground">
+            <div className="flex items-center justify-center border-t border-border/30 bg-muted/10 backdrop-blur-md px-10 py-5">
+              <p className="text-sm text-muted-foreground">
                 Already have an account?{" "}
-                <Link href="/login" className="font-semibold text-foreground hover:underline hover:cursor-pointer">
+                <Link href="/login" className="font-semibold text-foreground hover:text-primary transition-colors hover:cursor-pointer">
                   Log in instead
                 </Link>
               </p>

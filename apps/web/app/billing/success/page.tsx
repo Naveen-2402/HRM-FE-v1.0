@@ -60,7 +60,7 @@ export default function BillingSuccessPage() {
           </div>
           
           <CardHeader className="pt-8 pb-4">
-            <CardTitle className="text-3xl font-extrabold tracking-tight">Payment Successful!</CardTitle>
+            <CardTitle className="text-3xl font-extrabold tracking-wide">Payment Successful!</CardTitle>
             <CardDescription className="text-base text-muted-foreground mt-3 leading-relaxed">
               Your subscription is now active. Thank you for upgrading your workspace.
             </CardDescription>

@@ -30,6 +30,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
     { name: "Platform Overview", href: "/superadmin/dashboard", icon: LayoutDashboard },
     { name: "Subscription Plans", href: "/superadmin/plans", icon: Package },
     { name: "Coupons", href: "/superadmin/coupons", icon: Tag },
+    { name: "RBAC Permissions", href: "/superadmin/rbac", icon: ShieldAlert },
   ];
 
   return (
@@ -44,7 +45,7 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
             <Briefcase className="size-4 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold tracking-tight">AgentsFactory</span>
+            <span className="text-sm font-bold tracking-wide">AgentsFactory</span>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-destructive flex items-center gap-1">
               <ShieldAlert className="size-3" /> Superadmin
             </span>

@@ -75,7 +75,7 @@ export default function SettingsPage() {
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
             Workspace
           </p>
-          <h1 className="text-[28px] font-semibold tracking-tight text-foreground">Settings</h1>
+          <h1 className="text-[28px] font-semibold tracking-wide text-foreground">Settings</h1>
           <p className="text-sm text-muted-foreground">
             Manage your plan, billing, and workspace preferences.
           </p>
@@ -151,7 +151,7 @@ export default function SettingsPage() {
                   <div className="sm:col-span-3 space-y-4">
                     <div>
                       <p className="mb-1 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">Plan</p>
-                      <p className="text-4xl font-semibold tracking-tight text-foreground capitalize">
+                      <p className="text-4xl font-semibold tracking-wide text-foreground capitalize">
                         {isTrialing ? "Free Trial" : subscription.plan}
                       </p>
                     </div>

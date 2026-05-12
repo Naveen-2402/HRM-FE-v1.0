@@ -31,7 +31,7 @@ export default function BillingCancelPage() {
           </div>
           
           <CardHeader className="pt-8 pb-4">
-            <CardTitle className="text-3xl font-extrabold tracking-tight">Payment Cancelled</CardTitle>
+            <CardTitle className="text-3xl font-extrabold tracking-wide">Payment Cancelled</CardTitle>
             <CardDescription className="text-base text-muted-foreground mt-3 leading-relaxed">
               Your checkout process was safely aborted. No charges have been made to your account.
             </CardDescription>

@@ -196,7 +196,7 @@ export default function OnboardingPricingPage() {
               <div className="size-10 rounded-xl bg-primary flex items-center justify-center shadow-lg">
                 <Briefcase className="size-5 text-primary-foreground" />
               </div>
-              <span className="font-bold text-2xl tracking-tighter text-foreground">AgentsFactory HRM</span>
+              <span className="font-bold text-2xl tracking-wideer text-foreground">AgentsFactory HRM</span>
             </div>
         </div>
       </header>
@@ -210,7 +210,7 @@ export default function OnboardingPricingPage() {
         >
           {/* @ts-ignore */}
           <motion.div variants={itemVariants} className="text-center mb-16 md:mb-24">
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-foreground mb-6 bg-gradient-to-b from-foreground to-foreground/80 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl font-extrabold tracking-wideer text-foreground mb-6 bg-gradient-to-b from-foreground to-foreground/80 bg-clip-text text-transparent">
               Elevate your workforce.
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -249,14 +249,14 @@ export default function OnboardingPricingPage() {
                       <div className={`p-3 rounded-xl shadow-inner ${plan.recommended ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-secondary text-secondary-foreground border border-border'}`}>
                         <plan.icon className="size-6" />
                       </div>
-                      <CardTitle className="text-2xl font-extrabold tracking-tight text-card-foreground">{plan.name}</CardTitle>
+                      <CardTitle className="text-2xl font-extrabold tracking-wide text-card-foreground">{plan.name}</CardTitle>
                     </div>
                     <CardDescription className="text-md text-muted-foreground min-h-[48px] leading-relaxed">
                       {plan.description}
                     </CardDescription>
                     
                     <div className="mt-6 flex items-baseline text-card-foreground transition-all group-hover:scale-105 duration-300">
-                      <span className="text-5xl font-extrabold tracking-tighter text-foreground">{plan.price}</span>
+                      <span className="text-5xl font-extrabold tracking-wideer text-foreground">{plan.price}</span>
                       {plan.interval && (
                         <span className="ml-2 text-md font-medium text-muted-foreground">{plan.interval}</span>
                       )}

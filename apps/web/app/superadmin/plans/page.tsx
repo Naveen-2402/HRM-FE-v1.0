@@ -49,7 +49,7 @@ export default function SubscriptionPlansPage() {
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
+          <h1 className="text-3xl font-bold tracking-wide text-foreground flex items-center gap-3">
             Subscription & Billing Plans
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -99,9 +99,9 @@ export default function SubscriptionPlansPage() {
                     </div>
                     
                     <div className="mt-2">
-                      <p className="text-3xl font-extrabold text-foreground tracking-tight">
+                      <p className="text-3xl font-extrabold text-foreground tracking-wide">
                         {formatCurrency(price.amount, price.currency)}
-                        <span className="text-sm font-medium text-muted-foreground uppercase ml-1 tracking-normal">
+                        <span className="text-sm font-medium text-muted-foreground uppercase ml-1 tracking-wide">
                           {price.currency}
                         </span>
                       </p>

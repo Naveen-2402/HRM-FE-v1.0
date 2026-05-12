@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   Briefcase, LayoutDashboard, Users, UserPlus, 
-  Settings, LogOut, Menu, X, Bell, ShieldCheck 
+  Settings, LogOut, Menu, X, Bell, Handshake, UserSearch
 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -25,6 +25,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard, adminOnly: false },
     { name: "Employees", href: "/dashboard/employees", icon: Users, adminOnly: true },
     { name: "Invite Team", href: "/dashboard/employees/invite", icon: UserPlus, adminOnly: true },
+    { name: "Jobs", href: "/dashboard/jobs", icon: Handshake, adminOnly: false },
+    { name: "Candidates", href: "/dashboard/candidates", icon: UserSearch, adminOnly: false },
     { name: "Settings", href: "/dashboard/settings", icon: Settings, adminOnly: false },
   ];
 
@@ -46,7 +48,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div className="size-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
               <Briefcase className="size-4 text-sidebar-primary-foreground" />
             </div>
-            <span className="font-bold text-lg text-sidebar-foreground tracking-tight">HRM</span>
+            <span className="font-bold text-lg text-sidebar-foreground tracking-wide">HRM</span>
           </Link>
         </div>
 
