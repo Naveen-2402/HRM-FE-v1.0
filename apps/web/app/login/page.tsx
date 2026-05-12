@@ -21,6 +21,7 @@ import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/defaul
 import { useActivateCurrentEmployeeApiV1EmployeesActivatePost } from "@repo/orval-config/src/api/employees/employees";
 import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
 import { useForgotPasswordApiV1AuthForgotPasswordPost } from "@repo/orval-config/src/api/authentication/authentication"; 
+import { checkDomainApiV1AuthCheckDomainGet } from "@repo/orval-config/src/api/auth/auth/auth";
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 import { jwtDecode } from "jwt-decode";
@@ -52,7 +53,7 @@ function LoginFormContent() {
     onSubmit: async ({ value }) => {
       try {
         const response = await loginMutation.mutateAsync({
-          data: { username: value.email, password: value.password },
+          data: { email: value.email, password: value.password },
         });
 
         const { access_token, refresh_token, id_token, session_state } = response.data as any;
@@ -125,18 +126,19 @@ function LoginFormContent() {
     if (isLocalLogin) { setStep(2); return; }
     setIsChecking(true);
     try {
-      const response = await axios.get(`/auth/check-domain?email=${encodeURIComponent(email)}`);
-      if (response.data.sso_enabled) {
+      const response = await checkDomainApiV1AuthCheckDomainGet({ email }) as any;
+      if (response.sso_enabled) {
         const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8082";
         const realm       = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
         const clientId    = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "hrm-frontend";
         const redirectUri = `${window.location.origin}/auth/callback`;
-        const idpAlias    = response.data.idp_alias;
+        const idpAlias    = response.idp_alias;
         window.location.href = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20profile%20email%20organization&kc_idp_hint=${idpAlias}`;
       } else {
         setStep(2);
       }
-    } catch {
+    } catch (error) {
+      console.error("Check domain failed:", error);
       setStep(2);
     } finally {
       setIsChecking(false);
