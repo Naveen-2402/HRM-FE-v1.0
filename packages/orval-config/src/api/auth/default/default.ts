@@ -28,14 +28,14 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 /**
  * @summary Health Check
  */
-export const healthCheckApiV1AuthHealthGet = (
+export const healthCheckHealthGet = (
     
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<unknown>(
-      {url: `/api/v1/auth/health`, method: 'GET', signal
+      {url: `/health`, method: 'GET', signal
     },
       options);
     }
@@ -43,45 +43,45 @@ export const healthCheckApiV1AuthHealthGet = (
 
 
 
-export const getHealthCheckApiV1AuthHealthGetQueryKey = () => {
+export const getHealthCheckHealthGetQueryKey = () => {
     return [
-    `/api/v1/auth/health`
+    `/health`
     ] as const;
     }
 
     
-export const getHealthCheckApiV1AuthHealthGetQueryOptions = <TData = Awaited<ReturnType<typeof healthCheckApiV1AuthHealthGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckApiV1AuthHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export const getHealthCheckHealthGetQueryOptions = <TData = Awaited<ReturnType<typeof healthCheckHealthGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getHealthCheckApiV1AuthHealthGetQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getHealthCheckHealthGetQueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthCheckApiV1AuthHealthGet>>> = ({ signal }) => healthCheckApiV1AuthHealthGet(requestOptions, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthCheckHealthGet>>> = ({ signal }) => healthCheckHealthGet(requestOptions, signal);
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthCheckApiV1AuthHealthGet>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthCheckHealthGet>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type HealthCheckApiV1AuthHealthGetQueryResult = NonNullable<Awaited<ReturnType<typeof healthCheckApiV1AuthHealthGet>>>
-export type HealthCheckApiV1AuthHealthGetQueryError = unknown
+export type HealthCheckHealthGetQueryResult = NonNullable<Awaited<ReturnType<typeof healthCheckHealthGet>>>
+export type HealthCheckHealthGetQueryError = unknown
 
 
 /**
  * @summary Health Check
  */
 
-export function useHealthCheckApiV1AuthHealthGet<TData = Awaited<ReturnType<typeof healthCheckApiV1AuthHealthGet>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckApiV1AuthHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+export function useHealthCheckHealthGet<TData = Awaited<ReturnType<typeof healthCheckHealthGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
   
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getHealthCheckApiV1AuthHealthGetQueryOptions(options)
+  const queryOptions = getHealthCheckHealthGetQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
