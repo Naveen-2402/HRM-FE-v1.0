@@ -12,6 +12,7 @@ import { Button } from "@repo/ui/components/ui/button";
 import { useGetSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
 import { AccentBar, SectionCard } from "@/components/_shared";
 import { usePermissions } from "@/hooks/usePermissions";
+import { getRootOrigin } from "@repo/utils/src/domain";
 
 // ── Lazy-load every non-first tab ─────────────────────────────────────────────
 const SecurityTab = dynamic(() => import("./components/securityTab"), {
@@ -247,7 +248,7 @@ export default function SettingsPage() {
                 <ShieldCheck className="size-3.5" /> Secured by Stripe
               </div>
               <Button
-                onClick={() => (window.location.href = "http://hrm.test:3000/pricing")}
+                onClick={() => (window.location.href = `${getRootOrigin()}/pricing`)}
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90
                            font-medium text-sm px-5 py-2 rounded-xl shadow-sm transition-all hover:shadow-md hover:cursor-pointer"
               >

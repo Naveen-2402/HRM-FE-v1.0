@@ -62,8 +62,9 @@ export default function GithubTab() {
     },
   });
 
-  const isConfigured = config?.configured;
-  const integration = config?.github_integration;
+  const configData = config as any;
+  const isConfigured = configData?.configured;
+  const integration = configData?.github_integration;
 
   return (
     <div className="space-y-6">
