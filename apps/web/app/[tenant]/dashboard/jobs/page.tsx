@@ -20,9 +20,8 @@ export default function JobsPage() {
 
   // API Hooks
   const { data: jobsResponse, isLoading, refetch, isFetching } = useGetJobsApiV1JobsGet();
-
   const jobs = Array.isArray(jobsResponse) ? jobsResponse : [];
-  const { mutate: deleteJob } = useDeleteJobApiV1JobsJobIdDelete();
+  const { mutate: deleteJob, isPending: isDeleting } = useDeleteJobApiV1JobsJobIdDelete();
 
   // API: Fetch Credits Balance
   const { data: creditsData } = useGetCreditBalanceApiV1BillingCreditsGet();
@@ -138,6 +137,8 @@ export default function JobsPage() {
         onConfirm={handleDelete}
         title="Delete Job"
         description="Are you sure? All associated candidate data for this job will be archived."
+        isLoading={isDeleting}
+        isDestructive={true}
       />
       
       {/* Results Modal */}

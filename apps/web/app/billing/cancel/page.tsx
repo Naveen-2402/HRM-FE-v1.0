@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
+import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
 export default function BillingCancelPage() {
   const router = useRouter();
+  const { redirectToTenantDashboard } = useTenantRedirect();
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 selection:bg-primary/20">
@@ -49,6 +51,14 @@ export default function BillingCancelPage() {
               className="w-full h-12 text-base font-semibold hover:cursor-pointer bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all"
             >
               <ArrowLeft className="mr-2 size-5" /> Return to Pricing Plans
+            </Button>
+            
+            <Button 
+              variant="outline"
+              onClick={() => redirectToTenantDashboard()}
+              className="w-full h-12 text-base font-semibold hover:cursor-pointer border-border hover:bg-muted transition-all"
+            >
+              <Home className="mr-2 size-5" /> Go to Dashboard
             </Button>
           </CardFooter>
         </Card>

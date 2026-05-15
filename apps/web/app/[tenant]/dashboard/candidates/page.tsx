@@ -15,7 +15,8 @@ import {
 } from "@repo/orval-config/src/api/orchestrator/orchestrate/orchestrate";
 import { 
   useUploadSasApiV1CandidatesUploadSasPost,
-  useGetCandidatesApiV1CandidatesGet
+  useGetCandidatesApiV1CandidatesGet,
+  useDeleteCandidateApiV1CandidatesCandidateIdDelete
 } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
 import { 
   useGetCreditBalanceApiV1BillingCreditsGet 
@@ -60,6 +61,9 @@ export default function CandidatesPage() {
   // API: Fetch Candidates (Resume Bank)
   const { data: candidatesResponse, isLoading, refetch, isFetching } = useGetCandidatesApiV1CandidatesGet();
   const candidates = Array.isArray(candidatesResponse) ? candidatesResponse : [];
+
+  // API: Delete Candidate
+  const { mutate: deleteCandidate, isPending: isDeletingCandidate } = useDeleteCandidateApiV1CandidatesCandidateIdDelete();
 
   // API: Fetch Credits Balance (Public API)
   const { data: creditsData } = useGetCreditBalanceApiV1BillingCreditsGet();
@@ -162,21 +166,19 @@ export default function CandidatesPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteId) return;
-    try {
-      await customInstance({
-        url: `/api/v1/candidates/${deleteId}`,
-        method: 'DELETE'
-      });
-      toast.success("Candidate deleted successfully");
-      refetch();
-    } catch (error) {
-      console.error("Delete failed:", error);
-      toast.error("Failed to delete candidate");
-    } finally {
-      setDeleteId(null);
-    }
+    deleteCandidate({ candidateId: deleteId }, {
+      onSuccess: () => {
+        toast.success("Candidate deleted successfully");
+        refetch();
+        setDeleteId(null);
+      },
+      onError: (error: any) => {
+        console.error("Delete failed:", error);
+        toast.error(error?.response?.data?.detail || "Failed to delete candidate");
+      }
+    });
   };
 
   const handleViewFile = async (candidateId: number, filePath: string) => {
@@ -767,6 +769,8 @@ export default function CandidatesPage() {
         onConfirm={handleDelete}
         title="Delete Candidate"
         description="Are you sure you want to delete this candidate? This action cannot be undone."
+        isLoading={isDeletingCandidate}
+        isDestructive={true}
       />
     </div>
   );
