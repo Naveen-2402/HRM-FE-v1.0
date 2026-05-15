@@ -18,7 +18,7 @@ export const SectionCard: React.FC<{
   className?: string;
 } & React.HTMLAttributes<HTMLDivElement>> = ({ children, className, ...props }) => (
   <div
-    className={cn("rounded-2xl border border-border bg-card shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300", className)}
+    className={cn("rounded-2xl border border-border bg-card shadow-sm animate-in fade-in slide-in-from-bottom-3 duration-300", className)}
     {...props}
   >
     {children}

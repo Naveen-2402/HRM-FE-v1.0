@@ -92,9 +92,9 @@ export function Dropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -5, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute left-0 top-full z-50 mt-1.5 w-full min-w-[10rem] overflow-hidden rounded-md border border-border bg-card shadow-lg"
+            className="absolute left-0 top-full z-50 mt-1.5 w-full min-w-[10rem] rounded-md border border-border bg-card shadow-lg"
           >
-            <div className="max-h-[180px] overflow-y-auto p-1.5 space-y-0.5">
+            <div className="max-h-[180px] overflow-y-scroll overscroll-contain custom-scrollbar p-1.5 space-y-0.5">
               {options.length === 0 ? (
                 <div className="py-3 px-2 text-center text-sm text-muted-foreground">
                   No options

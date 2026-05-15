@@ -259,7 +259,7 @@ export default function CreateCouponModal(props: any){
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border border-border">
+              {/* <div className="grid grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border border-border">
                 <form.Field
                   name="free_days_allocation"
                   validators={{
@@ -313,7 +313,7 @@ export default function CreateCouponModal(props: any){
                     </div>
                   )}
                 />
-              </div>
+              </div> */}
 
               <div className="flex flex-wrap gap-3 pt-2">
                 <Button 
