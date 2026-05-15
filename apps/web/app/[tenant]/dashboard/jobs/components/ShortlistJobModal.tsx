@@ -252,7 +252,7 @@ export default function ShortlistJobModal({ isOpen, onClose, job }: ShortlistJob
                 disabled={!estimate.sufficient || isConfirming}
                 className="bg-primary text-primary-foreground px-5 py-2 rounded-md text-sm font-medium hover:cursor-pointer disabled:opacity-50 transition-opacity"
               >
-                {isConfirming ? "Confirming..." : "Confirm & Start ⚡"}
+                {isConfirming ? "Confirming..." : "Confirm & Start"}
               </button>
             </div>
           </>

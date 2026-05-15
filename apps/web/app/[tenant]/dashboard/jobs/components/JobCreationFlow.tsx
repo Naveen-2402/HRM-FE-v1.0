@@ -6,6 +6,8 @@ import { z } from "zod";
 import { useCreateJobApiV1JobsPost } from "@repo/orval-config/src/api/job/jobs/jobs";
 import { useExecuteWorkflowApiV1OrchestrateExecutePost, useConfirmWorkflowApiV1OrchestrateConfirmPost } from "@repo/orval-config/src/api/orchestrator/orchestrate/orchestrate";
 import { useUploadSasApiV1CandidatesUploadSasPost } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+import { toast } from "react-toastify";
+import { AlertCircle } from "lucide-react";
 
 const jobSchema = z.object({
   title: z.string().min(3, "Job title must be at least 3 characters"),
@@ -22,6 +24,7 @@ interface JobCreationFlowProps {
 export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
   const [createdJobId, setCreatedJobId] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   // API Mutations
   const { mutate: createJob, isPending: isCreating } = useCreateJobApiV1JobsPost();
@@ -45,6 +48,15 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
         onSuccess: (response: any) => {
           // The backend returns 'id', not 'job_id'
           setCreatedJobId(response?.id?.toString() || "created");
+          toast.success("Job created successfully!");
+        },
+        onError: (err: any) => {
+          if (err?.response?.status === 403) {
+            setError(err?.response?.data?.detail || "You don't have permission to create jobs.");
+          } else {
+            const errMsg = err?.response?.data?.detail || "Failed to create job. Please try again.";
+            setError(errMsg);
+          }
         }
       });
     },
@@ -211,6 +223,13 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
           </div>
         )}
       />
+
+      {error && (
+        <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs animate-in fade-in zoom-in-95 duration-200">
+          <AlertCircle className="size-4 shrink-0 mt-0.5" />
+          <p className="font-medium">{error}</p>
+        </div>
+      )}
 
       <div className="flex justify-end pt-4 border-t border-border mt-4">
         <button

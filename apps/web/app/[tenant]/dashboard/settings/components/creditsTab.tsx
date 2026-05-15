@@ -21,8 +21,10 @@ export default function CreditsTab() {
   
   const plans = (plansData as any) || [];
   
-  // Safely extract the balance (fallback to 0 if undefined)
-  const currentBalance = (balanceData as any)?.credit_balance ?? (balanceData as any)?.balance ?? 0;
+  // Safely extract the balance (available = balance - consumed - reserved)
+  const currentBalance = balanceData 
+    ? (balanceData as any).credit_balance - (balanceData as any).consumed_credits - (balanceData as any).reserved_credits
+    : 0;
 
   // Filter only products marked as "credits" in their metadata
   const credits = plans.filter((p: any) => p.metadata?.type === "credits" || p.type === "credits");
@@ -71,25 +73,28 @@ export default function CreditsTab() {
       {/* ── 1. Current Balance Section ── */}
       <SectionCard>
         <AccentBar />
-        <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div className="p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
               <Wallet className="size-3.5" /> Workspace Balance
             </div>
             
             {isLoadingBalance ? (
-              <div className="flex items-center gap-3 mt-2 h-[36px]">
+              <div className="flex items-center gap-3 mt-2 h-[48px]">
                 <Loader2 className="size-5 animate-spin text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Loading balance...</span>
+                <span className="text-sm text-muted-foreground font-medium">Loading balance...</span>
               </div>
             ) : (
-              <h2 className="text-4xl font-extrabold text-foreground tracking-wide mt-1 flex items-baseline gap-2">
+              <h2 className="text-5xl font-extrabold text-foreground tracking-tighter text-tighter mt-1 flex items-baseline gap-3">
                 {currentBalance.toLocaleString()}
-                <span className="text-lg font-medium text-muted-foreground tracking-wide">
+                <span className="text-xl font-medium text-muted-foreground tracking-tight">
                   Credits
                 </span>
               </h2>
             )}
+          </div>
+          <div className="px-4 py-2 rounded-xl bg-primary/5 border border-primary/10 hidden sm:block">
+            <span className="text-xs font-bold text-primary uppercase tracking-widest">Active Tier</span>
           </div>
         </div>
       </SectionCard>
@@ -124,56 +129,51 @@ export default function CreditsTab() {
                 return (
                   <div 
                     key={price.price_id} 
-                    className="flex flex-col p-6 rounded-2xl border border-border bg-background shadow-sm hover:border-success/50 hover:shadow-md transition-all group"
+                    className="flex flex-col p-8 rounded-3xl border border-border/50 bg-card/30 shadow-sm hover:border-primary/50 transition-all group"
                   >
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="size-12 rounded-full bg-success/10 flex items-center justify-center border border-success/20 text-success shrink-0">
-                        <Layers className="size-5" />
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="size-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 text-primary shrink-0 transition-transform group-hover:scale-110">
+                        <Layers className="size-6" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xl font-bold text-foreground truncate tracking-wide">
+                        <p className="text-2xl font-bold text-foreground truncate tracking-tight">
                           {price.metadata?.credits ? `${price.metadata.credits} Credits` : (price.nickname || price.planName)}
                         </p>
-                        <p className="text-sm text-muted-foreground font-medium truncate">
-                          One-time purchase
+                        <p className="text-[13px] text-muted-foreground font-medium uppercase tracking-widest">
+                          Bundle
                         </p>
                       </div>
                     </div>
 
-                    <div className="mt-auto space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <CheckCircle2 className="size-4 text-success" /> Added instantly to balance
+                    <div className="mt-auto space-y-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2.5 text-xs text-muted-foreground font-medium">
+                          <CheckCircle2 className="size-4 text-primary" /> Instant activation
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <CheckCircle2 className="size-4 text-success" /> Never expires
+                        <div className="flex items-center gap-2.5 text-xs text-muted-foreground font-medium">
+                          <CheckCircle2 className="size-4 text-primary" /> No expiration date
                         </div>
                       </div>
 
-                      <div className="border-t border-border pt-4 mt-2 flex items-center justify-between">
-                        <p className="text-2xl font-extrabold text-foreground tracking-wide">
-                          {formatCurrency(price.amount, price.currency)}
-                          <span className="text-xs font-medium text-muted-foreground uppercase ml-1 tracking-wide">
-                            {price.currency}
-                          </span>
-                        </p>
-
-                        <Button
-                          onClick={() => handleBuyCredits(price.price_id)}
-                          disabled={checkoutMutation.isPending}
-                          className="bg-success text-success-foreground hover:bg-success/90 hover:cursor-pointer shadow-sm rounded-xl px-4"
-                        >
-                          {isProcessing ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <>
-                              Buy Now <ArrowRight className="size-3.5 ml-1.5" />
-                            </>
-                          )}
-                        </Button>
+                      <div className="border-t border-border/50 pt-6 mt-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-3xl font-extrabold text-foreground tracking-tighter">
+                            {formatCurrency(price.amount, price.currency)}
+                          </p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                            {price.currency} Total
+                          </p>
+                        </div>
+                          <button
+                            onClick={() => handleBuyCredits(price.price_id)}
+                            disabled={isProcessing}
+                            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/30 disabled:opacity-50"
+                          >
+                            {isProcessing ? "Wait..." : "Buy Now"}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
                 );
               })}
             </div>

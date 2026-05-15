@@ -4,12 +4,14 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Loader2, CreditCard, Calendar, Clock,
-  AlertTriangle, ArrowRight, ShieldCheck, Zap, Sparkles, CheckCircle2, CircleDollarSign
+  AlertTriangle, ArrowRight, ShieldCheck, Zap, Sparkles, CheckCircle2, CircleDollarSign,
+  Github
 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 
 import { useGetSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
 import { AccentBar, SectionCard } from "@/components/_shared";
+import { usePermissions } from "@/hooks/usePermissions";
 
 // ── Lazy-load every non-first tab ─────────────────────────────────────────────
 const SecurityTab = dynamic(() => import("./components/securityTab"), {
@@ -38,6 +40,19 @@ const CreditsTab = dynamic(() => import("./components/creditsTab"), {
   ssr: false,
 });
 
+const GithubTab = dynamic(() => import("./components/githubTab"), {
+  loading: () => (
+    <div className="rounded-2xl border border-border bg-card shadow-sm">
+      <div className="h-[3px] w-full rounded-t-2xl bg-chart-1 animate-pulse" />
+      <div className="flex items-center justify-center gap-3 py-20">
+        <Loader2 className="size-6 animate-spin text-chart-1" />
+        <p className="text-sm text-muted-foreground">Loading GitHub config…</p>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 function getStatusConfig(status?: string) {
   const s = status?.toLowerCase() ?? "";
@@ -53,6 +68,7 @@ function getStatusConfig(status?: string) {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("Subscription");
+  const { hasPermission, isLoading: isLoadingPermissions } = usePermissions();
 
   const { data: subscription, isLoading, isError } =
     useGetSubscriptionStatusApiV1BillingSubscriptionGet();
@@ -66,8 +82,27 @@ export default function SettingsPage() {
   const periodEnded = !!subscription?.current_period_end &&
     new Date(subscription.current_period_end) < new Date();
 
+  // ── Permission-based Tab Visibility ──
+  const allTabs = [
+    { id: "Subscription", label: "Subscription", icon: CreditCard,       permission: "billing:access" },
+    { id: "Credits",      label: "Credits",      icon: CircleDollarSign, permission: "credits:read" },
+    { id: "Security",     label: "Security",     icon: ShieldCheck,      permission: "tenant:access" },
+    { id: "Github",       label: "Github Config", icon: Github,          permission: "github:manage" },
+  ] as const;
+
+  const visibleTabs = allTabs.filter(tab => hasPermission(tab.permission));
+
+  if (isLoadingPermissions) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center gap-3">
+        <Loader2 className="size-8 animate-spin text-primary" />
+        <p className="text-muted-foreground font-medium">Verifying access...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background sm:px-8 px-4">
+    <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl space-y-8">
 
         {/* ── Page Header ───────────────────────────────────────────────── */}
@@ -83,23 +118,19 @@ export default function SettingsPage() {
 
         {/* ── Tab Bar ───────────────────────────────────────────────────── */}
         <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted p-1">
-          {(["Subscription", "Credits", "Security"] as const).map((tab) => (
+          {visibleTabs.map((tab) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
               className={[
                 "hover:cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all capitalize",
-                activeTab === tab
+                activeTab === tab.id
                   ? "bg-card text-foreground shadow-sm border border-border"
                   : "text-muted-foreground hover:text-foreground hover:bg-card/60",
               ].join(" ")}
             >
-              {tab === "Subscription"
-                ? <CreditCard className="size-4" />
-                : tab === "Credits"
-                ? <CircleDollarSign className="size-4"/>
-                : <ShieldCheck className="size-4" />}
-              {tab}
+              <tab.icon className="size-4" />
+              {tab.label}
             </button>
           ))}
         </div>
@@ -236,6 +267,11 @@ export default function SettingsPage() {
             TAB: SECURITY  (lazy-loaded on first click)
         ══════════════════════════════════════════════════════════════════ */}
         {activeTab === "Security" && <SecurityTab />}
+
+        {/* ══════════════════════════════════════════════════════════════════
+            TAB: GITHUB CONFIG (lazy-loaded)
+        ══════════════════════════════════════════════════════════════════ */}
+        {activeTab === "Github" && <GithubTab />}
 
       </div>
     </div>

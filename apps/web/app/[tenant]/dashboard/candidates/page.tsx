@@ -22,6 +22,8 @@ import {
 } from "@repo/orval-config/src/api/billing/billing/billing";
 import { customInstance } from "@repo/orval-config/src/axios-setup";
 import { toast } from "react-toastify";
+import { SectionCard } from "@/components/_shared";
+import { RefreshCcw, UserPlus, Zap, Filter, Search, ChevronDown, Download, Eye, Trash2 } from "lucide-react";
 
 export default function CandidatesPage() {
   const params = useParams();
@@ -61,7 +63,9 @@ export default function CandidatesPage() {
 
   // API: Fetch Credits Balance (Public API)
   const { data: creditsData } = useGetCreditBalanceApiV1BillingCreditsGet();
-  const credits = (creditsData as any)?.credit_balance - (creditsData as any)?.consumed_credits - (creditsData as any)?.reserved_credits;
+  const credits = creditsData 
+    ? (creditsData as any).credit_balance - (creditsData as any).consumed_credits - (creditsData as any).reserved_credits
+    : 0;
 
   // API: Orchestrator Mutation for uploading/processing
   const { mutateAsync: executeWorkflow, isPending: isExecuting } = useExecuteWorkflowApiV1OrchestrateExecutePost();
@@ -129,8 +133,14 @@ export default function CandidatesPage() {
         setUploadStep("estimate");
       }
     } catch (error: any) {
-      console.error("Failed to get upload estimate:", error);
-      setUploadError(error?.response?.data?.detail || "Failed to estimate cost.");
+      if (error?.response?.status === 403) {
+        setUploadError(error?.response?.data?.detail || "You don't have permission to perform this action.");
+      } else if (error?.response?.status === 402) {
+        setUploadError("Insufficient credits. Please top up your balance.");
+      } else {
+        console.error("Failed to get upload estimate:", error);
+        setUploadError(error?.response?.data?.detail || "Failed to estimate cost. Please try again.");
+      }
     } finally {
       setIsUploadingFiles(false);
     }
@@ -281,38 +291,38 @@ export default function CandidatesPage() {
   const statsParsed = candidates.filter((c: any) => c.status?.toLowerCase() === "completed" || !c.status).length;
 
   return (
-    <div className="p-6 bg-background min-h-screen">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-background min-h-screen">
+      <div className="flex justify-between items-end mb-10">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Candidate pipeline</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-             {statsTotal} total · {statsParsed} parsed · <span className="text-success font-semibold">{credits} credits</span>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight text-tight">Candidate Pipeline</h1>
+          <p className="text-sm text-muted-foreground mt-2">
+             {statsTotal} total · {statsParsed} parsed · <span className="text-primary font-semibold">{credits} credits</span>
           </p>
         </div>
-        <div className="flex gap-3">
-          <button 
+        <div className="flex gap-4">
+          <button
             onClick={() => setIsShortlistModalOpen(true)}
-            className="bg-secondary text-secondary-foreground px-4 py-2 rounded-md text-sm font-medium hover:cursor-pointer flex items-center gap-2"
+            className="bg-secondary text-secondary-foreground px-6 py-2.5 rounded-xl text-sm font-bold hover:cursor-pointer flex items-center gap-2 transition-all hover:bg-secondary/80"
           >
-            <span className="text-warning">⚡</span> Shortlist
+            Shortlist
           </button>
           <button 
             onClick={() => setIsUploadModalOpen(true)}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:cursor-pointer"
+            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-sm font-bold hover:cursor-pointer flex items-center gap-2 transition-all hover:shadow-lg hover:shadow-primary/20"
           >
-            + Upload resumes
+            <UserPlus className="size-4" /> Upload resumes
           </button>
           <button 
             onClick={() => refetch()}
-            disabled={isFetching}
-            className="border border-border bg-card text-foreground px-4 py-2 rounded-md text-sm font-medium hover:cursor-pointer flex items-center gap-2 disabled:opacity-50"
+            className="bg-secondary text-secondary-foreground px-4 py-2.5 rounded-xl text-sm font-bold hover:cursor-pointer transition-all hover:bg-secondary/80"
           >
-            {isFetching ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Refresh"}
+            <RefreshCcw className={`size-4 ${isFetching ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-lg overflow-x-auto">
+      <SectionCard className="overflow-hidden p-0 border-border/40">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm text-left">
           <thead className="text-xs text-muted-foreground uppercase border-b border-border bg-muted/30">
             <tr>
@@ -412,6 +422,7 @@ export default function CandidatesPage() {
           </tbody>
         </table>
       </div>
+      </SectionCard>
 
       {/* Upload Modal with Orchestrator Mutation */}
       <Modal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} title="Upload resumes">
@@ -539,7 +550,7 @@ export default function CandidatesPage() {
                   disabled={!uploadEstimate.sufficient || isConfirming}
                   className="bg-primary text-primary-foreground px-5 py-2 rounded-md text-sm font-medium hover:cursor-pointer disabled:opacity-50 transition-opacity"
                 >
-                  {isConfirming ? "Confirming..." : "Confirm & Parse ⚡"}
+                  {isConfirming ? "Confirming..." : "Confirm & Parse"}
                 </button>
               </div>
             </>
@@ -704,7 +715,7 @@ export default function CandidatesPage() {
                   disabled={!shortlistEstimate.sufficient || isConfirming}
                   className="bg-primary text-primary-foreground px-5 py-2 rounded-md text-sm font-medium hover:cursor-pointer disabled:opacity-50 transition-opacity"
                 >
-                  {isConfirming ? "Confirming..." : "Confirm & Start ⚡"}
+                  {isConfirming ? "Confirming..." : "Confirm & Start"}
                 </button>
               </div>
             </>

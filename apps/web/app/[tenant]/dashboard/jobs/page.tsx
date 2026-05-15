@@ -4,8 +4,10 @@ import React, { useState } from "react";
 import { useGetJobsApiV1JobsGet, useDeleteJobApiV1JobsJobIdDelete } from "@repo/orval-config/src/api/job/jobs/jobs";
 import { Modal } from "@/components/_shared/Modal";
 import { ConfirmModal } from "@/components/_shared/ConfirmModal";
-import { RefreshCw } from "lucide-react";
+import { SectionCard } from "@/components/_shared";
+import { Handshake, RefreshCw } from "lucide-react";
 import JobCreationFlow from "./components/JobCreationFlow";
+import { useGetCreditBalanceApiV1BillingCreditsGet } from "@repo/orval-config/src/api/billing/billing/billing";
 
 import ShortlistResultsModal from "./components/ShortlistResultsModal";
 import ShortlistJobModal from "./components/ShortlistJobModal";
@@ -21,6 +23,12 @@ export default function JobsPage() {
 
   const jobs = Array.isArray(jobsResponse) ? jobsResponse : [];
   const { mutate: deleteJob } = useDeleteJobApiV1JobsJobIdDelete();
+
+  // API: Fetch Credits Balance
+  const { data: creditsData } = useGetCreditBalanceApiV1BillingCreditsGet();
+  const credits = creditsData 
+    ? (creditsData as any).credit_balance - (creditsData as any).consumed_credits - (creditsData as any).reserved_credits
+    : 0;
 
   const handleJobCreated = () => {
     setIsJobModalOpen(false);
@@ -39,30 +47,29 @@ export default function JobsPage() {
   };
 
   return (
-    <div className="p-6 bg-background min-h-screen">
+    <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-end mb-10">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Job management</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {jobs.length} active jobs · <span className="text-success-foreground font-semibold">978 credits</span>
+          <h1 className="text-3xl font-bold text-foreground tracking-tight text-tight">Job Management</h1>
+          <p className="text-sm text-muted-foreground mt-2">
+            {jobs.length} active roles · <span className="text-primary font-semibold">{credits} credits</span>
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <button
             onClick={() => setIsJobModalOpen(true)}
-            className="bg-primary text-primary-foreground px-5 py-2 rounded-md text-sm font-medium hover:cursor-pointer transition-all"
+            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-sm font-bold hover:cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/20 flex items-center gap-2"
           >
-            + Create job
+            <Handshake className="size-4" /> Create new job
           </button>
           <button 
             onClick={() => refetch()} 
             disabled={isFetching}
-            className="border border-border bg-card text-foreground px-4 py-2 rounded-md text-sm font-medium hover:cursor-pointer flex items-center gap-2 disabled:opacity-50 transition-all"
+            className="bg-secondary text-secondary-foreground px-6 py-2.5 rounded-xl text-sm font-bold hover:cursor-pointer transition-all hover:bg-secondary/80 flex items-center gap-2 disabled:opacity-50"
           >
             {isFetching ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Refresh"}
           </button>
-
         </div>
       </div>
 
@@ -70,42 +77,47 @@ export default function JobsPage() {
       {isLoading ? (
         <div className="text-muted-foreground py-20 text-center">Fetching jobs...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {jobs.length === 0 ? (
-            <div className="col-span-full py-20 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl bg-muted/5">
-              <p className="text-muted-foreground italic mb-3">No jobs created yet.</p>
+            <div className="col-span-full py-24 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-3xl bg-muted/5">
+              <p className="text-muted-foreground font-medium mb-3">No jobs created yet.</p>
             </div>
           ) : jobs.map((job: any, index: number) => (
-            <div key={job.id || `job-idx-${index}`} className="bg-card border border-border rounded-xl p-6 flex flex-col shadow-sm hover:border-ring transition-colors">
-              <h3 className="text-lg font-bold text-foreground mb-2">{job.title}</h3>
-              <p className="text-sm text-primary mb-4 line-clamp-3">
+            <SectionCard key={job.id || `job-idx-${index}`} className="p-8 flex flex-col group">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-bold text-foreground tracking-tight text-tight leading-tight">{job.title}</h3>
+                <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
+                  <Handshake className="size-4" />
+                </div>
+              </div>
+              <p className="text-[13.5px] text-muted-foreground/80 leading-relaxed mb-6 line-clamp-3">
                 {job.description || "No description available for this role."}
               </p>
               
-              <div className="mt-auto flex items-center gap-2 pt-4 border-t border-border/50">
+              <div className="mt-auto flex items-center gap-3 pt-6 border-t border-border/50">
                 <button 
                   onClick={() => setResultsJob({ id: job.id, title: job.title })}
-                  className="bg-secondary text-secondary-foreground px-4 py-2 rounded text-xs font-semibold hover:cursor-pointer transition-colors hover:bg-secondary/80"
+                  className="bg-primary text-primary-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/20"
                 >
-                  Results
+                  View Results
                 </button>
                 <button
                   onClick={() => setShortlistJob({ id: job.id, title: job.title })}
-                  className="bg-secondary/40 text-secondary-foreground px-4 py-2 rounded text-xs font-semibold hover:cursor-pointer flex items-center gap-1 hover:bg-secondary/60 transition-colors"
+                  className="bg-secondary text-secondary-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:bg-secondary/80"
                 >
-                  <span className="text-warning">⚡</span> Shortlist
+                  Shortlist
                 </button>
                 
                 <div className="flex-grow" />
 
                 <button 
                   onClick={() => setDeleteId(job.id)}
-                  className="text-destructive text-xs font-bold hover:cursor-pointer px-2 py-1 hover:bg-destructive/10 rounded transition-colors"
+                  className="text-muted-foreground hover:text-destructive text-xs font-bold hover:cursor-pointer px-3 py-2 hover:bg-destructive/10 rounded-lg transition-all"
                 >
                   Delete
                 </button>
               </div>
-            </div>
+            </SectionCard>
           ))}
         </div>
       )}
