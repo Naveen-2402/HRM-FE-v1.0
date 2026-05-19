@@ -8,7 +8,6 @@ import {
   Package, 
   LogOut, 
   ShieldAlert,
-  Briefcase,
   Bell,
   Tag
 } from "lucide-react";
@@ -16,6 +15,7 @@ import { getRootOrigin } from "@repo/utils/src/domain";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { ModeToggle } from "@/components/theme-toggle"; 
+import { Logo } from "../../components/logo";
 
 export default function SuperadminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -41,8 +41,8 @@ export default function SuperadminLayout({ children }: { children: React.ReactNo
         
         {/* Logo / Header */}
         <div className="flex items-center gap-3 px-6 h-16 border-b border-sidebar-border/50 shrink-0">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary shadow-sm">
-            <Briefcase className="size-4 text-primary-foreground" />
+          <div className="flex size-8 items-center justify-center rounded-lg bg-card border border-sidebar-border shadow-sm">
+            <Logo className="size-5" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-bold tracking-wide">AgentsFactory</span>

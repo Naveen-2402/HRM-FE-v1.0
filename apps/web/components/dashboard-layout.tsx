@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-  Briefcase, LayoutDashboard, Users, UserPlus, 
+  LayoutDashboard, Users, UserPlus, 
   Settings, LogOut, Menu, X, Bell, Handshake, UserSearch,
   ChevronRight, Search, Command
 } from "lucide-react";
@@ -15,6 +15,7 @@ import { getRootOrigin } from "@repo/utils/src/domain";
 
 import { usePermissions } from "@/hooks/usePermissions";
 import { Loader2 } from "lucide-react";
+import { Logo } from "./logo";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -68,8 +69,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         
         <div className="h-20 flex items-center px-6 relative">
           <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="size-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
-              <Briefcase className="size-5 text-primary-foreground" />
+            <div className="size-10 rounded-xl bg-card border border-sidebar-border flex items-center justify-center shadow-lg transition-transform group-hover:scale-105">
+              <Logo className="size-6" />
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-lg text-sidebar-foreground tracking-tight leading-none text-tight">HRM</span>
@@ -186,8 +187,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <aside className="relative w-72 bg-sidebar border-r border-sidebar-border h-full flex flex-col z-50 animate-in slide-in-from-left duration-300">
              <div className="h-16 flex items-center justify-between px-6 border-b border-sidebar-border">
               <div className="flex items-center gap-3">
-                <div className="size-8 rounded-lg bg-primary flex items-center justify-center">
-                  <Briefcase className="size-4 text-primary-foreground" />
+                <div className="size-8 rounded-lg bg-card border border-sidebar-border flex items-center justify-center">
+                  <Logo className="size-5" />
                 </div>
                 <span className="font-bold text-lg text-sidebar-foreground text-tight">HRM</span>
               </div>

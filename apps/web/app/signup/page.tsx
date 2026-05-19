@@ -15,6 +15,8 @@ import { Label } from "@repo/ui/components/ui/label";
 import { useOnboardTenantTenantsOnboardPost } from "@repo/orval-config/src/api/default/default";
 import { emailSchema, tenantNameSchema, validateWith } from "@repo/ui/lib/validators";
 
+import { Logo } from "../../components/logo";
+
 // ─── Reusable Glassmorphic Field Wrapper ───────────────────────────────────────
 function Field({
   label,
@@ -84,11 +86,7 @@ export default function TenantSignupPage() {
       {/* Logo + Wordmark */}
       <Link href="/" className="mb-10 flex items-center gap-3 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="size-12 flex items-center justify-center bg-card/20 backdrop-blur-md border border-border/30 rounded-2xl shadow-sm">
-          <img 
-            src="/logo.svg" 
-            alt="AgentsFactory HRM Logo" 
-            className="size-8" 
-          />
+          <Logo className="size-8" />
         </div>
         <span className="text-2xl font-bold tracking-wide text-foreground">
           AgentsFactory <span className="text-muted-foreground font-medium">HRM</span>

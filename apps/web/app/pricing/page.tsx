@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, Variants } from "framer-motion";
 import { 
-  CheckCircle2, Zap, Building2, Briefcase, 
+  CheckCircle2, Zap, Building2, 
   Loader2, ArrowRight, ShieldCheck, HelpCircle, Clock
 } from "lucide-react";
 import { toast } from "react-toastify";
@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useCreateCheckoutSessionApiV1BillingCheckoutPost, useCreateTrialApiV1BillingTrialPost } from "@repo/orval-config/src/api/billing/billing";
 import { useListPlansApiV1SuperadminPlansGet } from "@repo/orval-config/src/api/superadmin/superadmin";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
+import { Logo } from "../../components/logo";
 
 // Staggered animation container
 const containerVariants = {
@@ -193,8 +194,8 @@ export default function OnboardingPricingPage() {
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50 h-20 px-8 flex items-center shrink-0 shadow-sm">
         <div className="max-w-[1400px] mx-auto w-full flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="size-10 rounded-xl bg-primary flex items-center justify-center shadow-lg">
-                <Briefcase className="size-5 text-primary-foreground" />
+              <div className="size-10 rounded-xl bg-card border border-border flex items-center justify-center shadow-lg">
+                <Logo className="size-6" />
               </div>
               <span className="font-bold text-2xl tracking-wideer text-foreground">AgentsFactory HRM</span>
             </div>

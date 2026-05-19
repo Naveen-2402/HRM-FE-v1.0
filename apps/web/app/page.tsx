@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, Variants} from "framer-motion";
 import dynamic from "next/dynamic";
+import { Logo } from "../components/logo";
 import { useInView } from "react-intersection-observer";
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@repo/ui/components/ui/card";
@@ -66,11 +67,7 @@ export default function MarketingPage() {
         <div className="h-16 flex items-center justify-between px-6 rounded-2xl bg-background/40 backdrop-blur-2xl border border-border/40 shadow-sm">
           <div className="flex items-center gap-2 hover:cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <div className="size-10 flex items-center justify-center">
-              <img 
-                src="/logo.svg" 
-                alt="AgentsFactory HRM Logo" 
-                className="size-7" 
-              />
+              <Logo className="size-7" />
             </div>
             <span className="font-bold text-lg tracking-wide">AgentsFactory HRM</span>
           </div>
@@ -287,11 +284,7 @@ export default function MarketingPage() {
           <div className="border-t border-border/40 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-muted-foreground text-sm">
             <div className="flex items-center font-bold text-foreground hover:cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
               <div className="size-10 flex items-center justify-center">
-                <img 
-                  src="/logo.svg" 
-                  alt="AgentsFactory HRM Logo" 
-                  className="size-7" 
-                />
+                <Logo className="size-7" />
               </div>
               AgentsFactory HRM
             </div>

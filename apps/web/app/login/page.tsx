@@ -392,6 +392,8 @@ function LoginFormContent() {
   );
 }
 
+import { Logo } from "../../components/logo";
+
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden z-0">
@@ -403,11 +405,7 @@ export default function LoginPage() {
       {/* Logo + Wordmark */}
       <Link href="/" className="mb-10 flex items-center gap-3 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="size-12 flex items-center justify-center bg-card/20 backdrop-blur-md border border-border/30 rounded-2xl shadow-sm">
-          <img 
-            src="/logo.svg" 
-            alt="AgentsFactory HRM Logo" 
-            className="size-8" 
-          />
+          <Logo className="size-8" />
         </div>
         <span className="text-2xl font-bold tracking-wide text-foreground">
           AgentsFactory <span className="text-muted-foreground font-medium">HRM</span>
