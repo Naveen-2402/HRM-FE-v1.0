@@ -19,7 +19,8 @@ const publicPaths = [
   "/candidate/callback",
   "/candidate/profile",
   "/candidate/dashboard",
-  "/job"
+  "/job",
+  "/pricing"
 ];
 
 // Helper function to strip dynamic tenant prefix for route safety check
@@ -28,7 +29,7 @@ function getCleanPath(path: string) {
   const firstPart = parts[0];
   if (
     firstPart && 
-    !["login", "signup", "forgot-password", "auth", "superadmin", "dashboard", "candidate", "job"].includes(firstPart)
+    !["login", "signup", "forgot-password", "auth", "superadmin", "dashboard", "candidate", "job", "pricing"].includes(firstPart)
   ) {
     return "/" + parts.slice(1).join("/");
   }
@@ -91,7 +92,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (!isAuthenticated && !isPublicPath) {
       // SCENARIO 1: Not logged in + trying to access a private page -> Kick to login
       router.replace("/login");
-    } else if (isAuthenticated && isPublicPath && cleanPath !== "/auth/callback" && cleanPath !== "/candidate/callback") {
+    } else if (
+      isAuthenticated && 
+      isPublicPath && 
+      cleanPath !== "/auth/callback" && 
+      cleanPath !== "/candidate/callback" &&
+      cleanPath !== "/pricing"
+    ) {
       // SCENARIO 2: Logged in + trying to access login/signup -> Push to dashboard with tenant subdomain
       // Note: We intentionally let them access /auth/callback so the SSO flow can finish!
       const isCandidate = user?.realm_access?.roles?.includes("candidate");
