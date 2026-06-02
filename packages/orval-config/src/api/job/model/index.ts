@@ -5,9 +5,13 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './applyToJobApiV1JobsJobIdApplyPostBody';
 export * from './createJobApiV1JobsPostBody';
 export * from './createJobJobsPostBody';
 export * from './hTTPValidationError';
+export * from './updateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatchBody';
+export * from './updateJobStatusApiV1JobsJobIdStatusPatchBody';
+export * from './updatePipelineApiV1JobsJobIdPipelinePutBody';
 export * from './validationError';
 export * from './validationErrorCtx';
 export * from './validationErrorLocItem';

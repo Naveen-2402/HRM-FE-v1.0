@@ -5,10 +5,15 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './approvalActionRequest';
+export * from './approvalActionRequestComment';
 export * from './assignRoleRequest';
 export * from './createOrUpdateSubscriptionInternalApiV1InternalTenantsTenantIdSubscriptionPostBody';
 export * from './createOrUpdateSubscriptionInternalInternalTenantsTenantsTenantIdSubscriptionPostBody';
 export * from './hTTPValidationError';
+export * from './initiateApprovalRequest';
+export * from './initiateApprovalRequestPayload';
+export * from './initiateApprovalRequestReason';
 export * from './integrationsConfigRequest';
 export * from './listSubscriptionsInternalApiV1InternalTenantsSubscriptionsAllGetParams';
 export * from './listSubscriptionsInternalInternalTenantsSubscriptionsGetParams';

@@ -2,6 +2,10 @@
 
 import React from "react";
 import { Modal } from "@/components/_shared/Modal";
+import { Dropdown } from "@/components/_shared/Dropdown";
+import { useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch } from "@repo/orval-config/src/api/job/jobs/jobs";
+import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface EvaluationDetailModalProps {
   isOpen: boolean;
@@ -10,6 +14,10 @@ interface EvaluationDetailModalProps {
 }
 
 export function EvaluationDetailModal({ isOpen, onClose, evaluation }: EvaluationDetailModalProps) {
+  const { mutate: updateEvaluation, isPending: isUpdating } = useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch();
+  const [selectedDecision, setSelectedDecision] = useState<string>("");
+  const [overrideReason, setOverrideReason] = useState<string>("");
+
   if (!evaluation) return null;
 
   const scoreReasoning = evaluation.reasoning_json?.score_reasoning || {};
@@ -30,14 +38,46 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation }: Evaluatio
     return key.replace(/_/g, " ").toUpperCase();
   };
 
+  const handleOverride = () => {
+    if (!selectedDecision) return;
+    
+    const isSelect = selectedDecision === "Select";
+    
+    updateEvaluation(
+      {
+        jobId: evaluation.job_id,
+        evaluationId: evaluation.id,
+        data: {
+          human_decision: selectedDecision,
+          selection_status: isSelect ? "Pending" : "Rejected",
+          current_stage_index: isSelect ? 1 : 0, // Advance to round 2 (index 1) if selected
+          reason: overrideReason,
+        }
+      },
+      {
+        onSuccess: (data: any) => {
+          if (data && data.status === "pending") {
+            toast.info(data.detail || "Override request submitted. Awaiting approval from recruiting-manager.");
+          } else {
+            toast.success("Candidate evaluation overridden successfully.");
+          }
+          onClose(); // Optional: close or refetch parent
+        },
+        onError: () => {
+          toast.error("Failed to update candidate evaluation.");
+        }
+      }
+    );
+  };
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={evaluation.candidate_name || "Candidate Details"}
     >
-      <div className="flex flex-col gap-6 -mt-2">
-        <div className="-mt-4 mb-2">
+      <div className="flex flex-col gap-6 mt-2">
+        <div className="mb-2">
           <p className="text-sm text-primary/70">{evaluation.candidate_email}</p>
         </div>
 
@@ -167,6 +207,51 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation }: Evaluatio
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* HR Override Section - Only for Stage 0 (AI Screening) */}
+        {(evaluation.current_stage_index || 0) === 0 && (
+          <div className="mt-4 pt-6 border-t border-border flex flex-col gap-4">
+            <div>
+              <h3 className="text-sm font-bold text-foreground mb-1">HR Override</h3>
+              <p className="text-xs text-muted-foreground">Manually override the AI decision for this candidate to advance them to the next round.</p>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Override Justification (Optional)</label>
+              <textarea
+                placeholder="Explain why you are overriding the AI screening decision..."
+                value={overrideReason}
+                onChange={(e) => setOverrideReason(e.target.value)}
+                className="w-full px-3 py-2 bg-card/25 border border-border/50 rounded-xl text-sm focus:outline-none focus:border-primary/50 text-foreground resize-none h-16"
+              />
+            </div>
+            
+            <div className="flex gap-3 items-end">
+              <Dropdown
+                options={[
+                  { label: "Select (Move to Round 2)", value: "Select" },
+                  { label: "Reject", value: "Reject" }
+                ]}
+                value={selectedDecision}
+                onChange={setSelectedDecision}
+                placeholder="Select a decision..."
+                className="w-64"
+              />
+              <button
+                onClick={handleOverride}
+                disabled={!selectedDecision || isUpdating}
+                className="bg-primary text-primary-foreground px-4 h-10 rounded-md text-sm font-bold hover:cursor-pointer disabled:opacity-50 transition-all flex items-center justify-center shrink-0"
+              >
+                {isUpdating ? "Saving..." : "Apply Decision"}
+              </button>
+            </div>
+            {evaluation.human_decision && (
+              <div className="mt-3 text-xs bg-muted/30 p-2 rounded text-primary">
+                Current Override: <span className="font-bold">{evaluation.human_decision}</span>
+              </div>
+            )}
           </div>
         )}
       </div>

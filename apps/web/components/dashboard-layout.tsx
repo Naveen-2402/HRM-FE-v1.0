@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
   LayoutDashboard, Users, UserPlus, 
   Settings, LogOut, Menu, X, Bell, Handshake, UserSearch,
-  ChevronRight, Search, Command
+  ChevronRight, Search, Command, ClipboardList
 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -21,8 +21,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const { hasPermission, isLoading } = usePermissions();
+
+  useEffect(() => {
+    if (!isProfileOpen) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("#profile-dropdown-container")) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener("click", handleOutsideClick);
+    return () => document.removeEventListener("click", handleOutsideClick);
+  }, [isProfileOpen]);
 
   // ── Dynamic Breadcrumbs ──────────────────────────────────────────────────
   const breadcrumbs = useMemo(() => {
@@ -34,14 +47,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     });
   }, [pathname]);
 
-  // Mapping routes to required permissions
   const allNavItems = [
     { name: "Overview",    href: "/dashboard",                  icon: LayoutDashboard, permission: "orchestrator:read" },
     { name: "Employees",   href: "/dashboard/employees",         icon: Users,           permission: "employee:manage" },
     { name: "Invite Team", href: "/dashboard/employees/invite",  icon: UserPlus,        permission: "employee:manage" },
     { name: "Jobs",        href: "/dashboard/jobs",              icon: Handshake,       permission: "job:read" },
     { name: "Candidates",  href: "/dashboard/candidates",        icon: UserSearch,      permission: "candidate:read" },
-    { name: "Settings",    href: "/dashboard/settings",          icon: Settings,        permission: "candidate:read" },
+    { name: "Approvals",   href: "/dashboard/approvals",         icon: ClipboardList,   permission: "approval:read" },
   ];
 
   const visibleNavItems = allNavItems.filter(item => hasPermission(item.permission));
@@ -100,30 +112,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="p-4 mt-auto">
-          <div className="rounded-2xl bg-sidebar-accent/30 border border-sidebar-border/50 p-4 transition-all hover:bg-sidebar-accent/50 group">
-            <div className="flex items-center gap-3">
-              <div className="size-10 rounded-full bg-gradient-to-tr from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10 text-primary font-bold text-sm">
-                {user?.name?.charAt(0) || "U"}
-              </div>
-              <div className="flex flex-col min-w-0 flex-1">
-                <span className="text-sm font-semibold text-sidebar-foreground truncate tracking-tight">
-                  {user?.name || "User Profile"}
-                </span>
-                <span className="text-[11px] text-sidebar-foreground/50 truncate font-medium">
-                  {user?.preferred_username || "Workspace Admin"}
-                </span>
-              </div>
-              <button 
-                onClick={handleLogout}
-                className="size-8 flex items-center justify-center rounded-lg text-sidebar-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
-                title="Log out"
-              >
-                <LogOut className="size-4" />
-              </button>
-            </div>
-          </div>
-        </div>
       </aside>
 
       {/* ── MAIN CONTENT AREA ───────────────────────────────────────────── */}
@@ -162,10 +150,70 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-2">
               <ModeToggle />
-              <button className="relative p-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-xl transition-all group">
+              <button className="relative p-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-xl transition-all group mr-1">
                 <Bell className="size-5" />
                 <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-card" />
               </button>
+
+              {/* Profile Dropdown */}
+              <div className="relative" id="profile-dropdown-container">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center gap-2 p-1 rounded-full hover:cursor-pointer hover:bg-muted/80 transition-all border border-transparent hover:border-border/60 focus:outline-none"
+                  aria-expanded={isProfileOpen}
+                  aria-haspopup="true"
+                >
+                  <div className="size-9 rounded-full bg-gradient-to-tr from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 text-primary font-black text-sm shadow-inner transition-transform active:scale-95">
+                    {user?.name?.charAt(0) || "U"}
+                  </div>
+                </button>
+
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-border/50 bg-popover p-2 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                    {/* User Profile Summary Header */}
+                    <div className="flex items-center gap-3 p-3 select-none">
+                      <div className="size-10 rounded-full bg-gradient-to-tr from-primary/20 to-primary/5 flex items-center justify-center border border-primary/20 text-primary font-black text-sm shadow-inner">
+                        {user?.name?.charAt(0) || "U"}
+                      </div>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-sm font-bold text-foreground truncate tracking-tight leading-none">
+                          {user?.name || "Unknown user"}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground truncate font-medium mt-1">
+                          {user?.preferred_username || "Unknown user"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-border/40 my-2" />
+
+                    {/* Actions list */}
+                    <div className="space-y-0.5">
+                      {hasPermission("candidate:read") && (
+                        <Link 
+                          href="/dashboard/settings" 
+                          onClick={() => setIsProfileOpen(false)}
+                          className="group flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-all"
+                        >
+                          <Settings className="size-4 text-muted-foreground/70 group-hover:text-foreground transition-colors" />
+                          <span>Settings</span>
+                        </Link>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          handleLogout();
+                        }}
+                        className="group flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-destructive hover:bg-destructive/10 hover:cursor-pointer transition-all text-left"
+                      >
+                        <LogOut className="size-4" />
+                        <span>Log Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </header>

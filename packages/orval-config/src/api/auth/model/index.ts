@@ -5,6 +5,12 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './candidateForgotPasswordRequest';
+export * from './candidateGoogleCallbackRequest';
+export * from './candidateGoogleLoginUrlApiV1CandidateAuthGoogleLoginUrlGetParams';
+export * from './candidateLoginRequest';
+export * from './candidateRefreshRequest';
+export * from './candidateRegisterRequest';
 export * from './checkDomainApiV1AuthCheckDomainGetParams';
 export * from './checkDomainAuthCheckDomainGetParams';
 export * from './forgotPasswordRequest';

@@ -39,7 +39,13 @@ export function setupAxiosInterceptors() {
       config.url = config.url.replace('/api/v1/', '/');
     }
 
-    if (token) {
+    const isAzure = config.url && (
+      config.url.includes("blob.core.windows.net") || 
+      config.url.includes("127.0.0.1:10000") || 
+      config.url.includes("localhost:10000")
+    );
+
+    if (token && !isAzure) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

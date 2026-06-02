@@ -5,18 +5,22 @@ import { useGetJobsApiV1JobsGet, useDeleteJobApiV1JobsJobIdDelete } from "@repo/
 import { Modal } from "@/components/_shared/Modal";
 import { ConfirmModal } from "@/components/_shared/ConfirmModal";
 import { SectionCard } from "@/components/_shared";
-import { Handshake, RefreshCw } from "lucide-react";
+import { Handshake, RefreshCw, ToggleLeft, ToggleRight, Trash } from "lucide-react";
 import JobCreationFlow from "./components/JobCreationFlow";
 import { useGetCreditBalanceApiV1BillingCreditsGet } from "@repo/orval-config/src/api/billing/billing/billing";
+import { customInstance } from "@repo/orval-config/src/axios-setup";
+import { toast } from "react-toastify";
 
 import ShortlistResultsModal from "./components/ShortlistResultsModal";
 import ShortlistJobModal from "./components/ShortlistJobModal";
+import EditPipelineModal from "./components/EditPipelineModal";
 
 export default function JobsPage() {
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [resultsJob, setResultsJob] = useState<{ id: number; title: string } | null>(null);
+  const [resultsJob, setResultsJob] = useState<{ id: number; title: string; pipeline_stages?: string[] } | null>(null);
   const [shortlistJob, setShortlistJob] = useState<{ id: number; title: string } | null>(null);
+  const [editPipelineJob, setEditPipelineJob] = useState<{ id: number; title: string; pipeline_stages: string[] } | null>(null);
 
   // API Hooks
   const { data: jobsResponse, isLoading, refetch, isFetching } = useGetJobsApiV1JobsGet();
@@ -42,6 +46,20 @@ export default function JobsPage() {
           refetch();
         }
       });
+    }
+  };
+
+  const handleToggleStatus = async (job: any) => {
+    try {
+      await customInstance({
+        url: `/api/v1/jobs/${job.id}/status`,
+        method: 'PATCH',
+        data: { is_active: !job.is_active }
+      });
+      toast.success(`Job ${!job.is_active ? 'activated' : 'deactivated'} successfully`);
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || "Failed to update job status");
     }
   };
 
@@ -84,7 +102,14 @@ export default function JobsPage() {
           ) : jobs.map((job: any, index: number) => (
             <SectionCard key={job.id || `job-idx-${index}`} className="p-8 flex flex-col group">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-foreground tracking-tight text-tight leading-tight">{job.title}</h3>
+                <h3 className="text-xl font-bold text-foreground tracking-tight text-tight leading-tight flex items-center gap-2">
+                  {job.title}
+                  {!job.is_active && (
+                    <span className="text-[10px] uppercase font-bold bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full border border-border/50">
+                      Inactive
+                    </span>
+                  )}
+                </h3>
                 <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
                   <Handshake className="size-4" />
                 </div>
@@ -93,27 +118,43 @@ export default function JobsPage() {
                 {job.description || "No description available for this role."}
               </p>
               
-              <div className="mt-auto flex items-center gap-3 pt-6 border-t border-border/50">
+              <div className="mt-auto flex flex-wrap items-center gap-3 pt-6 border-t border-border/50">
                 <button 
-                  onClick={() => setResultsJob({ id: job.id, title: job.title })}
+                  onClick={() => setResultsJob({ id: job.id, title: job.title, pipeline_stages: job.pipeline_stages })}
                   className="bg-primary text-primary-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/20"
                 >
                   View Results
                 </button>
                 <button
                   onClick={() => setShortlistJob({ id: job.id, title: job.title })}
-                  className="bg-secondary text-secondary-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:bg-secondary/80"
+                  disabled={!job.is_active}
+                  className="bg-secondary text-secondary-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!job.is_active ? "Activate job to shortlist candidates" : ""}
                 >
-                  Shortlist
+                  Add candidates
+                </button>
+                <button
+                  onClick={() => setEditPipelineJob({ id: job.id, title: job.title, pipeline_stages: job.pipeline_stages || [] })}
+                  disabled={!job.is_active}
+                  className="bg-muted text-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={!job.is_active ? "Activate job to edit" : ""}
+                >
+                  Rounds
                 </button>
                 
                 <div className="flex-grow" />
 
                 <button 
+                  onClick={() => handleToggleStatus(job)}
+                  className="text-muted-foreground hover:text-foreground text-xs font-bold hover:cursor-pointer px-3 py-2 rounded-lg transition-all"
+                >
+                  {job.is_active ? <ToggleRight className="text-green-800 hover:text-green-900 rounded-lg size-6"  /> : <ToggleLeft className="text-red-800 hover:text-red-900 rounded-lg size-6" />}
+                </button>
+                <button 
                   onClick={() => setDeleteId(job.id)}
                   className="text-muted-foreground hover:text-destructive text-xs font-bold hover:cursor-pointer px-3 py-2 hover:bg-destructive/10 rounded-lg transition-all"
                 >
-                  Delete
+                  <Trash className="size-4" />
                 </button>
               </div>
             </SectionCard>
@@ -154,6 +195,16 @@ export default function JobsPage() {
         onClose={() => setShortlistJob(null)}
         job={shortlistJob}
       />
+
+      {/* Edit Pipeline Modal */}
+      {editPipelineJob && (
+        <EditPipelineModal
+          isOpen={!!editPipelineJob}
+          onClose={() => setEditPipelineJob(null)}
+          job={editPipelineJob}
+          onSuccess={() => refetch()}
+        />
+      )}
     </div>
   );
 }

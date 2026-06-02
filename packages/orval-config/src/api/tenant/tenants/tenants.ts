@@ -39,6 +39,74 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * Public endpoint to get tenant details by its subdomain.
+ * @summary Get Tenant By Subdomain
+ */
+export const getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet = (
+    subdomain: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/tenants/by-subdomain/${subdomain}`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGetQueryKey = (subdomain?: string,) => {
+    return [
+    `/api/v1/tenants/by-subdomain/${subdomain}`
+    ] as const;
+    }
+
+    
+export const getGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGetQueryOptions = <TData = Awaited<ReturnType<typeof getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet>>, TError = HTTPValidationError>(subdomain: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGetQueryKey(subdomain);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet>>> = ({ signal }) => getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet(subdomain, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(subdomain), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGetQueryResult = NonNullable<Awaited<ReturnType<typeof getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet>>>
+export type GetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGetQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Tenant By Subdomain
+ */
+
+export function useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet<TData = Awaited<ReturnType<typeof getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet>>, TError = HTTPValidationError>(
+ subdomain: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGetQueryOptions(subdomain,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
  * @summary Onboard Tenant
  */
 export const onboardTenantApiV1TenantsOnboardPost = (
@@ -364,8 +432,10 @@ export const useUpdateTenantSsoConfigApiV1TenantsSsoConfigPut = <TError = HTTPVa
       return useMutation(mutationOptions);
     }
     /**
- * Returns the current GitHub PAT configuration and rate limit status for the tenant.
+ * Returns the current GitHub PAT configuration for the tenant.
 Does not return the actual token string.
+Rate limit / quota data now comes from the Quota Guard ledger
+in the Orchestrator, not from stale integrations_config fields.
  * @summary Get Tenant Github Pat
  */
 export const getTenantGithubPatApiV1TenantsIntegrationsGithubGet = (
@@ -841,4 +911,72 @@ export const useRepairTenantGroupsApiV1TenantsRepairGroupsPost = <TError = unkno
 
       return useMutation(mutationOptions);
     }
+    /**
+ * List all permissions for the currently authenticated user.
+Includes permissions inherited from roles and individual overrides.
+ * @summary List My Permissions
+ */
+export const listMyPermissionsApiV1TenantsMePermissionsGet = (
     
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/tenants/me/permissions`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getListMyPermissionsApiV1TenantsMePermissionsGetQueryKey = () => {
+    return [
+    `/api/v1/tenants/me/permissions`
+    ] as const;
+    }
+
+    
+export const getListMyPermissionsApiV1TenantsMePermissionsGetQueryOptions = <TData = Awaited<ReturnType<typeof listMyPermissionsApiV1TenantsMePermissionsGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyPermissionsApiV1TenantsMePermissionsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMyPermissionsApiV1TenantsMePermissionsGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMyPermissionsApiV1TenantsMePermissionsGet>>> = ({ signal }) => listMyPermissionsApiV1TenantsMePermissionsGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMyPermissionsApiV1TenantsMePermissionsGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMyPermissionsApiV1TenantsMePermissionsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listMyPermissionsApiV1TenantsMePermissionsGet>>>
+export type ListMyPermissionsApiV1TenantsMePermissionsGetQueryError = unknown
+
+
+/**
+ * @summary List My Permissions
+ */
+
+export function useListMyPermissionsApiV1TenantsMePermissionsGet<TData = Awaited<ReturnType<typeof listMyPermissionsApiV1TenantsMePermissionsGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMyPermissionsApiV1TenantsMePermissionsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMyPermissionsApiV1TenantsMePermissionsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+

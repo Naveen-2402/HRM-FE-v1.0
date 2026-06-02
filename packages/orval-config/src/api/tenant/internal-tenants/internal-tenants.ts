@@ -44,70 +44,8 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Manually triggers the GitHub PAT refresh cron job for testing.
- * @summary Trigger Github Cron
- */
-export const triggerGithubCronApiV1InternalTenantsGithubCronPost = (
-    
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<unknown>(
-      {url: `/api/v1/internal/tenants/github-cron`, method: 'POST', signal
-    },
-      options);
-    }
-  
-
-
-export const getTriggerGithubCronApiV1InternalTenantsGithubCronPostMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerGithubCronApiV1InternalTenantsGithubCronPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof triggerGithubCronApiV1InternalTenantsGithubCronPost>>, TError,void, TContext> => {
-
-const mutationKey = ['triggerGithubCronApiV1InternalTenantsGithubCronPost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof triggerGithubCronApiV1InternalTenantsGithubCronPost>>, void> = () => {
-          
-
-          return  triggerGithubCronApiV1InternalTenantsGithubCronPost(requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TriggerGithubCronApiV1InternalTenantsGithubCronPostMutationResult = NonNullable<Awaited<ReturnType<typeof triggerGithubCronApiV1InternalTenantsGithubCronPost>>>
-    
-    export type TriggerGithubCronApiV1InternalTenantsGithubCronPostMutationError = unknown
-
-    /**
- * @summary Trigger Github Cron
- */
-export const useTriggerGithubCronApiV1InternalTenantsGithubCronPost = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerGithubCronApiV1InternalTenantsGithubCronPost>>, TError,void, TContext>, request?: SecondParameter<typeof customInstance>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof triggerGithubCronApiV1InternalTenantsGithubCronPost>>,
-        TError,
-        void,
-        TContext
-      > => {
-
-      const mutationOptions = getTriggerGithubCronApiV1InternalTenantsGithubCronPostMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    /**
- * Returns the cached GitHub PAT validation status and rate limit info.
+ * Returns the GitHub PAT status and real-time quota from the Quota Guard ledger.
+Used for service-to-service communication.
  * @summary Get Github Integration Status
  */
 export const getGithubIntegrationStatusApiV1InternalTenantsTenantIdGithubStatusGet = (

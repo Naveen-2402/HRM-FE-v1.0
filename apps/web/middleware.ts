@@ -38,8 +38,13 @@ export function middleware(req: NextRequest) {
   if (isSubdomain) {
     tenant = hostWithoutPort?.replace(`.${rootHostname}`, '');
 
-    // If a user is logged in, verify their token authorizes them for this subdomain
-    if (decodedToken) {
+    // Skip employee organization verification for candidate portal and public job routes
+    const cleanPath = tenant ? currentPath.replace(`/${tenant}`, '') : currentPath;
+    const isCandidateOrJobRoute = cleanPath.startsWith('/candidate') || cleanPath.startsWith('/job');
+
+    // If a user is logged in, verify their token authorizes them for this subdomain (skip for candidates/job-seekers)
+    const isCandidate = decodedToken?.realm_access?.roles?.includes('candidate');
+    if (!isCandidateOrJobRoute && decodedToken && !isCandidate) {
       const userOrgs: any = decodedToken.organization || [];
       const belongsToTenant = userOrgs.includes(tenant);
 
@@ -83,8 +88,11 @@ export function middleware(req: NextRequest) {
   // --- 4. APPLY SUBDOMAIN REWRITE ---
   // Apply the folder rewrite only after all security and tenant checks pass
   if (isSubdomain && tenant) {
+    const targetPath = currentPath.startsWith(`/${tenant}`)
+      ? currentPath
+      : `/${tenant}${currentPath}`;
     return NextResponse.rewrite(
-      new URL(`/${tenant}${currentPath}${url.search}`, req.url)
+      new URL(`${targetPath}${url.search}`, req.url)
     );
   }
 

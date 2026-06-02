@@ -6,12 +6,15 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './candidateMeUploadSasApiV1CandidatesMeUploadSasPostBody';
 export * from './confirmProcessingApiV1CandidatesCandidateIdConfirmPostBody';
 export * from './getDownloadSasApiV1CandidatesCandidateIdDownloadSasGetParams';
 export * from './hTTPValidationError';
 export * from './processCandidateApiV1CandidatesCandidateIdProcessPostBody';
 export * from './processCandidateApiV1CandidatesCandidateIdProcessPostParams';
 export * from './processCandidateCandidatesCandidateIdProcessPostBody';
+export * from './saveCandidateMeApiV1CandidatesMePostBody';
+export * from './updateCandidateApiV1CandidatesCandidateIdPatchBody';
 export * from './uploadSasApiV1CandidatesUploadSasPostBody';
 export * from './uploadSasCandidatesUploadSasPostBody';
 export * from './validationError';

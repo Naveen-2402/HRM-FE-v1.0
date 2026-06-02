@@ -9,7 +9,31 @@ import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
 // 1. Define routes that DO NOT require a login
-const publicPaths = ["/login", "/signup", "/forgot-password", "/auth/callback"];
+const publicPaths = [
+  "/login", 
+  "/signup", 
+  "/forgot-password", 
+  "/auth/callback",
+  "/candidate/login",
+  "/candidate/register",
+  "/candidate/callback",
+  "/candidate/profile",
+  "/candidate/dashboard",
+  "/job"
+];
+
+// Helper function to strip dynamic tenant prefix for route safety check
+function getCleanPath(path: string) {
+  const parts = path.split("/").filter(Boolean);
+  const firstPart = parts[0];
+  if (
+    firstPart && 
+    !["login", "signup", "forgot-password", "auth", "superadmin", "dashboard", "candidate", "job"].includes(firstPart)
+  ) {
+    return "/" + parts.slice(1).join("/");
+  }
+  return path;
+}
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -20,7 +44,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user, login, logout } = useAuthStore();
 
   const [isMounted, setIsMounted] = useState(false);
-  const [isRehydrating, setIsRehydrating] = useState(false);
+  const [isRehydrating, setIsRehydrating] = useState(isAuthenticated && !user);
 
   // Mark as mounted to safely execute browser-only logic
   useEffect(() => {
@@ -61,17 +85,21 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     // Wait until we are fully mounted and finished rehydrating the user
     if (!isMounted || isRehydrating) return;
 
-    const isPublicPath = publicPaths.some((path) => pathname?.startsWith(path)) || pathname === "/";
+    const cleanPath = getCleanPath(pathname || "");
+    const isPublicPath = publicPaths.some((path) => cleanPath.startsWith(path)) || cleanPath === "/";
 
     if (!isAuthenticated && !isPublicPath) {
       // SCENARIO 1: Not logged in + trying to access a private page -> Kick to login
       router.replace("/login");
-    } else if (isAuthenticated && isPublicPath && pathname !== "/auth/callback") {
+    } else if (isAuthenticated && isPublicPath && cleanPath !== "/auth/callback" && cleanPath !== "/candidate/callback") {
       // SCENARIO 2: Logged in + trying to access login/signup -> Push to dashboard with tenant subdomain
       // Note: We intentionally let them access /auth/callback so the SSO flow can finish!
-      redirectToTenantDashboard();
+      const isCandidate = user?.realm_access?.roles?.includes("candidate");
+      if (!isCandidate) {
+        redirectToTenantDashboard();
+      }
     }
-  }, [isAuthenticated, isMounted, isRehydrating, pathname, router]);
+  }, [isAuthenticated, isMounted, isRehydrating, pathname, router, user]);
 
   // Show a loading spinner while mounting OR while extracting the user from the cookie
   if (!isMounted || isRehydrating) {
@@ -82,7 +110,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isPublicPath = publicPaths.some((path) => pathname?.startsWith(path)) || pathname === "/";
+  const cleanPath = getCleanPath(pathname || "");
+  const isPublicPath = publicPaths.some((path) => cleanPath.startsWith(path)) || cleanPath === "/";
   
   // Prevent rendering the protected content for a split second before the redirect fires
   if (!isAuthenticated && !isPublicPath) {

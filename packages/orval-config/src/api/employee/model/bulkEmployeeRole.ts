@@ -19,4 +19,8 @@ export const BulkEmployeeRole = {
   viewer: 'viewer',
   'tenant-admin': 'tenant-admin',
   admin: 'admin',
+  'hiring-manager': 'hiring-manager',
+  interviewer: 'interviewer',
+  'recruiting-manager': 'recruiting-manager',
+  candidate: 'candidate',
 } as const;

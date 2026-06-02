@@ -9,6 +9,9 @@ import {
   useExecuteWorkflowApiV1OrchestrateExecutePost,
   useConfirmWorkflowApiV1OrchestrateConfirmPost,
 } from "@repo/orval-config/src/api/orchestrator/orchestrate/orchestrate";
+import {
+  useGetJobEvaluationsApiV1JobsJobIdEvaluationsGet
+} from "@repo/orval-config/src/api/job/jobs/jobs";
 
 interface ShortlistJobModalProps {
   isOpen: boolean;
@@ -30,7 +33,25 @@ export default function ShortlistJobModal({ isOpen, onClose, job }: ShortlistJob
     query: { enabled: isOpen } as any,
   });
   const candidates: any[] = Array.isArray(candidatesRaw) ? candidatesRaw : [];
-  const readyCandidates = candidates.filter((c) => c.status === "completed");
+
+  // Fetch existing evaluations for the selected job to filter out already shortlisted candidates
+  const { data: evaluationsResponse, isLoading: loadingEvaluations } = useGetJobEvaluationsApiV1JobsJobIdEvaluationsGet(
+    job?.id || 0,
+    {
+      query: {
+        enabled: isOpen && !!job?.id,
+      } as any,
+    }
+  );
+
+  const existingEvaluations = Array.isArray(evaluationsResponse) ? evaluationsResponse : [];
+  const shortlistedCandidateIds = existingEvaluations.map((e: any) => e.candidate_id);
+
+  const readyCandidates = candidates.filter(
+    (c) => (c.status === "completed" || !c.status) && !shortlistedCandidateIds.includes(c.id)
+  );
+
+  const isLoading = loadingCandidates || loadingEvaluations;
 
   // Orchestrator hooks
   const { mutate: executeWorkflow, isPending: isEstimating } =
@@ -119,7 +140,7 @@ export default function ShortlistJobModal({ isOpen, onClose, job }: ShortlistJob
               Only fully processed candidates are shown.
             </p>
 
-            {loadingCandidates ? (
+            {isLoading ? (
               <div className="py-10 text-center text-muted-foreground text-sm italic">
                 Loading candidates...
               </div>

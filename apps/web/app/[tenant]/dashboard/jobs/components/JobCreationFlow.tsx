@@ -13,6 +13,8 @@ const jobSchema = z.object({
   title: z.string().min(3, "Job title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   requirements: z.string().min(10, "Requirements must be at least 10 characters"),
+  pipeline_stages: z.string().optional(),
+  max_outside_applicants: z.string().optional(),
 });
 
 type JobFormValues = z.infer<typeof jobSchema>;
@@ -36,13 +38,15 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
    const isBusy = isExecuting || isConfirming || isUploadingFiles;
 
   const form = useForm({
-    defaultValues: { title: "", description: "", requirements: "" },
+    defaultValues: { title: "", description: "", requirements: "", pipeline_stages: "AI screening, HR Screening, Interview, Offer", max_outside_applicants: "" },
     onSubmit: async ({ value }) => {
       createJob({
         data: {
           title: value.title,
           description: value.description,
           requirements: value.requirements,
+          pipeline_stages: value.pipeline_stages ? value.pipeline_stages.split(",").map(s => s.trim()).filter(Boolean) : ["AI screening", "HR Screening", "Interview", "Offer"],
+          max_outside_applicants: value.max_outside_applicants ? parseInt(value.max_outside_applicants, 10) : undefined,
         }
       }, {
         onSuccess: (response: any) => {
@@ -139,7 +143,7 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
           >
             Browse Resumes
           </label>
-          <p className="text-muted-foreground text-sm">Upload resumes to parse them into this job's pipeline.</p>
+          <p className="text-muted-foreground text-sm">Upload resumes to parse them into this job's hiring rounds.</p>
 
           {selectedFiles.length > 0 && (
             <div className="mt-4 text-left bg-background border border-border rounded-lg p-3 max-h-32 overflow-y-auto">
@@ -219,6 +223,40 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
               onChange={(e) => field.handleChange(e.target.value)}
               className="bg-background text-foreground border border-input rounded-md px-3 py-2 min-h-[80px] focus:ring-2 focus:ring-ring outline-none resize-none"
               placeholder="Skills, experience..."
+            />
+          </div>
+        )}
+      />
+
+      <form.Field
+        name="pipeline_stages"
+        children={(field) => (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-foreground text-sm font-semibold" htmlFor={field.name}>Hiring Rounds (comma-separated)</label>
+            <input
+              id={field.name}
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+              className="bg-background text-foreground border border-input rounded-md px-3 py-2 focus:ring-2 focus:ring-ring outline-none"
+              placeholder="e.g. Applied, Resume Screen, Tech Interview, Offer"
+            />
+          </div>
+        )}
+      />
+
+      <form.Field
+        name="max_outside_applicants"
+        children={(field) => (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-foreground text-sm font-semibold" htmlFor={field.name}>Max Outside Applicants</label>
+            <input
+              id={field.name}
+              type="number"
+              min="0"
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+              className="bg-background text-foreground border border-input rounded-md px-3 py-2 focus:ring-2 focus:ring-ring outline-none"
+              placeholder="Optional limit"
             />
           </div>
         )}

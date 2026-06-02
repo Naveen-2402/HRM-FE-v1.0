@@ -10,6 +10,9 @@ import {
 import { Button } from "@repo/ui/components/ui/button";
 
 import { useGetSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
+import { 
+  useGetCreditBalanceApiV1BillingCreditsGet
+} from "@repo/orval-config/src/api/billing/billing";
 import { AccentBar, SectionCard } from "@/components/_shared";
 import { usePermissions } from "@/hooks/usePermissions";
 import { getRootOrigin } from "@repo/utils/src/domain";
@@ -73,6 +76,12 @@ export default function SettingsPage() {
 
   const { data: subscription, isLoading, isError } =
     useGetSubscriptionStatusApiV1BillingSubscriptionGet();
+  
+  const { data: balanceData, isLoading: isLoadingBalance } = useGetCreditBalanceApiV1BillingCreditsGet();
+  // Safely extract the balance (available = balance - consumed - reserved)
+  const currentBalance = balanceData 
+    ? (balanceData as any).credit_balance - (balanceData as any).consumed_credits - (balanceData as any).reserved_credits
+    : 0;
 
   const formatDate = (d?: string) =>
     d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "N/A";
@@ -226,8 +235,15 @@ export default function SettingsPage() {
                           </div>
                           <div>
                             <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1">Credit Balance</p>
-                            {/* @ts-ignore */}
-                            <p className="text-sm font-medium text-card-foreground">₹{subscription.credit_balance.toLocaleString()}</p>
+                            {isLoadingBalance ? (
+                              <div className="flex items-center gap-3 mt-2 h-[48px]">
+                                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground font-medium">Loading balance...</span>
+                              </div>
+                              ): (
+                                <p className="text-sm font-medium text-card-foreground">₹{currentBalance.toLocaleString()}</p>
+                              )
+                            }
                           </div>
                         </div>
                       </>

@@ -2,9 +2,17 @@
 
 import React from "react";
 import { Modal } from "@/components/_shared/Modal";
-import { useGetJobEvaluationsApiV1JobsJobIdEvaluationsGet } from "@repo/orval-config/src/api/job/jobs/jobs";
+import { 
+  useGetJobEvaluationsApiV1JobsJobIdEvaluationsGet,
+  useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch
+} from "@repo/orval-config/src/api/job/jobs/jobs";
+import {
+  useGetMyRequestsApiV1ApprovalsMyRequestsGet,
+  useGetPendingApprovalsApiV1ApprovalsPendingGet
+} from "@repo/orval-config/src/api/tenant/approvals/approvals";
 import { EvaluationDetailModal } from "./EvaluationDetailModal";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Check, X } from "lucide-react";
+import { toast } from "react-toastify";
 
 
 
@@ -14,12 +22,16 @@ interface ShortlistResultsModalProps {
   job: {
     id: number;
     title: string;
+    pipeline_stages?: string[];
   } | null;
 }
 
 export default function ShortlistResultsModal({ isOpen, onClose, job }: ShortlistResultsModalProps) {
   const [selectedEvaluation, setSelectedEvaluation] = React.useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
+  const [activeTabIndex, setActiveTabIndex] = React.useState(0);
+
+  const { mutate: updateEvaluation } = useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch();
 
   const { data: evaluationsResponse, isLoading, refetch, isFetching } = useGetJobEvaluationsApiV1JobsJobIdEvaluationsGet(
     job?.id || 0,
@@ -30,8 +42,40 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
     }
   );
 
+  const { data: myRequestsResponse, refetch: refetchMyRequests } = useGetMyRequestsApiV1ApprovalsMyRequestsGet({
+    query: {
+      enabled: isOpen,
+    } as any
+  });
 
-  const evaluations = Array.isArray(evaluationsResponse) ? evaluationsResponse : [];
+  const { data: pendingApprovalsResponse, refetch: refetchPendingApprovals } = useGetPendingApprovalsApiV1ApprovalsPendingGet({
+    query: {
+      enabled: isOpen,
+    } as any
+  });
+
+  const allRequests = [
+    ...(Array.isArray(myRequestsResponse) ? myRequestsResponse : []),
+    ...(Array.isArray(pendingApprovalsResponse) ? pendingApprovalsResponse : [])
+  ];
+
+  const getCandidateApprovalRequest = (evalId: any) => {
+    return allRequests.find((req: any) => 
+      req.entity_type === "JobEvaluation" && 
+      String(req.entity_id) === String(evalId) && 
+      req.status === "pending"
+    );
+  };
+
+  const handleRefetch = () => {
+    refetch();
+    refetchMyRequests();
+    refetchPendingApprovals();
+  };
+
+  const allEvaluations = Array.isArray(evaluationsResponse) ? evaluationsResponse : [];
+  const evaluations = allEvaluations.filter((ev: any) => (ev.current_stage_index || 0) === activeTabIndex);
+  const stages = job?.pipeline_stages || ["Evaluations"];
 
   const getInitials = (name: string) => {
     if (!name) return "??";
@@ -59,6 +103,35 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
     setIsDetailOpen(true);
   };
 
+  const handleQuickAction = (ev: any, action: "forward" | "reject") => {
+    if (!job) return;
+    
+    const isForward = action === "forward";
+    const nextStageIndex = isForward ? (ev.current_stage_index || 0) + 1 : ev.current_stage_index;
+    const isLastStage = nextStageIndex >= (job.pipeline_stages?.length || 1);
+
+    updateEvaluation(
+      {
+        jobId: job.id,
+        evaluationId: ev.id,
+        data: {
+          human_decision: isForward ? "Select" : "Reject",
+          selection_status: isForward ? (isLastStage ? "Hired" : "Pending") : "Rejected",
+          current_stage_index: isLastStage && isForward ? ev.current_stage_index : nextStageIndex,
+        }
+      },
+      {
+        onSuccess: () => {
+          toast.success(`Candidate ${isForward ? 'moved forward' : 'rejected'}`);
+          refetch();
+        },
+        onError: () => {
+          toast.error("Failed to update candidate status");
+        }
+      }
+    );
+  };
+
 
   return (
     <Modal
@@ -70,7 +143,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
         <div className="-mt-3 flex justify-between items-center">
           <p className="text-sm text-primary font-medium">{job?.title}</p>
           <button 
-            onClick={() => refetch()}
+            onClick={handleRefetch}
             disabled={isFetching}
             className="text-primary hover:text-primary/80 disabled:opacity-50 transition-all p-1 hover:bg-primary/5 rounded-full"
             title="Refresh results"
@@ -79,6 +152,26 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
           </button>
         </div>
 
+        {stages.length > 0 && (
+          <div className="flex border-b border-border gap-6 px-2 overflow-x-auto custom-scrollbar pb-px">
+            {stages.map((stage, idx) => (
+              <button
+                key={idx}
+                onClick={() => setActiveTabIndex(idx)}
+                className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap hover:cursor-pointer ${
+                  activeTabIndex === idx 
+                    ? "border-primary text-primary" 
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {stage}
+                <span className="ml-2 text-[10px] bg-muted/30 px-1.5 py-0.5 rounded-full font-bold">
+                  {allEvaluations.filter((ev: any) => (ev.current_stage_index || 0) === idx).length}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="border border-border rounded-lg overflow-hidden bg-card">
           <div className="overflow-x-auto overflow-y-auto max-h-[500px] custom-scrollbar">
@@ -130,20 +223,46 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                         <span className="text-xs text-muted-foreground ml-0.5">/100</span>
                       </td>
                       <td className="px-4 py-4 text-center">
-                        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getVerdictStyle(ev.selection_status)}`}>
-                          {ev.selection_status || "Pending"}
-                        </span>
+                        {getCandidateApprovalRequest(ev.id) ? (
+                          <span className="inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-amber-500/10 text-amber-500 border-amber-500/20 animate-pulse">
+                            Awaiting Approval
+                          </span>
+                        ) : (
+                          <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getVerdictStyle(ev.selection_status)}`}>
+                            {ev.selection_status || "Pending"}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-4 text-center text-[11px] text-primary/70 font-medium lowercase">
                         {ev.status || "completed"}
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <button 
-                          onClick={() => handleDetailsClick(ev)}
-                          className="text-primary text-xs font-bold hover:underline hover:cursor-pointer"
-                        >
-                          Details →
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          {activeTabIndex > 0 && activeTabIndex < (job?.pipeline_stages?.length || 1) - 1 && ev.selection_status !== "Rejected" && (
+                            <button
+                              onClick={() => handleQuickAction(ev, "forward")}
+                              className="w-7 h-7 flex items-center justify-center rounded bg-success/10 text-success hover:bg-success hover:text-white transition-colors"
+                              title="Move to next round"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          )}
+                          {activeTabIndex > 0 && ev.selection_status !== "Rejected" && (
+                            <button
+                              onClick={() => handleQuickAction(ev, "reject")}
+                              className="w-7 h-7 flex items-center justify-center rounded bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors"
+                              title="Reject candidate"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleDetailsClick(ev)}
+                            className="text-primary text-xs font-bold hover:underline hover:cursor-pointer ml-2"
+                          >
+                            Details →
+                          </button>
+                        </div>
                       </td>
 
                     </tr>

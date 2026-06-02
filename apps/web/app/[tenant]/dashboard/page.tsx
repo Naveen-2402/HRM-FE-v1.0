@@ -111,16 +111,16 @@ export default function DashboardPage() {
           title="Total Talent Pool"
           value={candidateAnalytics?.total_candidates || 0}
           icon={Users}
-          trend={{ value: 12, isUp: true }}
+          trend={candidateAnalytics?.talent_trend}
           description="Candidates in your database"
           color="indigo"
           delay={0.1}
         />
         <StatsCard 
           title="Active Jobs"
-          value={jobStats?.total_jobs || 0}
+          value={jobStats?.active_jobs || 0}
           icon={Briefcase}
-          trend={{ value: 5, isUp: true }}
+          trend={jobStats?.jobs_trend}
           description="Currently open positions"
           color="violet"
           delay={0.2}
@@ -135,9 +135,9 @@ export default function DashboardPage() {
         />
         <StatsCard 
           title="Parsing Success"
-          value="98.2%"
+          value={candidateAnalytics?.parsing_success_rate !== undefined ? `${candidateAnalytics.parsing_success_rate}%` : "0%"}
           icon={CheckCircle2}
-          trend={{ value: 0.5, isUp: true }}
+          trend={candidateAnalytics?.parsing_trend}
           description="Successful resume extractions"
           color="emerald"
           delay={0.4}
