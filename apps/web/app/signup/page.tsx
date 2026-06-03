@@ -16,6 +16,7 @@ import { useOnboardTenantTenantsOnboardPost } from "@repo/orval-config/src/api/d
 import { emailSchema, tenantNameSchema, validateWith } from "@repo/ui/lib/validators";
 
 import { Logo } from "../../components/logo";
+import { useWarmup } from "@/hooks/useWarmup";
 
 // ─── Reusable Glassmorphic Field Wrapper ───────────────────────────────────────
 function Field({
@@ -63,6 +64,7 @@ function Field({
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function TenantSignupPage() {
+  useWarmup();
   const [isSuccess, setIsSuccess] = useState(false);
 
   const onboardMutation = useOnboardTenantTenantsOnboardPost({

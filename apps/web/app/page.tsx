@@ -37,7 +37,10 @@ const SectionLoader = () => (
 const ProductVisual = dynamic(() => import('./sections/productVisualsSection'), { loading: () => <SectionLoader /> });
 const PricingSection = dynamic(() => import('./sections/pricingSection'), { loading: () => <SectionLoader /> });
 
+import { useWarmup } from "@/hooks/useWarmup";
+
 export default function MarketingPage() {
+  useWarmup();
   const { ref, inView } = useInView({ 
     triggerOnce: true, 
     rootMargin: "200px 0px" 

@@ -393,8 +393,10 @@ function LoginFormContent() {
 }
 
 import { Logo } from "../../components/logo";
+import { useWarmup } from "@/hooks/useWarmup";
 
 export default function LoginPage() {
+  useWarmup();
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden z-0">
       
