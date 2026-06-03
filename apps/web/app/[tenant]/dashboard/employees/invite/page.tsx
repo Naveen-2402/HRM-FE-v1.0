@@ -175,8 +175,21 @@ export default function EmployeeInvitePage() {
       
       setTimeout(() => setIsSuccess(false), 3000);
     } catch (error: any) {
-      console.log(error.response.data)
-      setGlobalError(error?.response?.data?.errors[0]?.msg || "Failed to invite employees. Please try again.");
+      console.log(error?.response?.data);
+      let errorMsg = "Failed to invite employees. Please try again.";
+      const data = error?.response?.data;
+      if (data) {
+        if (typeof data.detail === "string") {
+          errorMsg = data.detail;
+        } else if (Array.isArray(data.detail)) {
+          errorMsg = data.detail[0]?.msg || data.detail[0]?.message || JSON.stringify(data.detail);
+        } else if (data.errors?.[0]?.msg) {
+          errorMsg = data.errors[0].msg;
+        } else if (data.message) {
+          errorMsg = data.message;
+        }
+      }
+      setGlobalError(errorMsg);
     }
   };
 
@@ -473,8 +486,8 @@ export default function EmployeeInvitePage() {
 
               <div className="border-t border-border bg-muted/30 p-5 shrink-0 flex flex-col gap-3">
                 {globalError && (
-                  <div className="w-full px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-start gap-2">
-                    <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                  <div className="w-full px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-center gap-2">
+                    <AlertTriangle className="size-4 shrink-0" />
                     <p>{globalError}</p>
                   </div>
                 )}
