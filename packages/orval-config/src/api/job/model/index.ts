@@ -10,6 +10,7 @@ export * from './createJobApiV1JobsPostBody';
 export * from './createJobJobsPostBody';
 export * from './hTTPValidationError';
 export * from './updateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatchBody';
+export * from './updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody';
 export * from './updateJobStatusApiV1JobsJobIdStatusPatchBody';
 export * from './updatePipelineApiV1JobsJobIdPipelinePutBody';
 export * from './validationError';

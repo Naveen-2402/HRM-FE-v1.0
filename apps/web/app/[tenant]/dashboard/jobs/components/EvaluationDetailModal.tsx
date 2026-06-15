@@ -11,9 +11,10 @@ interface EvaluationDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   evaluation: any;
+  onSuccess?: () => void;
 }
 
-export function EvaluationDetailModal({ isOpen, onClose, evaluation }: EvaluationDetailModalProps) {
+export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }: EvaluationDetailModalProps) {
   const { mutate: updateEvaluation, isPending: isUpdating } = useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch();
   const [selectedDecision, setSelectedDecision] = useState<string>("");
   const [overrideReason, setOverrideReason] = useState<string>("");
@@ -25,10 +26,10 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation }: Evaluatio
 
   const getVerdictStyle = (status: string) => {
     const s = status?.toLowerCase() || "";
-    if (s.includes("shortlisted") || s.includes("selected") || s.includes("optimal")) {
+    if (s.includes("shortlisted") || s.includes("selected") || s.includes("optimal") || s.includes("moving_forward")) {
       return "bg-success/10 text-success border-success/20";
     }
-    if (s.includes("rejected") || s.includes("not recommended")) {
+    if (s.includes("rejected") || s.includes("not recommended") || s.includes("not_selected")) {
       return "bg-destructive/10 text-destructive border-destructive/20";
     }
     return "bg-muted text-muted-foreground border-border";
@@ -36,6 +37,11 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation }: Evaluatio
 
   const formatKey = (key: string) => {
     return key.replace(/_/g, " ").toUpperCase();
+  };
+
+  const formatStatus = (status: string) => {
+    if (!status) return "Pending";
+    return status.replace(/_/g, " ");
   };
 
   const handleOverride = () => {
@@ -49,7 +55,7 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation }: Evaluatio
         evaluationId: evaluation.id,
         data: {
           human_decision: selectedDecision,
-          selection_status: isSelect ? "Pending" : "Rejected",
+          selection_status: isSelect ? "Application_Under_Review" : "Not_Selected",
           current_stage_index: isSelect ? 1 : 0, // Advance to round 2 (index 1) if selected
           reason: overrideReason,
         }
@@ -61,6 +67,7 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation }: Evaluatio
           } else {
             toast.success("Candidate evaluation overridden successfully.");
           }
+          onSuccess?.();
           onClose(); // Optional: close or refetch parent
         },
         onError: () => {
@@ -94,7 +101,7 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation }: Evaluatio
           
           <div className={`border rounded-xl p-6 flex flex-col items-center justify-center text-center ${getVerdictStyle(evaluation.selection_status)}`}>
             <div className="text-xl font-bold mb-1">
-              {evaluation.selection_status || "Pending"}
+              {formatStatus(evaluation.selection_status)}
             </div>
             <div className="text-[10px] font-bold uppercase tracking-widest opacity-70">
               Verdict

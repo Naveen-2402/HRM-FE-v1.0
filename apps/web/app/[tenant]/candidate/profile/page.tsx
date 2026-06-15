@@ -186,7 +186,8 @@ function CandidateProfileFormContent() {
       toast.success("Resume uploaded successfully!");
     } catch (err: any) {
       console.error("Error uploading resume:", err);
-      toast.error("Failed to upload resume to Azure Storage");
+      const errorMsg = err?.response?.data?.detail?.message || err?.response?.data?.detail || "Failed to upload resume to Azure Storage";
+      toast.error(errorMsg);
     } finally {
       setUploading(false);
     }

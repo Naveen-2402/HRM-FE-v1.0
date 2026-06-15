@@ -89,10 +89,10 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
 
   const getVerdictStyle = (verdict: string) => {
     const v = verdict?.toLowerCase() || "";
-    if (v.includes("shortlisted") || v.includes("selected") || v.includes("optimal")) {
+    if (v.includes("shortlisted") || v.includes("selected") || v.includes("optimal") || v.includes("moving_forward")) {
       return "bg-success/10 text-success border-success/20";
     }
-    if (v.includes("rejected") || v.includes("not recommended")) {
+    if (v.includes("rejected") || v.includes("not recommended") || v.includes("not_selected")) {
       return "bg-destructive/10 text-destructive border-destructive/20";
     }
     return "bg-muted text-muted-foreground border-border";
@@ -116,7 +116,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
         evaluationId: ev.id,
         data: {
           human_decision: isForward ? "Select" : "Reject",
-          selection_status: isForward ? (isLastStage ? "Hired" : "Pending") : "Rejected",
+          selection_status: isForward ? (isLastStage ? "Hired" : "Application_Under_Review") : "Not_Selected",
           current_stage_index: isLastStage && isForward ? ev.current_stage_index : nextStageIndex,
         }
       },
@@ -229,7 +229,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                           </span>
                         ) : (
                           <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getVerdictStyle(ev.selection_status)}`}>
-                            {ev.selection_status || "Pending"}
+                            {ev.selection_status ? ev.selection_status.replace(/_/g, " ") : "Pending"}
                           </span>
                         )}
                       </td>
@@ -238,7 +238,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                       </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {activeTabIndex > 0 && activeTabIndex < (job?.pipeline_stages?.length || 1) - 1 && ev.selection_status !== "Rejected" && (
+                          {activeTabIndex > 0 && activeTabIndex < (job?.pipeline_stages?.length || 1) - 1 && ev.selection_status !== "Rejected" && ev.selection_status !== "Not_Selected" && (
                             <button
                               onClick={() => handleQuickAction(ev, "forward")}
                               className="w-7 h-7 flex items-center justify-center rounded bg-success/10 text-success hover:bg-success hover:text-white transition-colors"
@@ -247,7 +247,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                               <Check className="w-4 h-4" />
                             </button>
                           )}
-                          {activeTabIndex > 0 && ev.selection_status !== "Rejected" && (
+                          {activeTabIndex > 0 && ev.selection_status !== "Rejected" && ev.selection_status !== "Not_Selected" && (
                             <button
                               onClick={() => handleQuickAction(ev, "reject")}
                               className="w-7 h-7 flex items-center justify-center rounded bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors"
@@ -278,6 +278,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         evaluation={selectedEvaluation}
+        onSuccess={handleRefetch}
       />
     </Modal>
 

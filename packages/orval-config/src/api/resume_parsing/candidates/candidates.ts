@@ -28,6 +28,7 @@ import type {
   ProcessCandidateApiV1CandidatesCandidateIdProcessPostParams,
   SaveCandidateMeApiV1CandidatesMePostBody,
   UpdateCandidateApiV1CandidatesCandidateIdPatchBody,
+  UpdateCandidateMeApiV1CandidatesMePutBody,
   UploadSasApiV1CandidatesUploadSasPostBody
 } from '.././model';
 
@@ -39,6 +40,74 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+
+
+/**
+ * Lightweight, unauthenticated endpoint to check candidate service health/warm-up.
+ * @summary Health Check
+ */
+export const healthCheckApiV1CandidatesHealthGet = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/candidates/health`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getHealthCheckApiV1CandidatesHealthGetQueryKey = () => {
+    return [
+    `/api/v1/candidates/health`
+    ] as const;
+    }
+
+    
+export const getHealthCheckApiV1CandidatesHealthGetQueryOptions = <TData = Awaited<ReturnType<typeof healthCheckApiV1CandidatesHealthGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckApiV1CandidatesHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHealthCheckApiV1CandidatesHealthGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthCheckApiV1CandidatesHealthGet>>> = ({ signal }) => healthCheckApiV1CandidatesHealthGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthCheckApiV1CandidatesHealthGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type HealthCheckApiV1CandidatesHealthGetQueryResult = NonNullable<Awaited<ReturnType<typeof healthCheckApiV1CandidatesHealthGet>>>
+export type HealthCheckApiV1CandidatesHealthGetQueryError = unknown
+
+
+/**
+ * @summary Health Check
+ */
+
+export function useHealthCheckApiV1CandidatesHealthGet<TData = Awaited<ReturnType<typeof healthCheckApiV1CandidatesHealthGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckApiV1CandidatesHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getHealthCheckApiV1CandidatesHealthGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
 
 
 
@@ -318,6 +387,207 @@ export const useConfirmProcessingApiV1CandidatesCandidateIdConfirmPost = <TError
       return useMutation(mutationOptions);
     }
     /**
+ * Get the profile of the currently logged-in candidate.
+NOTE: parsed_md_url and dossier_md_url are NEVER exposed here (recruiter-only).
+ * @summary Get Candidate Me
+ */
+export const getCandidateMeApiV1CandidatesMeGet = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/candidates/me`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetCandidateMeApiV1CandidatesMeGetQueryKey = () => {
+    return [
+    `/api/v1/candidates/me`
+    ] as const;
+    }
+
+    
+export const getGetCandidateMeApiV1CandidatesMeGetQueryOptions = <TData = Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCandidateMeApiV1CandidatesMeGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>> = ({ signal }) => getCandidateMeApiV1CandidatesMeGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCandidateMeApiV1CandidatesMeGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>>
+export type GetCandidateMeApiV1CandidatesMeGetQueryError = unknown
+
+
+/**
+ * @summary Get Candidate Me
+ */
+
+export function useGetCandidateMeApiV1CandidatesMeGet<TData = Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCandidateMeApiV1CandidatesMeGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Update the profile of the currently logged-in candidate (PUT method).
+ * @summary Update Candidate Me
+ */
+export const updateCandidateMeApiV1CandidatesMePut = (
+    updateCandidateMeApiV1CandidatesMePutBody: UpdateCandidateMeApiV1CandidatesMePutBody,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/candidates/me`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateCandidateMeApiV1CandidatesMePutBody
+    },
+      options);
+    }
+  
+
+
+export const getUpdateCandidateMeApiV1CandidatesMePutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCandidateMeApiV1CandidatesMePut>>, TError,{data: UpdateCandidateMeApiV1CandidatesMePutBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCandidateMeApiV1CandidatesMePut>>, TError,{data: UpdateCandidateMeApiV1CandidatesMePutBody}, TContext> => {
+
+const mutationKey = ['updateCandidateMeApiV1CandidatesMePut'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCandidateMeApiV1CandidatesMePut>>, {data: UpdateCandidateMeApiV1CandidatesMePutBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateCandidateMeApiV1CandidatesMePut(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCandidateMeApiV1CandidatesMePutMutationResult = NonNullable<Awaited<ReturnType<typeof updateCandidateMeApiV1CandidatesMePut>>>
+    export type UpdateCandidateMeApiV1CandidatesMePutMutationBody = UpdateCandidateMeApiV1CandidatesMePutBody
+    export type UpdateCandidateMeApiV1CandidatesMePutMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Candidate Me
+ */
+export const useUpdateCandidateMeApiV1CandidatesMePut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCandidateMeApiV1CandidatesMePut>>, TError,{data: UpdateCandidateMeApiV1CandidatesMePutBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCandidateMeApiV1CandidatesMePut>>,
+        TError,
+        {data: UpdateCandidateMeApiV1CandidatesMePutBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateCandidateMeApiV1CandidatesMePutMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Create or update the profile of the currently logged-in candidate.
+Handles state machine transitions for resume uploads:
+- New candidate with resume → PENDING_HR_REVIEW (hard lock)
+- Existing IDLE candidate with new resume_blob_url → staged upload, PENDING_HR_REVIEW
+ * @summary Save Candidate Me
+ */
+export const saveCandidateMeApiV1CandidatesMePost = (
+    saveCandidateMeApiV1CandidatesMePostBody: SaveCandidateMeApiV1CandidatesMePostBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/candidates/me`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: saveCandidateMeApiV1CandidatesMePostBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getSaveCandidateMeApiV1CandidatesMePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>, TError,{data: SaveCandidateMeApiV1CandidatesMePostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>, TError,{data: SaveCandidateMeApiV1CandidatesMePostBody}, TContext> => {
+
+const mutationKey = ['saveCandidateMeApiV1CandidatesMePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>, {data: SaveCandidateMeApiV1CandidatesMePostBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveCandidateMeApiV1CandidatesMePost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveCandidateMeApiV1CandidatesMePostMutationResult = NonNullable<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>>
+    export type SaveCandidateMeApiV1CandidatesMePostMutationBody = SaveCandidateMeApiV1CandidatesMePostBody
+    export type SaveCandidateMeApiV1CandidatesMePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Save Candidate Me
+ */
+export const useSaveCandidateMeApiV1CandidatesMePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>, TError,{data: SaveCandidateMeApiV1CandidatesMePostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>,
+        TError,
+        {data: SaveCandidateMeApiV1CandidatesMePostBody},
+        TContext
+      > => {
+
+      const mutationOptions = getSaveCandidateMeApiV1CandidatesMePostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
  * @summary Get Candidate
  */
 export const getCandidateApiV1CandidatesCandidateIdGet = (
@@ -582,140 +852,10 @@ export function useGetDownloadSasApiV1CandidatesCandidateIdDownloadSasGet<TData 
 
 
 /**
- * Get the profile of the currently logged-in candidate.
- * @summary Get Candidate Me
- */
-export const getCandidateMeApiV1CandidatesMeGet = (
-    
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<unknown>(
-      {url: `/api/v1/candidates/me`, method: 'GET', signal
-    },
-      options);
-    }
-  
-
-
-
-export const getGetCandidateMeApiV1CandidatesMeGetQueryKey = () => {
-    return [
-    `/api/v1/candidates/me`
-    ] as const;
-    }
-
-    
-export const getGetCandidateMeApiV1CandidatesMeGetQueryOptions = <TData = Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getGetCandidateMeApiV1CandidatesMeGetQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>> = ({ signal }) => getCandidateMeApiV1CandidatesMeGet(requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type GetCandidateMeApiV1CandidatesMeGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>>
-export type GetCandidateMeApiV1CandidatesMeGetQueryError = unknown
-
-
-/**
- * @summary Get Candidate Me
- */
-
-export function useGetCandidateMeApiV1CandidatesMeGet<TData = Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCandidateMeApiV1CandidatesMeGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
-  
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getGetCandidateMeApiV1CandidatesMeGetQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-/**
- * Create or update the profile of the currently logged-in candidate.
- * @summary Save Candidate Me
- */
-export const saveCandidateMeApiV1CandidatesMePost = (
-    saveCandidateMeApiV1CandidatesMePostBody: SaveCandidateMeApiV1CandidatesMePostBody,
- options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
-) => {
-      
-      
-      return customInstance<unknown>(
-      {url: `/api/v1/candidates/me`, method: 'POST',
-      headers: {'Content-Type': 'application/json', },
-      data: saveCandidateMeApiV1CandidatesMePostBody, signal
-    },
-      options);
-    }
-  
-
-
-export const getSaveCandidateMeApiV1CandidatesMePostMutationOptions = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>, TError,{data: SaveCandidateMeApiV1CandidatesMePostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
-): UseMutationOptions<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>, TError,{data: SaveCandidateMeApiV1CandidatesMePostBody}, TContext> => {
-
-const mutationKey = ['saveCandidateMeApiV1CandidatesMePost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>, {data: SaveCandidateMeApiV1CandidatesMePostBody}> = (props) => {
-          const {data} = props ?? {};
-
-          return  saveCandidateMeApiV1CandidatesMePost(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type SaveCandidateMeApiV1CandidatesMePostMutationResult = NonNullable<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>>
-    export type SaveCandidateMeApiV1CandidatesMePostMutationBody = SaveCandidateMeApiV1CandidatesMePostBody
-    export type SaveCandidateMeApiV1CandidatesMePostMutationError = HTTPValidationError
-
-    /**
- * @summary Save Candidate Me
- */
-export const useSaveCandidateMeApiV1CandidatesMePost = <TError = HTTPValidationError,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>, TError,{data: SaveCandidateMeApiV1CandidatesMePostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof saveCandidateMeApiV1CandidatesMePost>>,
-        TError,
-        {data: SaveCandidateMeApiV1CandidatesMePostBody},
-        TContext
-      > => {
-
-      const mutationOptions = getSaveCandidateMeApiV1CandidatesMePostMutationOptions(options);
-
-      return useMutation(mutationOptions);
-    }
-    /**
  * Generate an Azure upload SAS for the logged-in candidate's resume.
+Enforces:
+  - Upload lock: 423 if state == PENDING_HR_REVIEW
+  - Rate limit: 429 if 3+ uploads in the current 24-hour window
  * @summary Candidate Me Upload Sas
  */
 export const candidateMeUploadSasApiV1CandidatesMeUploadSasPost = (

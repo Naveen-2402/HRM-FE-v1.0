@@ -20,6 +20,7 @@ import type {
 
 import type {
   ApprovalActionRequest,
+  CreateDelegationRequest,
   HTTPValidationError,
   InitiateApprovalRequest
 } from '.././model';
@@ -369,3 +370,261 @@ export function useGetMyRequestsApiV1ApprovalsMyRequestsGet<TData = Awaited<Retu
 
 
 
+/**
+ * Claim a pending group-routed request.
+ * @summary Claim Request
+ */
+export const claimRequestApiV1ApprovalsRequestIdClaimPost = (
+    requestId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/approvals/${requestId}/claim`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getClaimRequestApiV1ApprovalsRequestIdClaimPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimRequestApiV1ApprovalsRequestIdClaimPost>>, TError,{requestId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof claimRequestApiV1ApprovalsRequestIdClaimPost>>, TError,{requestId: string}, TContext> => {
+
+const mutationKey = ['claimRequestApiV1ApprovalsRequestIdClaimPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof claimRequestApiV1ApprovalsRequestIdClaimPost>>, {requestId: string}> = (props) => {
+          const {requestId} = props ?? {};
+
+          return  claimRequestApiV1ApprovalsRequestIdClaimPost(requestId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClaimRequestApiV1ApprovalsRequestIdClaimPostMutationResult = NonNullable<Awaited<ReturnType<typeof claimRequestApiV1ApprovalsRequestIdClaimPost>>>
+    
+    export type ClaimRequestApiV1ApprovalsRequestIdClaimPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Claim Request
+ */
+export const useClaimRequestApiV1ApprovalsRequestIdClaimPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof claimRequestApiV1ApprovalsRequestIdClaimPost>>, TError,{requestId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof claimRequestApiV1ApprovalsRequestIdClaimPost>>,
+        TError,
+        {requestId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getClaimRequestApiV1ApprovalsRequestIdClaimPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Return a request to the requester for changes.
+ * @summary Return Request
+ */
+export const returnRequestApiV1ApprovalsRequestIdReturnPost = (
+    requestId: string,
+    approvalActionRequest: ApprovalActionRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/approvals/${requestId}/return`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: approvalActionRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getReturnRequestApiV1ApprovalsRequestIdReturnPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof returnRequestApiV1ApprovalsRequestIdReturnPost>>, TError,{requestId: string;data: ApprovalActionRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof returnRequestApiV1ApprovalsRequestIdReturnPost>>, TError,{requestId: string;data: ApprovalActionRequest}, TContext> => {
+
+const mutationKey = ['returnRequestApiV1ApprovalsRequestIdReturnPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof returnRequestApiV1ApprovalsRequestIdReturnPost>>, {requestId: string;data: ApprovalActionRequest}> = (props) => {
+          const {requestId,data} = props ?? {};
+
+          return  returnRequestApiV1ApprovalsRequestIdReturnPost(requestId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReturnRequestApiV1ApprovalsRequestIdReturnPostMutationResult = NonNullable<Awaited<ReturnType<typeof returnRequestApiV1ApprovalsRequestIdReturnPost>>>
+    export type ReturnRequestApiV1ApprovalsRequestIdReturnPostMutationBody = ApprovalActionRequest
+    export type ReturnRequestApiV1ApprovalsRequestIdReturnPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Return Request
+ */
+export const useReturnRequestApiV1ApprovalsRequestIdReturnPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof returnRequestApiV1ApprovalsRequestIdReturnPost>>, TError,{requestId: string;data: ApprovalActionRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof returnRequestApiV1ApprovalsRequestIdReturnPost>>,
+        TError,
+        {requestId: string;data: ApprovalActionRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getReturnRequestApiV1ApprovalsRequestIdReturnPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Withdraw a pending request (requester only).
+ * @summary Withdraw Request
+ */
+export const withdrawRequestApiV1ApprovalsRequestIdWithdrawPost = (
+    requestId: string,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/approvals/${requestId}/withdraw`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getWithdrawRequestApiV1ApprovalsRequestIdWithdrawPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawRequestApiV1ApprovalsRequestIdWithdrawPost>>, TError,{requestId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof withdrawRequestApiV1ApprovalsRequestIdWithdrawPost>>, TError,{requestId: string}, TContext> => {
+
+const mutationKey = ['withdrawRequestApiV1ApprovalsRequestIdWithdrawPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof withdrawRequestApiV1ApprovalsRequestIdWithdrawPost>>, {requestId: string}> = (props) => {
+          const {requestId} = props ?? {};
+
+          return  withdrawRequestApiV1ApprovalsRequestIdWithdrawPost(requestId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type WithdrawRequestApiV1ApprovalsRequestIdWithdrawPostMutationResult = NonNullable<Awaited<ReturnType<typeof withdrawRequestApiV1ApprovalsRequestIdWithdrawPost>>>
+    
+    export type WithdrawRequestApiV1ApprovalsRequestIdWithdrawPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Withdraw Request
+ */
+export const useWithdrawRequestApiV1ApprovalsRequestIdWithdrawPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof withdrawRequestApiV1ApprovalsRequestIdWithdrawPost>>, TError,{requestId: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof withdrawRequestApiV1ApprovalsRequestIdWithdrawPost>>,
+        TError,
+        {requestId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getWithdrawRequestApiV1ApprovalsRequestIdWithdrawPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Create a leave delegation.
+ * @summary Create Delegation
+ */
+export const createDelegationApiV1ApprovalsDelegationsPost = (
+    createDelegationRequest: CreateDelegationRequest,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/approvals/delegations`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createDelegationRequest, signal
+    },
+      options);
+    }
+  
+
+
+export const getCreateDelegationApiV1ApprovalsDelegationsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDelegationApiV1ApprovalsDelegationsPost>>, TError,{data: CreateDelegationRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDelegationApiV1ApprovalsDelegationsPost>>, TError,{data: CreateDelegationRequest}, TContext> => {
+
+const mutationKey = ['createDelegationApiV1ApprovalsDelegationsPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDelegationApiV1ApprovalsDelegationsPost>>, {data: CreateDelegationRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createDelegationApiV1ApprovalsDelegationsPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDelegationApiV1ApprovalsDelegationsPostMutationResult = NonNullable<Awaited<ReturnType<typeof createDelegationApiV1ApprovalsDelegationsPost>>>
+    export type CreateDelegationApiV1ApprovalsDelegationsPostMutationBody = CreateDelegationRequest
+    export type CreateDelegationApiV1ApprovalsDelegationsPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Delegation
+ */
+export const useCreateDelegationApiV1ApprovalsDelegationsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDelegationApiV1ApprovalsDelegationsPost>>, TError,{data: CreateDelegationRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDelegationApiV1ApprovalsDelegationsPost>>,
+        TError,
+        {data: CreateDelegationRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateDelegationApiV1ApprovalsDelegationsPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    

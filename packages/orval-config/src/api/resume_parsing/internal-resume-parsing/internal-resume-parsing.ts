@@ -6,16 +6,24 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
   MutationFunction,
+  QueryFunction,
+  QueryKey,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
-  HTTPValidationError
+  HTTPValidationError,
+  SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody,
+  TriggerDossierInternalResumeParsingTriggerDossierPostBody,
+  TriggerExtractInternalResumeParsingTriggerExtractPostBody
 } from '.././model';
 
 import { customInstance } from '../../../axios-setup';
@@ -90,6 +98,344 @@ export const useProvisionTenantInternalResumeParsingProvisionTenantIdPost = <TEr
       > => {
 
       const mutationOptions = getProvisionTenantInternalResumeParsingProvisionTenantIdPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * HTTP trigger for local development testing to bypass Service Bus competing consumers.
+ * @summary Trigger Extract
+ */
+export const triggerExtractInternalResumeParsingTriggerExtractPost = (
+    triggerExtractInternalResumeParsingTriggerExtractPostBody: TriggerExtractInternalResumeParsingTriggerExtractPostBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/internal/resume-parsing/trigger-extract`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: triggerExtractInternalResumeParsingTriggerExtractPostBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getTriggerExtractInternalResumeParsingTriggerExtractPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerExtractInternalResumeParsingTriggerExtractPost>>, TError,{data: TriggerExtractInternalResumeParsingTriggerExtractPostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof triggerExtractInternalResumeParsingTriggerExtractPost>>, TError,{data: TriggerExtractInternalResumeParsingTriggerExtractPostBody}, TContext> => {
+
+const mutationKey = ['triggerExtractInternalResumeParsingTriggerExtractPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof triggerExtractInternalResumeParsingTriggerExtractPost>>, {data: TriggerExtractInternalResumeParsingTriggerExtractPostBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  triggerExtractInternalResumeParsingTriggerExtractPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TriggerExtractInternalResumeParsingTriggerExtractPostMutationResult = NonNullable<Awaited<ReturnType<typeof triggerExtractInternalResumeParsingTriggerExtractPost>>>
+    export type TriggerExtractInternalResumeParsingTriggerExtractPostMutationBody = TriggerExtractInternalResumeParsingTriggerExtractPostBody
+    export type TriggerExtractInternalResumeParsingTriggerExtractPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Trigger Extract
+ */
+export const useTriggerExtractInternalResumeParsingTriggerExtractPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerExtractInternalResumeParsingTriggerExtractPost>>, TError,{data: TriggerExtractInternalResumeParsingTriggerExtractPostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof triggerExtractInternalResumeParsingTriggerExtractPost>>,
+        TError,
+        {data: TriggerExtractInternalResumeParsingTriggerExtractPostBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTriggerExtractInternalResumeParsingTriggerExtractPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * HTTP trigger for local development testing to bypass Service Bus competing consumers.
+ * @summary Trigger Dossier
+ */
+export const triggerDossierInternalResumeParsingTriggerDossierPost = (
+    triggerDossierInternalResumeParsingTriggerDossierPostBody: TriggerDossierInternalResumeParsingTriggerDossierPostBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/internal/resume-parsing/trigger-dossier`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: triggerDossierInternalResumeParsingTriggerDossierPostBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getTriggerDossierInternalResumeParsingTriggerDossierPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerDossierInternalResumeParsingTriggerDossierPost>>, TError,{data: TriggerDossierInternalResumeParsingTriggerDossierPostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof triggerDossierInternalResumeParsingTriggerDossierPost>>, TError,{data: TriggerDossierInternalResumeParsingTriggerDossierPostBody}, TContext> => {
+
+const mutationKey = ['triggerDossierInternalResumeParsingTriggerDossierPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof triggerDossierInternalResumeParsingTriggerDossierPost>>, {data: TriggerDossierInternalResumeParsingTriggerDossierPostBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  triggerDossierInternalResumeParsingTriggerDossierPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TriggerDossierInternalResumeParsingTriggerDossierPostMutationResult = NonNullable<Awaited<ReturnType<typeof triggerDossierInternalResumeParsingTriggerDossierPost>>>
+    export type TriggerDossierInternalResumeParsingTriggerDossierPostMutationBody = TriggerDossierInternalResumeParsingTriggerDossierPostBody
+    export type TriggerDossierInternalResumeParsingTriggerDossierPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Trigger Dossier
+ */
+export const useTriggerDossierInternalResumeParsingTriggerDossierPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof triggerDossierInternalResumeParsingTriggerDossierPost>>, TError,{data: TriggerDossierInternalResumeParsingTriggerDossierPostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof triggerDossierInternalResumeParsingTriggerDossierPost>>,
+        TError,
+        {data: TriggerDossierInternalResumeParsingTriggerDossierPostBody},
+        TContext
+      > => {
+
+      const mutationOptions = getTriggerDossierInternalResumeParsingTriggerDossierPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Service-to-service endpoint: rollback a staged resume upload.
+Clears staged_resume_blob_url, resets state to IDLE.
+Called by job-service when HR rejects a resume update.
+ * @summary Rollback Staged Resume
+ */
+export const rollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost = (
+    tenantId: string,
+    candidateId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/internal/resume-parsing/candidates/${tenantId}/${candidateId}/rollback-staged`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getRollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost>>, TError,{tenantId: string;candidateId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost>>, TError,{tenantId: string;candidateId: number}, TContext> => {
+
+const mutationKey = ['rollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost>>, {tenantId: string;candidateId: number}> = (props) => {
+          const {tenantId,candidateId} = props ?? {};
+
+          return  rollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost(tenantId,candidateId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPostMutationResult = NonNullable<Awaited<ReturnType<typeof rollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost>>>
+    
+    export type RollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Rollback Staged Resume
+ */
+export const useRollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost>>, TError,{tenantId: string;candidateId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPost>>,
+        TError,
+        {tenantId: string;candidateId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getRollbackStagedResumeInternalResumeParsingCandidatesTenantIdCandidateIdRollbackStagedPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Service-to-service endpoint: query candidate profile state.
+Returns state, has_parsed_data, has_staged_upload.
+Called by job-service to determine hr_tag on application.
+ * @summary Get Candidate State
+ */
+export const getCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet = (
+    tenantId: string,
+    candidateId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/internal/resume-parsing/candidates/${tenantId}/${candidateId}/state`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGetQueryKey = (tenantId?: string,
+    candidateId?: number,) => {
+    return [
+    `/internal/resume-parsing/candidates/${tenantId}/${candidateId}/state`
+    ] as const;
+    }
+
+    
+export const getGetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGetQueryOptions = <TData = Awaited<ReturnType<typeof getCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet>>, TError = HTTPValidationError>(tenantId: string,
+    candidateId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGetQueryKey(tenantId,candidateId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet>>> = ({ signal }) => getCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet(tenantId,candidateId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(tenantId && candidateId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet>>>
+export type GetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGetQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Candidate State
+ */
+
+export function useGetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet<TData = Awaited<ReturnType<typeof getCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet>>, TError = HTTPValidationError>(
+ tenantId: string,
+    candidateId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdStateGetQueryOptions(tenantId,candidateId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Service-to-service endpoint: set candidate state.
+Used by job-service for reject-resume (RESUME_REJECTED) and accept-resume-update completion callback.
+ * @summary Set Candidate State
+ */
+export const setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost = (
+    tenantId: string,
+    candidateId: number,
+    setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody: SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/internal/resume-parsing/candidates/${tenantId}/${candidateId}/set-state`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody, signal
+    },
+      options);
+    }
+  
+
+
+export const getSetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost>>, TError,{tenantId: string;candidateId: number;data: SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost>>, TError,{tenantId: string;candidateId: number;data: SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody}, TContext> => {
+
+const mutationKey = ['setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost>>, {tenantId: string;candidateId: number;data: SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody}> = (props) => {
+          const {tenantId,candidateId,data} = props ?? {};
+
+          return  setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost(tenantId,candidateId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostMutationResult = NonNullable<Awaited<ReturnType<typeof setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost>>>
+    export type SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostMutationBody = SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody
+    export type SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Set Candidate State
+ */
+export const useSetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost>>, TError,{tenantId: string;candidateId: number;data: SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePost>>,
+        TError,
+        {tenantId: string;candidateId: number;data: SetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostBody},
+        TContext
+      > => {
+
+      const mutationOptions = getSetCandidateStateInternalResumeParsingCandidatesTenantIdCandidateIdSetStatePostMutationOptions(options);
 
       return useMutation(mutationOptions);
     }

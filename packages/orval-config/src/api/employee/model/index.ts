@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './bulkAssignRoleRequest';
 export * from './bulkEmployeeEntry';
 export * from './bulkEmployeeEntryContactEmail';
 export * from './bulkEmployeeInviteRequest';

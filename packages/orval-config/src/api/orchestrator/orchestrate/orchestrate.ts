@@ -299,4 +299,71 @@ export const useCancelApiV1OrchestrateCancelCorrelationIdPost = <TError = HTTPVa
 
       return useMutation(mutationOptions);
     }
+    /**
+ * Lightweight, unauthenticated endpoint to check orchestrator service health/warm-up.
+ * @summary Health Check
+ */
+export const healthCheckApiV1OrchestrateHealthGet = (
     
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/orchestrate/health`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getHealthCheckApiV1OrchestrateHealthGetQueryKey = () => {
+    return [
+    `/api/v1/orchestrate/health`
+    ] as const;
+    }
+
+    
+export const getHealthCheckApiV1OrchestrateHealthGetQueryOptions = <TData = Awaited<ReturnType<typeof healthCheckApiV1OrchestrateHealthGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckApiV1OrchestrateHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getHealthCheckApiV1OrchestrateHealthGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof healthCheckApiV1OrchestrateHealthGet>>> = ({ signal }) => healthCheckApiV1OrchestrateHealthGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthCheckApiV1OrchestrateHealthGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type HealthCheckApiV1OrchestrateHealthGetQueryResult = NonNullable<Awaited<ReturnType<typeof healthCheckApiV1OrchestrateHealthGet>>>
+export type HealthCheckApiV1OrchestrateHealthGetQueryError = unknown
+
+
+/**
+ * @summary Health Check
+ */
+
+export function useHealthCheckApiV1OrchestrateHealthGet<TData = Awaited<ReturnType<typeof healthCheckApiV1OrchestrateHealthGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheckApiV1OrchestrateHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getHealthCheckApiV1OrchestrateHealthGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+

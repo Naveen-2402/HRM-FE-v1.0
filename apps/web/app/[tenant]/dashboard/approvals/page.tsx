@@ -23,6 +23,7 @@ import { Button } from "@repo/ui/components/ui/button";
 import { Modal } from "@/components/_shared/Modal";
 import { useQuery } from "@tanstack/react-query";
 import { customInstance } from "@repo/orval-config/src/axios-setup";
+import { useSearchParams } from "next/navigation";
 
 import {
   useGetPendingApprovalsApiV1ApprovalsPendingGet,
@@ -32,6 +33,9 @@ import {
 } from "@repo/orval-config/src/api/tenant/approvals/approvals";
 
 export default function ApprovalsPage() {
+  const searchParams = useSearchParams();
+  const requestIdParam = searchParams.get("id");
+
   const [activeTab, setActiveTab] = useState<"pending" | "my-requests">("pending");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
@@ -89,6 +93,36 @@ export default function ApprovalsPage() {
   }));
   const pendingRequests = [...standardPending, ...evalsPending];
   const myRequests = Array.isArray(myRequestsResponse) ? myRequestsResponse : [];
+
+  React.useEffect(() => {
+    if (requestIdParam) {
+      refetchPending();
+      refetchEvals();
+      refetchMyRequests();
+    }
+  }, [requestIdParam, refetchPending, refetchEvals, refetchMyRequests]);
+
+  React.useEffect(() => {
+    if (!requestIdParam) return;
+    
+    // Look in pendingRequests first
+    const foundPending = pendingRequests.find((r: any) => r.id === requestIdParam);
+    if (foundPending) {
+      setSelectedRequest(foundPending);
+      setActiveTab("pending");
+      setIsModalOpen(true);
+      return;
+    }
+
+    // Look in myRequests next
+    const foundMyRequest = myRequests.find((r: any) => r.id === requestIdParam);
+    if (foundMyRequest) {
+      setSelectedRequest(foundMyRequest);
+      setActiveTab("my-requests");
+      setIsModalOpen(true);
+      return;
+    }
+  }, [pendingResponse, pendingEvaluationsResponse, myRequestsResponse, requestIdParam]);
 
   const handleRefetch = () => {
     if (activeTab === "pending") {

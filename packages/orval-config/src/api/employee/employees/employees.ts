@@ -19,6 +19,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BulkAssignRoleRequest,
   BulkEmployeeInviteRequest,
   HTTPValidationError,
   ListEmployeesApiV1EmployeesGetParams
@@ -476,6 +477,69 @@ export const useActivateCurrentEmployeeApiV1EmployeesActivatePost = <TError = un
       > => {
 
       const mutationOptions = getActivateCurrentEmployeeApiV1EmployeesActivatePostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * @summary Bulk Assign Roles
+ */
+export const bulkAssignRolesApiV1EmployeesBulkAssignRolesPatch = (
+    bulkAssignRoleRequest: BulkAssignRoleRequest,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/employees/bulk-assign-roles`, method: 'PATCH',
+      headers: {'Content-Type': 'application/json', },
+      data: bulkAssignRoleRequest
+    },
+      options);
+    }
+  
+
+
+export const getBulkAssignRolesApiV1EmployeesBulkAssignRolesPatchMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkAssignRolesApiV1EmployeesBulkAssignRolesPatch>>, TError,{data: BulkAssignRoleRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof bulkAssignRolesApiV1EmployeesBulkAssignRolesPatch>>, TError,{data: BulkAssignRoleRequest}, TContext> => {
+
+const mutationKey = ['bulkAssignRolesApiV1EmployeesBulkAssignRolesPatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof bulkAssignRolesApiV1EmployeesBulkAssignRolesPatch>>, {data: BulkAssignRoleRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  bulkAssignRolesApiV1EmployeesBulkAssignRolesPatch(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BulkAssignRolesApiV1EmployeesBulkAssignRolesPatchMutationResult = NonNullable<Awaited<ReturnType<typeof bulkAssignRolesApiV1EmployeesBulkAssignRolesPatch>>>
+    export type BulkAssignRolesApiV1EmployeesBulkAssignRolesPatchMutationBody = BulkAssignRoleRequest
+    export type BulkAssignRolesApiV1EmployeesBulkAssignRolesPatchMutationError = HTTPValidationError
+
+    /**
+ * @summary Bulk Assign Roles
+ */
+export const useBulkAssignRolesApiV1EmployeesBulkAssignRolesPatch = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof bulkAssignRolesApiV1EmployeesBulkAssignRolesPatch>>, TError,{data: BulkAssignRoleRequest}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof bulkAssignRolesApiV1EmployeesBulkAssignRolesPatch>>,
+        TError,
+        {data: BulkAssignRoleRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getBulkAssignRolesApiV1EmployeesBulkAssignRolesPatchMutationOptions(options);
 
       return useMutation(mutationOptions);
     }

@@ -38,6 +38,9 @@ interface CandidateProfile {
   education: string;
   resume_blob_url: string;
   status: string;
+  state?: string;
+  upload_enabled?: boolean;
+  profile_banner?: string | null;
 }
 
 interface Application {
@@ -49,6 +52,7 @@ interface Application {
   current_stage_index: number;
   stage_status: string;
   selection_status: string;
+  display_status?: string;
   human_decision: boolean;
   created_at: string;
   pipeline_stages?: string[];
@@ -275,6 +279,13 @@ function CandidateDashboardContent() {
 
         {/* Right Column: Applications tracking list */}
         <div className="lg:col-span-3 space-y-6">
+          {profile?.profile_banner && (
+            <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold flex items-center gap-2">
+              <Clock className="size-4 text-indigo-400 shrink-0 animate-pulse" />
+              <span>{profile.profile_banner}</span>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-black text-white">Your Applications</h2>
             <span className="text-xs font-bold text-slate-500 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">
@@ -315,13 +326,13 @@ function CandidateDashboardContent() {
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-slate-500 font-bold">Status:</span>
                       <span className={`inline-flex items-center text-[10px] font-black px-2.5 py-1 rounded-lg border ${
-                        app.selection_status === "HIRED"
+                        app.selection_status === "HIRED" || app.selection_status === "Moving_Forward"
                           ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                          : app.selection_status === "REJECTED"
+                          : app.selection_status === "REJECTED" || app.selection_status === "Not_Selected"
                           ? "bg-red-500/10 border-red-500/20 text-red-400"
                           : "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
                       }`}>
-                        {app.selection_status || "PENDING EVALUATION"}
+                        {app.display_status || app.selection_status || "PENDING EVALUATION"}
                       </span>
                     </div>
                   </div>

@@ -6,8 +6,10 @@ import { z } from "zod";
 import { useCreateJobApiV1JobsPost } from "@repo/orval-config/src/api/job/jobs/jobs";
 import { useExecuteWorkflowApiV1OrchestrateExecutePost, useConfirmWorkflowApiV1OrchestrateConfirmPost } from "@repo/orval-config/src/api/orchestrator/orchestrate/orchestrate";
 import { useUploadSasApiV1CandidatesUploadSasPost } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+import { useListEmployeesApiV1EmployeesGet } from "@repo/orval-config/src/api/employees/employees";
 import { toast } from "react-toastify";
 import { AlertCircle } from "lucide-react";
+import { Dropdown } from "@/components/_shared/Dropdown";
 
 const jobSchema = z.object({
   title: z.string().min(3, "Job title must be at least 3 characters"),
@@ -15,6 +17,8 @@ const jobSchema = z.object({
   requirements: z.string().min(10, "Requirements must be at least 10 characters"),
   pipeline_stages: z.string().optional(),
   max_outside_applicants: z.string().optional(),
+  hiring_manager_id: z.string().optional(),
+  recruiter_id: z.string().optional(),
 });
 
 type JobFormValues = z.infer<typeof jobSchema>;
@@ -37,9 +41,40 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
    const [isUploadingFiles, setIsUploadingFiles] = useState(false);
    const isBusy = isExecuting || isConfirming || isUploadingFiles;
 
+  const { data: employeesData } = useListEmployeesApiV1EmployeesGet({ skip: 0, limit: 100 });
+  const employeesList = employeesData?.employees || [];
+
+  const hiringManagerOptions = [
+    { label: "Select Hiring Manager", value: "" },
+    ...employeesList.map((emp: any) => ({
+      label: `${emp.first_name} ${emp.last_name} (${emp.email})`,
+      value: String(emp.id),
+    })),
+  ];
+
+  const recruiterOptions = [
+    { label: "Select Recruiter", value: "" },
+    ...employeesList.map((emp: any) => ({
+      label: `${emp.first_name} ${emp.last_name} (${emp.email})`,
+      value: String(emp.id),
+    })),
+  ];
+
   const form = useForm({
-    defaultValues: { title: "", description: "", requirements: "", pipeline_stages: "AI screening, HR Screening, Interview, Offer", max_outside_applicants: "" },
+    defaultValues: { 
+      title: "", 
+      description: "", 
+      requirements: "", 
+      pipeline_stages: "AI screening, HR Screening, Interview, Offer", 
+      max_outside_applicants: "",
+      hiring_manager_id: "",
+      recruiter_id: ""
+    },
     onSubmit: async ({ value }) => {
+      const role_bindings: Record<string, string> = {};
+      if (value.hiring_manager_id) role_bindings["hiring-manager"] = value.hiring_manager_id;
+      if (value.recruiter_id) role_bindings["recruiter"] = value.recruiter_id;
+
       createJob({
         data: {
           title: value.title,
@@ -47,7 +82,8 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
           requirements: value.requirements,
           pipeline_stages: value.pipeline_stages ? value.pipeline_stages.split(",").map(s => s.trim()).filter(Boolean) : ["AI screening", "HR Screening", "Interview", "Offer"],
           max_outside_applicants: value.max_outside_applicants ? parseInt(value.max_outside_applicants, 10) : undefined,
-        }
+          role_bindings: Object.keys(role_bindings).length > 0 ? role_bindings : undefined,
+        } as any
       }, {
         onSuccess: (response: any) => {
           // The backend returns 'id', not 'job_id'
@@ -261,6 +297,38 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
           </div>
         )}
       />
+
+      <div className="grid grid-cols-2 gap-4">
+        <form.Field
+          name="hiring_manager_id"
+          children={(field) => (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-foreground text-sm font-semibold" htmlFor={field.name}>Hiring Manager</label>
+              <Dropdown
+                options={hiringManagerOptions}
+                value={field.state.value || ""}
+                onChange={(val) => field.handleChange(val)}
+                placeholder="Select Hiring Manager"
+              />
+            </div>
+          )}
+        />
+
+        <form.Field
+          name="recruiter_id"
+          children={(field) => (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-foreground text-sm font-semibold" htmlFor={field.name}>Recruiter</label>
+              <Dropdown
+                options={recruiterOptions}
+                value={field.state.value || ""}
+                onChange={(val) => field.handleChange(val)}
+                placeholder="Select Recruiter"
+              />
+            </div>
+          )}
+        />
+      </div>
 
       {error && (
         <div className="flex items-start gap-2 p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs animate-in fade-in zoom-in-95 duration-200">

@@ -10,4 +10,5 @@ export interface TenantRequest {
   email: string;
   tenant_name: string;
   contact_email?: TenantRequestContactEmail;
+  enable_strict_workflows?: boolean;
 }

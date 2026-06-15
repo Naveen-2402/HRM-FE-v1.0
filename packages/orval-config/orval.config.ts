@@ -132,4 +132,20 @@ export default defineConfig({
       },
     },
   },
+
+  notification: {
+    input: `${process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL}/openapi.json`,
+    output: {
+      mode: 'tags-split',
+      target: 'src/api/notification/endpoints.ts',
+      schemas: 'src/api/notification/model',
+      client: 'react-query',
+      override: {
+        mutator: {
+          path: 'src/axios-setup.ts',
+          name: 'customInstance',
+        },
+      },
+    },
+  },
 });

@@ -21,6 +21,9 @@ export default function JobsPage() {
   const [resultsJob, setResultsJob] = useState<{ id: number; title: string; pipeline_stages?: string[] } | null>(null);
   const [shortlistJob, setShortlistJob] = useState<{ id: number; title: string } | null>(null);
   const [editPipelineJob, setEditPipelineJob] = useState<{ id: number; title: string; pipeline_stages: string[] } | null>(null);
+  const [pendingUpdates, setPendingUpdates] = useState<Record<number, { approver_role: string; target_active: boolean }>>({});
+  const [confirmToggleJob, setConfirmToggleJob] = useState<any>(null);
+  const [isToggling, setIsToggling] = useState(false);
 
   // API Hooks
   const { data: jobsResponse, isLoading, refetch, isFetching } = useGetJobsApiV1JobsGet();
@@ -50,16 +53,37 @@ export default function JobsPage() {
   };
 
   const handleToggleStatus = async (job: any) => {
+    setIsToggling(true);
     try {
-      await customInstance({
+      const res: any = await customInstance({
         url: `/api/v1/jobs/${job.id}/status`,
         method: 'PATCH',
         data: { is_active: !job.is_active }
       });
-      toast.success(`Job ${!job.is_active ? 'activated' : 'deactivated'} successfully`);
-      refetch();
+      
+      if (res && res.approval_request_id) {
+        toast.info(`${res.detail || "Status update submitted"}. Sent to ${res.approver_role || "approver"}.`);
+        setPendingUpdates(prev => ({
+          ...prev,
+          [job.id]: {
+            approver_role: res.approver_role || "approver",
+            target_active: !job.is_active
+          }
+        }));
+      } else {
+        toast.success(res?.detail || `Job ${!job.is_active ? 'activated' : 'deactivated'} successfully`);
+        setPendingUpdates(prev => {
+          const next = { ...prev };
+          delete next[job.id];
+          return next;
+        });
+        refetch();
+      }
     } catch (error: any) {
       toast.error(error?.response?.data?.detail || "Failed to update job status");
+    } finally {
+      setIsToggling(false);
+      setConfirmToggleJob(null);
     }
   };
 
@@ -81,7 +105,10 @@ export default function JobsPage() {
             <Handshake className="size-4" /> Create new job
           </button>
           <button 
-            onClick={() => refetch()} 
+            onClick={() => {
+              setPendingUpdates({});
+              refetch();
+            }} 
             disabled={isFetching}
             className="bg-secondary text-secondary-foreground px-6 py-2.5 rounded-xl text-sm font-bold hover:cursor-pointer transition-all hover:bg-secondary/80 flex items-center gap-2 disabled:opacity-50"
           >
@@ -99,66 +126,94 @@ export default function JobsPage() {
             <div className="col-span-full py-24 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-3xl bg-muted/5">
               <p className="text-muted-foreground font-medium mb-3">No jobs created yet.</p>
             </div>
-          ) : jobs.map((job: any, index: number) => (
-            <SectionCard key={job.id || `job-idx-${index}`} className="p-8 flex flex-col group">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-foreground tracking-tight text-tight leading-tight flex items-center gap-2">
-                  {job.title}
-                  {!job.is_active && (
-                    <span className="text-[10px] uppercase font-bold bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full border border-border/50">
-                      Inactive
-                    </span>
-                  )}
-                </h3>
-                <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
-                  <Handshake className="size-4" />
+          ) : jobs.map((job: any, index: number) => {
+            const pendingUpdate = pendingUpdates[job.id];
+            return (
+              <SectionCard key={job.id || `job-idx-${index}`} className="p-8 flex flex-col group">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-xl font-bold text-foreground tracking-tight text-tight leading-tight flex items-center gap-2">
+                    {job.title}
+                    {!job.is_active && !pendingUpdate && (
+                      <span className="text-[10px] uppercase font-bold bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full border border-border/50">
+                        Inactive
+                      </span>
+                    )}
+                    {pendingUpdate && (
+                      <span className="text-[10px] uppercase font-bold bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full border border-amber-500/20 animate-pulse">
+                        Pending Approval ({pendingUpdate.approver_role})
+                      </span>
+                    )}
+                  </h3>
+                  <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
+                    <Handshake className="size-4" />
+                  </div>
                 </div>
-              </div>
-              <p className="text-[13.5px] text-muted-foreground/80 leading-relaxed mb-6 line-clamp-3">
-                {job.description || "No description available for this role."}
-              </p>
-              
-              <div className="mt-auto flex flex-wrap items-center gap-3 pt-6 border-t border-border/50">
-                <button 
-                  onClick={() => setResultsJob({ id: job.id, title: job.title, pipeline_stages: job.pipeline_stages })}
-                  className="bg-primary text-primary-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/20"
-                >
-                  View Results
-                </button>
-                <button
-                  onClick={() => setShortlistJob({ id: job.id, title: job.title })}
-                  disabled={!job.is_active}
-                  className="bg-secondary text-secondary-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!job.is_active ? "Activate job to shortlist candidates" : ""}
-                >
-                  Add candidates
-                </button>
-                <button
-                  onClick={() => setEditPipelineJob({ id: job.id, title: job.title, pipeline_stages: job.pipeline_stages || [] })}
-                  disabled={!job.is_active}
-                  className="bg-muted text-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title={!job.is_active ? "Activate job to edit" : ""}
-                >
-                  Rounds
-                </button>
+                <p className="text-[13.5px] text-muted-foreground/80 leading-relaxed mb-6 line-clamp-3">
+                  {job.description || "No description available for this role."}
+                </p>
                 
-                <div className="flex-grow" />
+                <div className="mt-auto flex flex-wrap items-center gap-3 pt-6 border-t border-border/50">
+                  <button 
+                    onClick={() => setResultsJob({ id: job.id, title: job.title, pipeline_stages: job.pipeline_stages })}
+                    className="bg-primary text-primary-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/20"
+                  >
+                    View Results
+                  </button>
+                  <button
+                    onClick={() => setShortlistJob({ id: job.id, title: job.title })}
+                    disabled={!job.is_active}
+                    className="bg-secondary text-secondary-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:bg-secondary/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={!job.is_active ? "Activate job to shortlist candidates" : ""}
+                  >
+                    Add candidates
+                  </button>
+                  <button
+                    onClick={() => setEditPipelineJob({ id: job.id, title: job.title, pipeline_stages: job.pipeline_stages || [] })}
+                    disabled={!job.is_active}
+                    className="bg-muted text-foreground px-5 py-2 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={!job.is_active ? "Activate job to edit" : ""}
+                  >
+                    Rounds
+                  </button>
+                  
+                  <div className="flex-grow" />
 
-                <button 
-                  onClick={() => handleToggleStatus(job)}
-                  className="text-muted-foreground hover:text-foreground text-xs font-bold hover:cursor-pointer px-3 py-2 rounded-lg transition-all"
-                >
-                  {job.is_active ? <ToggleRight className="text-green-800 hover:text-green-900 rounded-lg size-6"  /> : <ToggleLeft className="text-red-800 hover:text-red-900 rounded-lg size-6" />}
-                </button>
-                <button 
-                  onClick={() => setDeleteId(job.id)}
-                  className="text-muted-foreground hover:text-destructive text-xs font-bold hover:cursor-pointer px-3 py-2 hover:bg-destructive/10 rounded-lg transition-all"
-                >
-                  <Trash className="size-4" />
-                </button>
-              </div>
-            </SectionCard>
-          ))}
+                  <button 
+                    onClick={() => setConfirmToggleJob(job)}
+                    disabled={!!pendingUpdate}
+                    className={`text-xs font-bold hover:cursor-pointer px-3 py-2 rounded-lg transition-all ${
+                      pendingUpdate ? "text-amber-500" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    title={
+                      pendingUpdate
+                        ? `Approval pending from ${pendingUpdate.approver_role}`
+                        : job.is_active
+                        ? "Deactivate Job"
+                        : "Activate Job"
+                    }
+                  >
+                    {pendingUpdate ? (
+                      pendingUpdate.target_active ? (
+                        <ToggleRight className="text-amber-500 size-6 animate-pulse" />
+                      ) : (
+                        <ToggleLeft className="text-amber-500 size-6 animate-pulse" />
+                      )
+                    ) : job.is_active ? (
+                      <ToggleRight className="text-green-800 hover:text-green-900 rounded-lg size-6"  />
+                    ) : (
+                      <ToggleLeft className="text-red-800 hover:text-red-900 rounded-lg size-6" />
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => setDeleteId(job.id)}
+                    className="text-muted-foreground hover:text-destructive text-xs font-bold hover:cursor-pointer px-3 py-2 hover:bg-destructive/10 rounded-lg transition-all"
+                  >
+                    <Trash className="size-4" />
+                  </button>
+                </div>
+              </SectionCard>
+            );
+          })}
         </div>
       )}
 
@@ -180,6 +235,22 @@ export default function JobsPage() {
         description="Are you sure? All associated candidate data for this job will be archived."
         isLoading={isDeleting}
         isDestructive={true}
+      />
+
+      {/* Toggle Status Confirmation */}
+      <ConfirmModal 
+        isOpen={!!confirmToggleJob} 
+        onClose={() => setConfirmToggleJob(null)} 
+        onConfirm={() => handleToggleStatus(confirmToggleJob)}
+        title={confirmToggleJob?.is_active ? "Deactivate Job" : "Activate Job"}
+        description={
+          confirmToggleJob?.is_active 
+            ? "Are you sure you want to deactivate this job? Active candidates will not be able to apply." 
+            : "Are you sure you want to activate this job?"
+        }
+        isLoading={isToggling}
+        isDestructive={confirmToggleJob?.is_active}
+        confirmText={confirmToggleJob?.is_active ? "Deactivate" : "Activate"}
       />
       
       {/* Results Modal */}

@@ -16,6 +16,7 @@ import { getRootOrigin } from "@repo/utils/src/domain";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Loader2 } from "lucide-react";
 import { Logo } from "./logo";
+import { NotificationDropdown } from "./notification-dropdown";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -150,10 +151,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-2">
               <ModeToggle />
-              <button className="relative p-2 text-muted-foreground hover:bg-muted hover:text-foreground rounded-xl transition-all group mr-1">
-                <Bell className="size-5" />
-                <span className="absolute top-2 right-2 size-2 bg-primary rounded-full border-2 border-card" />
-              </button>
+              <NotificationDropdown />
 
               {/* Profile Dropdown */}
               <div className="relative" id="profile-dropdown-container">

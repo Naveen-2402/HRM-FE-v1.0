@@ -6,6 +6,7 @@
  */
 import type { InitiateApprovalRequestPayload } from './initiateApprovalRequestPayload';
 import type { InitiateApprovalRequestReason } from './initiateApprovalRequestReason';
+import type { InitiateApprovalRequestManualApproverUserId } from './initiateApprovalRequestManualApproverUserId';
 
 export interface InitiateApprovalRequest {
   permission_key: string;
@@ -14,4 +15,5 @@ export interface InitiateApprovalRequest {
   entity_id: string;
   payload: InitiateApprovalRequestPayload;
   reason?: InitiateApprovalRequestReason;
+  manual_approver_user_id?: InitiateApprovalRequestManualApproverUserId;
 }

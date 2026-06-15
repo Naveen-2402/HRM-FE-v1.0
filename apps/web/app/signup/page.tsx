@@ -11,6 +11,7 @@ import {
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { Label } from "@repo/ui/components/ui/label";
+import { Checkbox } from "@repo/ui/components/ui/checkbox";
 
 import { useOnboardTenantTenantsOnboardPost } from "@repo/orval-config/src/api/default/default";
 import { emailSchema, tenantNameSchema, validateWith } from "@repo/ui/lib/validators";
@@ -72,7 +73,7 @@ export default function TenantSignupPage() {
   });
 
   const form = useForm({
-    defaultValues: { tenant_name: "", email: "", contact_email: "" },
+    defaultValues: { tenant_name: "", email: "", contact_email: "", enable_strict_workflows: false },
     onSubmit: async ({ value }) => {
       await onboardMutation.mutateAsync({ data: value as any });
     },
@@ -193,6 +194,30 @@ export default function TenantSignupPage() {
                       placeholder="personal.email@gmail.com"
                       field={field}
                     />
+                  )}
+                </form.Field>
+
+                <form.Field name="enable_strict_workflows">
+                  {(field) => (
+                    <div className="flex items-start space-x-3 pt-2 ml-1 p-4 rounded-2xl border border-border/20 bg-background/20 backdrop-blur-md shadow-sm">
+                      <Checkbox
+                        id={field.name}
+                        checked={field.state.value}
+                        onCheckedChange={(checked) => field.handleChange(checked === true)}
+                        className="hover:cursor-pointer size-5 mt-0.5 rounded-md border-border/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=checked]:border-primary"
+                      />
+                      <div className="grid gap-1.5 leading-none select-none">
+                        <label
+                          htmlFor={field.name}
+                          className="text-sm font-semibold text-foreground hover:cursor-pointer hover:text-primary transition-colors"
+                        >
+                          Enable strict HR workflows
+                        </label>
+                        <p className="text-xs text-muted-foreground leading-normal">
+                          Requires hiring manager approvals for offers and job requisitions. If unchecked, default actions bypass approval workflows.
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </form.Field>
 

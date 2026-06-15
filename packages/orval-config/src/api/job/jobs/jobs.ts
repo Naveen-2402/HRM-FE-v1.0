@@ -23,6 +23,7 @@ import type {
   CreateJobApiV1JobsPostBody,
   HTTPValidationError,
   UpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatchBody,
+  UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody,
   UpdateJobStatusApiV1JobsJobIdStatusPatchBody,
   UpdatePipelineApiV1JobsJobIdPipelinePutBody
 } from '.././model';
@@ -170,6 +171,137 @@ export const useCreateJobApiV1JobsPost = <TError = HTTPValidationError,
       return useMutation(mutationOptions);
     }
     /**
+ * @summary Get Job Role Bindings
+ */
+export const getJobRoleBindingsApiV1JobsJobIdRoleBindingsGet = (
+    jobId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/${jobId}/role-bindings`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetJobRoleBindingsApiV1JobsJobIdRoleBindingsGetQueryKey = (jobId?: number,) => {
+    return [
+    `/api/v1/jobs/${jobId}/role-bindings`
+    ] as const;
+    }
+
+    
+export const getGetJobRoleBindingsApiV1JobsJobIdRoleBindingsGetQueryOptions = <TData = Awaited<ReturnType<typeof getJobRoleBindingsApiV1JobsJobIdRoleBindingsGet>>, TError = HTTPValidationError>(jobId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getJobRoleBindingsApiV1JobsJobIdRoleBindingsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJobRoleBindingsApiV1JobsJobIdRoleBindingsGetQueryKey(jobId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJobRoleBindingsApiV1JobsJobIdRoleBindingsGet>>> = ({ signal }) => getJobRoleBindingsApiV1JobsJobIdRoleBindingsGet(jobId, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(jobId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJobRoleBindingsApiV1JobsJobIdRoleBindingsGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetJobRoleBindingsApiV1JobsJobIdRoleBindingsGetQueryResult = NonNullable<Awaited<ReturnType<typeof getJobRoleBindingsApiV1JobsJobIdRoleBindingsGet>>>
+export type GetJobRoleBindingsApiV1JobsJobIdRoleBindingsGetQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Job Role Bindings
+ */
+
+export function useGetJobRoleBindingsApiV1JobsJobIdRoleBindingsGet<TData = Awaited<ReturnType<typeof getJobRoleBindingsApiV1JobsJobIdRoleBindingsGet>>, TError = HTTPValidationError>(
+ jobId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getJobRoleBindingsApiV1JobsJobIdRoleBindingsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetJobRoleBindingsApiV1JobsJobIdRoleBindingsGetQueryOptions(jobId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * @summary Update Job Role Bindings
+ */
+export const updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut = (
+    jobId: number,
+    updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody: UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody,
+ options?: SecondParameter<typeof customInstance>,) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/${jobId}/role-bindings`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody
+    },
+      options);
+    }
+  
+
+
+export const getUpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut>>, TError,{jobId: number;data: UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut>>, TError,{jobId: number;data: UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody}, TContext> => {
+
+const mutationKey = ['updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut>>, {jobId: number;data: UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody}> = (props) => {
+          const {jobId,data} = props ?? {};
+
+          return  updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut(jobId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutMutationResult = NonNullable<Awaited<ReturnType<typeof updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut>>>
+    export type UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutMutationBody = UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody
+    export type UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutMutationError = HTTPValidationError
+
+    /**
+ * @summary Update Job Role Bindings
+ */
+export const useUpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut>>, TError,{jobId: number;data: UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateJobRoleBindingsApiV1JobsJobIdRoleBindingsPut>>,
+        TError,
+        {jobId: number;data: UpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutBody},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateJobRoleBindingsApiV1JobsJobIdRoleBindingsPutMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
  * @summary Get Job Stats
  */
 export const getJobStatsApiV1JobsStatsGet = (
@@ -226,6 +358,75 @@ export function useGetJobStatsApiV1JobsStatsGet<TData = Awaited<ReturnType<typeo
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetJobStatsApiV1JobsStatsGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Get all pending job evaluations across all jobs in the tenant.
+Joins with Candidate and Job to enrich candidate details before resume parsing.
+ * @summary Get Pending Evaluations
+ */
+export const getPendingEvaluationsApiV1JobsEvaluationsPendingGet = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/evaluations/pending`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetPendingEvaluationsApiV1JobsEvaluationsPendingGetQueryKey = () => {
+    return [
+    `/api/v1/jobs/evaluations/pending`
+    ] as const;
+    }
+
+    
+export const getGetPendingEvaluationsApiV1JobsEvaluationsPendingGetQueryOptions = <TData = Awaited<ReturnType<typeof getPendingEvaluationsApiV1JobsEvaluationsPendingGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingEvaluationsApiV1JobsEvaluationsPendingGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPendingEvaluationsApiV1JobsEvaluationsPendingGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPendingEvaluationsApiV1JobsEvaluationsPendingGet>>> = ({ signal }) => getPendingEvaluationsApiV1JobsEvaluationsPendingGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPendingEvaluationsApiV1JobsEvaluationsPendingGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPendingEvaluationsApiV1JobsEvaluationsPendingGetQueryResult = NonNullable<Awaited<ReturnType<typeof getPendingEvaluationsApiV1JobsEvaluationsPendingGet>>>
+export type GetPendingEvaluationsApiV1JobsEvaluationsPendingGetQueryError = unknown
+
+
+/**
+ * @summary Get Pending Evaluations
+ */
+
+export function useGetPendingEvaluationsApiV1JobsEvaluationsPendingGet<TData = Awaited<ReturnType<typeof getPendingEvaluationsApiV1JobsEvaluationsPendingGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingEvaluationsApiV1JobsEvaluationsPendingGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPendingEvaluationsApiV1JobsEvaluationsPendingGetQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -562,6 +763,130 @@ export const useUpdateJobStatusApiV1JobsJobIdStatusPatch = <TError = HTTPValidat
       return useMutation(mutationOptions);
     }
     /**
+ * @summary Publish Job
+ */
+export const publishJobApiV1JobsJobIdPublishPost = (
+    jobId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/${jobId}/publish`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getPublishJobApiV1JobsJobIdPublishPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishJobApiV1JobsJobIdPublishPost>>, TError,{jobId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof publishJobApiV1JobsJobIdPublishPost>>, TError,{jobId: number}, TContext> => {
+
+const mutationKey = ['publishJobApiV1JobsJobIdPublishPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishJobApiV1JobsJobIdPublishPost>>, {jobId: number}> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  publishJobApiV1JobsJobIdPublishPost(jobId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublishJobApiV1JobsJobIdPublishPostMutationResult = NonNullable<Awaited<ReturnType<typeof publishJobApiV1JobsJobIdPublishPost>>>
+    
+    export type PublishJobApiV1JobsJobIdPublishPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Publish Job
+ */
+export const usePublishJobApiV1JobsJobIdPublishPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishJobApiV1JobsJobIdPublishPost>>, TError,{jobId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof publishJobApiV1JobsJobIdPublishPost>>,
+        TError,
+        {jobId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getPublishJobApiV1JobsJobIdPublishPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * @summary Close Job
+ */
+export const closeJobApiV1JobsJobIdClosePost = (
+    jobId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/${jobId}/close`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getCloseJobApiV1JobsJobIdClosePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeJobApiV1JobsJobIdClosePost>>, TError,{jobId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof closeJobApiV1JobsJobIdClosePost>>, TError,{jobId: number}, TContext> => {
+
+const mutationKey = ['closeJobApiV1JobsJobIdClosePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof closeJobApiV1JobsJobIdClosePost>>, {jobId: number}> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  closeJobApiV1JobsJobIdClosePost(jobId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CloseJobApiV1JobsJobIdClosePostMutationResult = NonNullable<Awaited<ReturnType<typeof closeJobApiV1JobsJobIdClosePost>>>
+    
+    export type CloseJobApiV1JobsJobIdClosePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Close Job
+ */
+export const useCloseJobApiV1JobsJobIdClosePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof closeJobApiV1JobsJobIdClosePost>>, TError,{jobId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof closeJobApiV1JobsJobIdClosePost>>,
+        TError,
+        {jobId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getCloseJobApiV1JobsJobIdClosePostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
  * Unified application route handling both self_applied and hr_sourced.
  * @summary Apply To Job
  */
@@ -624,6 +949,135 @@ export const useApplyToJobApiV1JobsJobIdApplyPost = <TError = HTTPValidationErro
       > => {
 
       const mutationOptions = getApplyToJobApiV1JobsJobIdApplyPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Recruiter endpoint to accept a candidate's pending resume.
+Triggers the background resume parser and transitions application states.
+ * @summary Accept Candidate Resume
+ */
+export const acceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost = (
+    jobId: number,
+    evaluationId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/${jobId}/evaluations/${evaluationId}/accept-resume`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getAcceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost>>, TError,{jobId: number;evaluationId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost>>, TError,{jobId: number;evaluationId: number}, TContext> => {
+
+const mutationKey = ['acceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost>>, {jobId: number;evaluationId: number}> = (props) => {
+          const {jobId,evaluationId} = props ?? {};
+
+          return  acceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost(jobId,evaluationId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePostMutationResult = NonNullable<Awaited<ReturnType<typeof acceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost>>>
+    
+    export type AcceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Accept Candidate Resume
+ */
+export const useAcceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost>>, TError,{jobId: number;evaluationId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePost>>,
+        TError,
+        {jobId: number;evaluationId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getAcceptCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumePostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Recruiter endpoint to reject/deny a candidate's pending resume.
+ * @summary Reject Candidate Resume
+ */
+export const rejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost = (
+    jobId: number,
+    evaluationId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/${jobId}/evaluations/${evaluationId}/reject-resume`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getRejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost>>, TError,{jobId: number;evaluationId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost>>, TError,{jobId: number;evaluationId: number}, TContext> => {
+
+const mutationKey = ['rejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost>>, {jobId: number;evaluationId: number}> = (props) => {
+          const {jobId,evaluationId} = props ?? {};
+
+          return  rejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost(jobId,evaluationId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePostMutationResult = NonNullable<Awaited<ReturnType<typeof rejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost>>>
+    
+    export type RejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Reject Candidate Resume
+ */
+export const useRejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost>>, TError,{jobId: number;evaluationId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePost>>,
+        TError,
+        {jobId: number;evaluationId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getRejectCandidateResumeApiV1JobsJobIdEvaluationsEvaluationIdRejectResumePostMutationOptions(options);
 
       return useMutation(mutationOptions);
     }
@@ -752,6 +1206,74 @@ export function useListJobsPublicApiV1JobsPublicListGet<TData = Awaited<ReturnTy
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListJobsPublicApiV1JobsPublicListGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * Get the list of applications (evaluations) submitted by the logged-in candidate.
+ * @summary List Candidate Applications
+ */
+export const listCandidateApplicationsApiV1JobsPublicMyApplicationsGet = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/public/my-applications`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryKey = () => {
+    return [
+    `/api/v1/jobs/public/my-applications`
+    ] as const;
+    }
+
+    
+export const getListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryOptions = <TData = Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>> = ({ signal }) => listCandidateApplicationsApiV1JobsPublicMyApplicationsGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>>
+export type ListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryError = unknown
+
+
+/**
+ * @summary List Candidate Applications
+ */
+
+export function useListCandidateApplicationsApiV1JobsPublicMyApplicationsGet<TData = Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -895,70 +1417,198 @@ export const useCandidateApplyPublicApiV1JobsPublicJobIdApplyPost = <TError = HT
       return useMutation(mutationOptions);
     }
     /**
- * Get the list of applications (evaluations) submitted by the logged-in candidate.
- * @summary List Candidate Applications
+ * HR accepts a staged resume update. Triggers Service 1 on staged_resume_blob_url.
+After parsing completes, the system overwrites main resume/parsed_md/dossier and clears staging.
+ * @summary Accept Resume Update
  */
-export const listCandidateApplicationsApiV1JobsPublicMyApplicationsGet = (
-    
+export const acceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost = (
+    jobId: number,
+    evaluationId: number,
  options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
 ) => {
       
       
       return customInstance<unknown>(
-      {url: `/api/v1/jobs/public/my-applications`, method: 'GET', signal
+      {url: `/api/v1/jobs/${jobId}/evaluations/${evaluationId}/accept-resume-update`, method: 'POST', signal
     },
       options);
     }
   
 
 
+export const getAcceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost>>, TError,{jobId: number;evaluationId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost>>, TError,{jobId: number;evaluationId: number}, TContext> => {
 
-export const getListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryKey = () => {
-    return [
-    `/api/v1/jobs/public/my-applications`
-    ] as const;
-    }
+const mutationKey = ['acceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
 
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost>>, {jobId: number;evaluationId: number}> = (props) => {
+          const {jobId,evaluationId} = props ?? {};
+
+          return  acceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost(jobId,evaluationId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePostMutationResult = NonNullable<Awaited<ReturnType<typeof acceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost>>>
     
-export const getListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryOptions = <TData = Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
-) => {
+    export type AcceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePostMutationError = HTTPValidationError
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>> = ({ signal }) => listCandidateApplicationsApiV1JobsPublicMyApplicationsGet(requestOptions, signal);
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type ListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>>
-export type ListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryError = unknown
-
-
-/**
- * @summary List Candidate Applications
+    /**
+ * @summary Accept Resume Update
  */
+export const useAcceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost>>, TError,{jobId: number;evaluationId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePost>>,
+        TError,
+        {jobId: number;evaluationId: number},
+        TContext
+      > => {
 
-export function useListCandidateApplicationsApiV1JobsPublicMyApplicationsGet<TData = Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError = unknown>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCandidateApplicationsApiV1JobsPublicMyApplicationsGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+      const mutationOptions = getAcceptResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdAcceptResumeUpdatePostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * HR rejects a staged resume update. Rolls back staging slot, candidate stays in queue.
+Original approved resume/parsed_md/dossier remain intact.
+ * @summary Reject Resume Update
+ */
+export const rejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost = (
+    jobId: number,
+    evaluationId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/${jobId}/evaluations/${evaluationId}/reject-resume-update`, method: 'POST', signal
+    },
+      options);
+    }
   
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getListCandidateApplicationsApiV1JobsPublicMyApplicationsGetQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
 
 
+export const getRejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost>>, TError,{jobId: number;evaluationId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof rejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost>>, TError,{jobId: number;evaluationId: number}, TContext> => {
 
+const mutationKey = ['rejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost>>, {jobId: number;evaluationId: number}> = (props) => {
+          const {jobId,evaluationId} = props ?? {};
+
+          return  rejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost(jobId,evaluationId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePostMutationResult = NonNullable<Awaited<ReturnType<typeof rejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost>>>
+    
+    export type RejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Reject Resume Update
+ */
+export const useRejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost>>, TError,{jobId: number;evaluationId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePost>>,
+        TError,
+        {jobId: number;evaluationId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getRejectResumeUpdateApiV1JobsJobIdEvaluationsEvaluationIdRejectResumeUpdatePostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    /**
+ * Move all cleared candidates from HR Screening (stage 0) to the next round.
+Blocks if any evaluation in stage 0 still has an unresolved hr_tag.
+Takes a point-in-time snapshot of resume_blob_url, parsed_md, dossier.
+ * @summary Move To Next Round
+ */
+export const moveToNextRoundApiV1JobsJobIdMoveToNextRoundPost = (
+    jobId: number,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/api/v1/jobs/${jobId}/move-to-next-round`, method: 'POST', signal
+    },
+      options);
+    }
+  
+
+
+export const getMoveToNextRoundApiV1JobsJobIdMoveToNextRoundPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof moveToNextRoundApiV1JobsJobIdMoveToNextRoundPost>>, TError,{jobId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof moveToNextRoundApiV1JobsJobIdMoveToNextRoundPost>>, TError,{jobId: number}, TContext> => {
+
+const mutationKey = ['moveToNextRoundApiV1JobsJobIdMoveToNextRoundPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof moveToNextRoundApiV1JobsJobIdMoveToNextRoundPost>>, {jobId: number}> = (props) => {
+          const {jobId} = props ?? {};
+
+          return  moveToNextRoundApiV1JobsJobIdMoveToNextRoundPost(jobId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MoveToNextRoundApiV1JobsJobIdMoveToNextRoundPostMutationResult = NonNullable<Awaited<ReturnType<typeof moveToNextRoundApiV1JobsJobIdMoveToNextRoundPost>>>
+    
+    export type MoveToNextRoundApiV1JobsJobIdMoveToNextRoundPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Move To Next Round
+ */
+export const useMoveToNextRoundApiV1JobsJobIdMoveToNextRoundPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof moveToNextRoundApiV1JobsJobIdMoveToNextRoundPost>>, TError,{jobId: number}, TContext>, request?: SecondParameter<typeof customInstance>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof moveToNextRoundApiV1JobsJobIdMoveToNextRoundPost>>,
+        TError,
+        {jobId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getMoveToNextRoundApiV1JobsJobIdMoveToNextRoundPostMutationOptions(options);
+
+      return useMutation(mutationOptions);
+    }
+    

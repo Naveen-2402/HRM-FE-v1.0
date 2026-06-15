@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import {
   Loader2, CreditCard, Calendar, Clock,
   AlertTriangle, ArrowRight, ShieldCheck, Zap, Sparkles, CheckCircle2, CircleDollarSign,
-  Github
+  Github, Sliders, Mail
 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 
@@ -31,6 +31,19 @@ const SecurityTab = dynamic(() => import("./components/securityTab"), {
   ssr: false, // auth state is client-only; skip SSR for this chunk
 });
 
+const EmailTab = dynamic(() => import("./components/emailTab"), {
+  loading: () => (
+    <div className="rounded-2xl border border-border bg-card shadow-sm">
+      <div className="h-[3px] w-full rounded-t-2xl bg-chart-3 animate-pulse" />
+      <div className="flex items-center justify-center gap-3 py-20">
+        <Loader2 className="size-6 animate-spin text-chart-3" />
+        <p className="text-sm text-muted-foreground">Loading email settings…</p>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
+
 const CreditsTab = dynamic(() => import("./components/creditsTab"), {
   loading: () => (
     <div className="rounded-2xl border border-border bg-card shadow-sm">
@@ -51,6 +64,19 @@ const GithubTab = dynamic(() => import("./components/githubTab"), {
       <div className="flex items-center justify-center gap-3 py-20">
         <Loader2 className="size-6 animate-spin text-chart-1" />
         <p className="text-sm text-muted-foreground">Loading GitHub config…</p>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
+
+const WorkflowTab = dynamic(() => import("./components/workflowTab"), {
+  loading: () => (
+    <div className="rounded-2xl border border-border bg-card shadow-sm">
+      <div className="h-[3px] w-full rounded-t-2xl bg-chart-4 animate-pulse" />
+      <div className="flex items-center justify-center gap-3 py-20">
+        <Loader2 className="size-6 animate-spin text-chart-4" />
+        <p className="text-sm text-muted-foreground">Loading workflow settings…</p>
       </div>
     </div>
   ),
@@ -97,6 +123,8 @@ export default function SettingsPage() {
     { id: "Subscription", label: "Subscription", icon: CreditCard,       permission: "billing:access" },
     { id: "Credits",      label: "Credits",      icon: CircleDollarSign, permission: "credits:read" },
     { id: "Security",     label: "Security",     icon: ShieldCheck,      permission: "tenant:access" },
+    { id: "Email",        label: "Email Config", icon: Mail,             permission: "tenant:access" },
+    { id: "Workflow",     label: "Workflow Rules", icon: Sliders,        permission: "approval:configure" },
     { id: "Github",       label: "Github Config", icon: Github,          permission: "github:manage" },
   ] as const;
 
@@ -286,9 +314,19 @@ export default function SettingsPage() {
         {activeTab === "Security" && <SecurityTab />}
 
         {/* ══════════════════════════════════════════════════════════════════
+            TAB: EMAIL CONFIG (lazy-loaded)
+        ══════════════════════════════════════════════════════════════════ */}
+        {activeTab === "Email" && <EmailTab />}
+
+        {/* ══════════════════════════════════════════════════════════════════
             TAB: GITHUB CONFIG (lazy-loaded)
         ══════════════════════════════════════════════════════════════════ */}
         {activeTab === "Github" && <GithubTab />}
+
+        {/* ══════════════════════════════════════════════════════════════════
+            TAB: WORKFLOW RULES (lazy-loaded)
+        ══════════════════════════════════════════════════════════════════ */}
+        {activeTab === "Workflow" && <WorkflowTab />}
 
       </div>
     </div>
