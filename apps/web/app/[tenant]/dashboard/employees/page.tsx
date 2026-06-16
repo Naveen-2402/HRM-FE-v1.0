@@ -3,12 +3,12 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { 
-  Search, ChevronUp, ChevronDown, Loader2, UserPlus, Ban, UserCheck 
+import {
+  Search, ChevronUp, ChevronDown, Loader2, UserPlus, Ban, UserCheck
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { 
+import {
   useListEmployeesApiV1EmployeesGet,
   useDisableEmployeeApiV1EmployeesEmployeeIdDisablePatch,
   useEnableEmployeeApiV1EmployeesEmployeeIdEnablePatch,
@@ -17,7 +17,7 @@ import {
 import { useEmployeeStore } from "@/store/useEmployeeStore";
 
 // Import your custom modal
-import { ConfirmModal } from "@/components/_shared/ConfirmModal"; 
+import { ConfirmModal } from "@/components/_shared/ConfirmModal";
 
 // ── Status Helper (Adapted for Employee Lifecycle) ─────────────
 function getEmployeeStatusConfig(status?: string) {
@@ -78,9 +78,9 @@ export default function EmployeesPage() {
     try {
       await disableMutation.mutateAsync({ employeeId });
       toast.success(`${employeeName}'s access has been disabled.`);
-      
+
       setDisableModalState({ isOpen: false, employeeId: "", employeeName: "" });
-      
+
       queryClient.invalidateQueries({
         queryKey: getListEmployeesApiV1EmployeesGetQueryKey({ skip, limit })
       });
@@ -99,9 +99,9 @@ export default function EmployeesPage() {
     try {
       await enableMutation.mutateAsync({ employeeId });
       toast.success(`${employeeName}'s access has been restored.`);
-      
+
       setEnableModalState({ isOpen: false, employeeId: "", employeeName: "" });
-      
+
       queryClient.invalidateQueries({
         queryKey: getListEmployeesApiV1EmployeesGetQueryKey({ skip, limit })
       });
@@ -151,8 +151,8 @@ export default function EmployeesPage() {
           <h1 className="text-2xl font-bold tracking-wide">Team Members</h1>
           <p className="text-muted-foreground text-sm mt-1">Manage your workspace employees and their access.</p>
         </div>
-        <button 
-          onClick={() => router.push("/dashboard/employees/invite")} 
+        <button
+          onClick={() => router.push("/dashboard/employees/invite")}
           className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors hover:cursor-pointer px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium shadow-sm"
         >
           <UserPlus className="size-4" />
@@ -178,7 +178,7 @@ export default function EmployeesPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-muted/40 text-muted-foreground border-b border-border text-xs uppercase tracking-wider font-semibold">
               <tr>
-                <th 
+                <th
                   className="px-6 py-4 hover:cursor-pointer select-none transition-colors hover:bg-muted/60"
                   onClick={() => setSort("first_name")}
                 >
@@ -189,7 +189,7 @@ export default function EmployeesPage() {
                     )}
                   </div>
                 </th>
-                <th 
+                <th
                   className="px-6 py-4 hover:cursor-pointer select-none transition-colors hover:bg-muted/60"
                   onClick={() => setSort("last_name")}
                 >
@@ -231,7 +231,7 @@ export default function EmployeesPage() {
                   const isDisabledStatus = s === "disabled" || s === "inactive";
                   const statusCfg = getEmployeeStatusConfig(s);
                   const isRoleAdmin = employee.tenant_role === "tenant-admin";
-                  
+
                   return (
                     <tr key={employee.id} className="hover:bg-muted/30 transition-colors group">
                       <td className="px-6 py-4 font-medium text-foreground">{employee.first_name}</td>
@@ -278,24 +278,24 @@ export default function EmployeesPage() {
         </div>
 
         {/* Pagination Controls */}
+
         {!isLoading && totalRecords > 0 && (
           <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/10">
             <p className="text-xs text-muted-foreground">
-              Showing <span className="font-medium text-foreground">{skip + 1}</span> to <span className="font-medium text-foreground">{Math.min(skip + limit, totalRecords)}</span> of <span className="font-medium text-foreground">{totalRecords}</span> records
+              {/* Showing <span className="font-medium text-foreground">{skip + 1}</span> to <span className="font-medium text-foreground">{Math.min(skip + limit, totalRecords)}</span> of <span className="font-medium text-foreground">{totalRecords}</span> records */}
+              Page <span className="font-medium text-foreground">{currentPage}</span> / <span className="font-medium text-foreground">{totalPages}</span>
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage(Math.max(0, skip - limit))}
                 disabled={skip === 0}
-                className="px-3 py-1.5 text-xs font-medium border border-border rounded-md text-foreground bg-card hover:bg-muted transition-colors hover:cursor-pointer disabled:opacity-50 disabled:hover:cursor-not-allowed shadow-sm"
-              >
+                className="px-3 py-1.5 text-xs font-medium border border-border rounded-md text-foreground bg-card hover:bg-muted transition-colors hover:cursor-pointer disabled:opacity-50 disabled:hover:cursor-not-allowed shadow-sm">
                 Previous
               </button>
               <button
                 onClick={() => setPage(skip + limit)}
                 disabled={currentPage >= totalPages}
-                className="px-3 py-1.5 text-xs font-medium border border-border rounded-md text-foreground bg-card hover:bg-muted transition-colors hover:cursor-pointer disabled:opacity-50 disabled:hover:cursor-not-allowed shadow-sm"
-              >
+                className="px-3 py-1.5 text-xs font-medium border border-border rounded-md text-foreground bg-card hover:bg-muted transition-colors hover:cursor-pointer disabled:opacity-50 disabled:hover:cursor-not-allowed shadow-sm">
                 Next
               </button>
             </div>

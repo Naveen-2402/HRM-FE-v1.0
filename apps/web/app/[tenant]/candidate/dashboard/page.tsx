@@ -3,24 +3,29 @@
 import React, { useEffect, Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { 
-  Building,
-  User, 
-  Mail, 
-  Phone, 
-  Briefcase, 
-  FileText, 
-  Clock, 
+import {
+  User,
+  Mail,
+  Phone,
+  Briefcase,
+  FileText,
+  Clock,
   CheckCircle,
   ExternalLink,
   ChevronRight,
   TrendingUp,
-  MapPin
+  MapPin,
+  Calendar,
+  Layers,
+  AlertCircle,
+  XCircle,
+  ArrowRight,
+  Loader2
 } from "lucide-react";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
-import { 
+import {
   useGetCandidateMeApiV1CandidatesMeGet,
-  getDownloadSasApiV1CandidatesCandidateIdDownloadSasGet 
+  getDownloadSasApiV1CandidatesCandidateIdDownloadSasGet
 } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
 import { useListCandidateApplicationsApiV1JobsPublicMyApplicationsGet } from "@repo/orval-config/src/api/job/jobs/jobs";
 import { Button } from "@repo/ui/components/ui/button";
@@ -116,7 +121,7 @@ function CandidateDashboardContent() {
           }
         }
       )) as any;
-      
+
       const data = sasRes.data || sasRes;
       if (data?.download_url) {
         window.open(data.download_url, "_blank", "noopener,noreferrer");
@@ -154,250 +159,203 @@ function CandidateDashboardContent() {
   const applications = (appsQuery.data as Application[]) || [];
   const loading = tenantQuery.isLoading || profileQuery.isLoading || appsQuery.isLoading;
 
+  // Status helpers
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case "HIRED":
+        return {
+          label: "Hired",
+          icon: CheckCircle,
+          className: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+          dotColor: "bg-emerald-500"
+        };
+      case "REJECTED":
+        return {
+          label: "Not Selected",
+          icon: XCircle,
+          className: "bg-destructive/10 text-destructive border-destructive/20",
+          dotColor: "bg-destructive"
+        };
+      default:
+        return {
+          label: "In Review",
+          icon: Clock,
+          className: "bg-primary/10 text-primary border-primary/20",
+          dotColor: "bg-primary"
+        };
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-slate-300">
-        <div className="size-10 border-4 border-indigo-600/30 border-t-indigo-500 rounded-full animate-spin" />
-        <p className="font-bold text-sm">Synchronizing candidate dossier...</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground">
+        <Loader2 className="size-8 animate-spin text-primary" />
+        <p className="font-semibold text-sm">Loading your dashboard...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col relative selection:bg-indigo-500/30 overflow-x-hidden">
-      
+    <>
+
       {/* Background glowing rings */}
-      <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-indigo-600/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-violet-600/5 rounded-full blur-[140px] pointer-events-none" />
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-slate-900 bg-slate-950/60 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="size-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-              <Building className="size-5 text-white" />
-            </div>
-            <span className="font-bold text-lg tracking-tight hover:cursor-pointer" onClick={() => router.push(`/${tenant}`)}>
-              {tenantDetails ? tenantDetails.name : "Company Portal"}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              onClick={() => router.push(`/${tenant}`)}
-              className="text-xs hover:bg-slate-900 rounded-lg text-slate-300"
-            >
-              Browse Open Jobs
-            </Button>
-            <Button 
-              variant="ghost" 
-              onClick={() => { logout(); toast.info("Logged out successfully"); }}
-              className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
+      <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/3 rounded-full blur-[140px] pointer-events-none" />
 
       {/* Main Dashboard Layout */}
-      <main className="max-w-7xl mx-auto px-4 w-full flex-1 py-12 grid gap-8 lg:grid-cols-4">
-        
-        {/* Left Column: Candidate profile overview */}
-        {profile && (
-          <div className="lg:col-span-1 space-y-6">
-            <div className="p-6 rounded-[2rem] border border-slate-800 bg-slate-900/20 backdrop-blur-xl space-y-6 relative overflow-hidden">
-              
-              <div className="absolute top-0 left-0 w-full h-[6px] bg-gradient-to-r from-indigo-500 to-violet-500" />
-              
-              {/* Profile Header */}
-              <div className="text-center space-y-2">
-                <div className="size-16 rounded-full bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400 font-black text-xl">
-                  {profile.name.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="font-black text-base text-slate-100">{profile.name}</h3>
-                  <span className="text-[10px] bg-slate-950 text-indigo-400 px-2 py-0.5 rounded-md font-bold border border-slate-800">
-                    {profile.key_role}
-                  </span>
-                </div>
-              </div>
+      <main className="w-full max-w-[1600px] mx-auto px-6 lg:px-12 flex-1 pt-8 pb-16 flex flex-col items-start">
 
-              {/* Overview list */}
-              <div className="space-y-4 pt-4 border-t border-slate-800/80 text-xs font-bold text-slate-400">
-                <div className="flex items-center gap-2.5">
-                  <Mail className="size-4 text-slate-600" />
-                  <span className="truncate">{profile.email}</span>
-                </div>
-                {profile.phone_number && (
-                  <div className="flex items-center gap-2.5">
-                    <Phone className="size-4 text-slate-600" />
-                    <span>{profile.phone_number}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2.5">
-                  <Briefcase className="size-4 text-slate-600" />
-                  <span>{profile.experience_years} Years Experience</span>
-                </div>
-              </div>
+        {/* Applications Container (Aligned to 'A' in AgentsFactory) */}
+        <div className="w-full space-y-8 md:pl-9">
 
-              {/* Resume Access Link */}
-              {profile.resume_blob_url && (
-                <button 
-                  onClick={handleViewPdf}
-                  disabled={fetchingSas}
-                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-indigo-500/5 hover:bg-indigo-500/10 border border-indigo-500/15 hover:border-indigo-500/30 text-xs font-black text-indigo-400 transition-all hover:cursor-pointer disabled:opacity-50"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="size-4" />
-                    {fetchingSas ? "Generating link..." : "View Uploaded PDF"}
-                  </span>
-                  <ExternalLink className="size-3.5" />
-                </button>
-              )}
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-extrabold text-foreground tracking-tight">Your Applications</h2>
+              <p className="text-sm text-muted-foreground mt-2">Track your job application progress</p>
             </div>
-
-            {/* Profile Skills */}
-            {profile.skills && profile.skills.length > 0 && (
-              <div className="p-6 rounded-[2rem] border border-slate-800 bg-slate-900/20 backdrop-blur-xl space-y-4">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Skills Verified</h4>
-                <div className="flex flex-wrap gap-1.5">
-                  {profile.skills.map((skill) => (
-                    <span 
-                      key={skill}
-                      className="text-[10px] font-bold bg-slate-950 text-slate-400 px-2.5 py-1 rounded-lg border border-slate-855"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-        )}
 
-        {/* Right Column: Applications tracking list */}
-        <div className="lg:col-span-3 space-y-6">
-          {profile?.profile_banner && (
-            <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold flex items-center gap-2">
-              <Clock className="size-4 text-indigo-400 shrink-0 animate-pulse" />
-              <span>{profile.profile_banner}</span>
+          {/* Applications Grid */}
+          {applications.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full flex flex-col items-center justify-center py-20 text-center"
+            >
+              <div className="size-14 rounded-2xl bg-secondary/50 flex items-center justify-center mx-auto mb-4">
+                <Briefcase className="size-7 text-muted-foreground/50" />
+              </div>
+              <h4 className="font-bold text-foreground text-sm">No applications yet</h4>
+              <p className="text-muted-foreground text-xs mt-1.5 max-w-sm mx-auto leading-relaxed">
+                You haven't submitted any job applications to {tenantDetails ? tenantDetails.name : "this company"} yet. Browse available positions to get started.
+              </p>
+              <Button
+                onClick={() => router.push(`/${tenant}`)}
+                className="mt-5 text-xs rounded-full px-6 gap-2 cursor-pointer"
+              >
+                Find Open Jobs <ArrowRight className="size-3.5" />
+              </Button>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {applications.map((app, index) => {
+                const statusConfig = getStatusConfig(app.selection_status);
+                const StatusIcon = statusConfig.icon;
+                const stages = app.pipeline_stages || ["Resume Screen", "Technical", "Manager Review", "Offer"];
+                const totalStages = stages.length;
+                const completedStages = app.current_stage_index + (app.stage_status === "CLEARED" ? 1 : 0);
+                const progressPercent = Math.round((completedStages / totalStages) * 100);
+
+                return (
+                  <motion.div
+                    key={app.evaluation_id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="group rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md"
+                  >
+                    {/* Card Header */}
+                    <div className="p-4 sm:p-5">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                              JOB-{app.job_id}
+                            </span>
+                            <span className="text-muted-foreground/30">•</span>
+                            <span className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
+                              <Calendar className="size-3.5" />
+                              Applied {new Date(app.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </span>
+                            {app.source && (
+                              <>
+                                <span className="text-muted-foreground/30">•</span>
+                                <span className="text-[10px] sm:text-xs font-medium text-muted-foreground capitalize">
+                                  via {app.source}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <h3 className="text-lg font-bold text-foreground line-clamp-1">
+                            {app.job_title}
+                          </h3>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className={`inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-full border shrink-0 ${statusConfig.className}`}>
+                          <StatusIcon className="size-3.5" />
+                          {statusConfig.label}
+                        </div>
+                      </div>
+
+                      {/* Pipeline Progress */}
+                      <div className="mt-5 space-y-3">
+                        {/* Progress bar */}
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+                            <motion.div
+                              className="h-full bg-primary rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progressPercent}%` }}
+                              transition={{ duration: 0.8, ease: "easeOut" }}
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-muted-foreground tabular-nums w-8 text-right">
+                            {progressPercent}%
+                          </span>
+                        </div>
+
+                        {/* Stage Steps */}
+                        <div className="flex items-center justify-between w-full pt-1">
+                          {stages.map((stage, idx) => {
+                            const isCleared = idx < app.current_stage_index || (idx === app.current_stage_index && app.stage_status === "CLEARED");
+                            const isActive = idx === app.current_stage_index && app.stage_status !== "CLEARED";
+
+                            return (
+                              <div key={stage} className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+                                <div className={`size-6 rounded-full border-[1.5px] flex items-center justify-center transition-all ${isCleared
+                                  ? "bg-emerald-500 border-emerald-400 text-white"
+                                  : isActive
+                                    ? "bg-primary/10 border-primary text-primary"
+                                    : "bg-secondary border-border text-muted-foreground/40"
+                                  }`}>
+                                  {isCleared ? (
+                                    <CheckCircle className="size-3.5" />
+                                  ) : isActive ? (
+                                    <div className="size-2 bg-primary rounded-full animate-pulse" />
+                                  ) : (
+                                    <div className="size-2 bg-muted-foreground/30 rounded-full" />
+                                  )}
+                                </div>
+                                <span className={`text-[10px] sm:text-[11px] leading-tight font-semibold text-center select-none truncate w-full px-0.5 ${isCleared ? "text-emerald-500" : isActive ? "text-primary" : "text-muted-foreground/50"
+                                  }`}>
+                                  {stage}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
-
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-black text-white">Your Applications</h2>
-            <span className="text-xs font-bold text-slate-500 bg-slate-900 px-3 py-1 rounded-full border border-slate-800">
-              {applications.length} Position{applications.length !== 1 && "s"} Total
-            </span>
-          </div>
-
-          <div className="space-y-6">
-            {applications.length === 0 ? (
-              <div className="p-12 text-center border border-dashed border-slate-850 rounded-[2rem] bg-slate-900/10">
-                <Briefcase className="size-10 text-slate-700 mx-auto mb-3" />
-                <h4 className="font-bold text-slate-350 text-sm">No applications yet</h4>
-                <p className="text-slate-500 text-xs mt-1 max-w-xs mx-auto font-medium">
-                  You haven't submitted any job applications to {tenantDetails ? tenantDetails.name : "this company"} yet.
-                </p>
-                <Button 
-                  onClick={() => router.push(`/${tenant}`)}
-                  className="mt-4 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg"
-                >
-                  Find Open Jobs
-                </Button>
-              </div>
-            ) : (
-              applications.map((app) => (
-                <div 
-                  key={app.evaluation_id}
-                  className="p-6 rounded-[2rem] border border-slate-800 bg-slate-900/20 hover:bg-slate-900/35 transition-all duration-300 space-y-6"
-                >
-                  {/* Top card metadata */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-black text-slate-100">{app.job_title}</h3>
-                      <p className="text-[10px] text-slate-500 font-bold mt-0.5">
-                        Applied on {new Date(app.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-500 font-bold">Status:</span>
-                      <span className={`inline-flex items-center text-[10px] font-black px-2.5 py-1 rounded-lg border ${
-                        app.selection_status === "HIRED" || app.selection_status === "Moving_Forward"
-                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                          : app.selection_status === "REJECTED" || app.selection_status === "Not_Selected"
-                          ? "bg-red-500/10 border-red-500/20 text-red-400"
-                          : "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
-                      }`}>
-                        {app.display_status || app.selection_status || "PENDING EVALUATION"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Stage evaluation timeline */}
-                  <div className="pt-4 border-t border-slate-800/80 space-y-4">
-                    <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-500">Recruitment Progress</h4>
-                    
-                    <div className="relative flex items-start justify-between w-full max-w-lg pt-4 pb-2">
-                      {/* Connecting Line */}
-                      <div className="absolute left-0 right-0 top-7 -translate-y-1/2 h-0.5 bg-slate-800 pointer-events-none" />
-                      
-                      {/* Dynamic Stage Timelines */}
-                      {(app.pipeline_stages || ["Resume Screen", "Technical", "Manager Match", "Offer"]).map((stage, idx) => {
-                        const isCleared = idx < app.current_stage_index || (idx === app.current_stage_index && app.stage_status === "CLEARED");
-                        const isActive = idx === app.current_stage_index && app.stage_status !== "CLEARED";
-                        
-                        return (
-                          <div key={stage} className="relative flex flex-col items-center gap-2 z-10">
-                            <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-all ${
-                              isCleared 
-                                ? "bg-emerald-500 border-emerald-400 text-slate-950" 
-                                : isActive 
-                                ? "bg-indigo-500 border-indigo-400 text-white animate-pulse" 
-                                : "bg-slate-950 border-slate-800 text-slate-600"
-                            }`}>
-                              {isCleared ? (
-                                <CheckCircle className="size-3.5" />
-                              ) : (
-                                <Clock className="size-3.5" />
-                              )}
-                            </div>
-                            <span className="text-[9px] font-bold text-slate-400 text-center select-none truncate max-w-[80px]">
-                              {stage}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                </div>
-              ))
-            )}
-          </div>
         </div>
 
       </main>
-
-      {/* Footer */}
-      <footer className="w-full border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-600">
-        <div className="max-w-7xl mx-auto px-4">
-          <p>© {new Date().getFullYear()} {tenantDetails ? tenantDetails.name : "Company"}. Candidate Dashboard Panel.</p>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 }
 
 export default function CandidateDashboard() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 text-slate-300">
-        <div className="size-10 border-4 border-indigo-600/30 border-t-indigo-500 rounded-full animate-spin" />
-        <p className="font-bold text-sm">Opening Candidate Dashboard...</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground">
+        <Loader2 className="size-8 animate-spin text-primary" />
+        <p className="font-semibold text-sm">Opening Candidate Dashboard...</p>
       </div>
     }>
       <CandidateDashboardContent />

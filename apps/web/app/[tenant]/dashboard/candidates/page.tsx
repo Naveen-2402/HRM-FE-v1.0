@@ -5,17 +5,17 @@ import { Modal } from "@/components/_shared/Modal";
 import { ConfirmModal } from "@/components/_shared/ConfirmModal";
 import { Dropdown, DropdownOption } from "@/components/_shared/Dropdown";
 import { useParams } from "next/navigation";
-import { 
+import {
   useGetJobsApiV1JobsGet,
   useApplyToJobApiV1JobsJobIdApplyPost
 } from "@repo/orval-config/src/api/job/jobs/jobs";
-import { 
+import {
   useGetCandidatesApiV1CandidatesGet,
   useDeleteCandidateApiV1CandidatesCandidateIdDelete,
   getDownloadSasApiV1CandidatesCandidateIdDownloadSasGet
 } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
-import { 
-  useGetCreditBalanceApiV1BillingCreditsGet 
+import {
+  useGetCreditBalanceApiV1BillingCreditsGet
 } from "@repo/orval-config/src/api/billing/billing/billing";
 import dynamic from "next/dynamic";
 
@@ -133,7 +133,7 @@ export default function CandidatesPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isShortlistModalOpen, setIsShortlistModalOpen] = useState(false);
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
-  
+
   // Data
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -157,7 +157,7 @@ export default function CandidatesPage() {
 
   // API: Fetch Credits Balance (Public API)
   const { data: creditsData } = useGetCreditBalanceApiV1BillingCreditsGet();
-  const credits = creditsData 
+  const credits = creditsData
     ? (creditsData as any).credit_balance - (creditsData as any).consumed_credits - (creditsData as any).reserved_credits
     : 0;
 
@@ -247,7 +247,7 @@ export default function CandidatesPage() {
         <div>
           <h1 className="text-3xl font-bold text-foreground tracking-tight text-tight">Candidate Pipeline</h1>
           <p className="text-sm text-muted-foreground mt-2">
-             {statsTotal} total · {statsParsed} parsed · <span className="text-primary font-semibold">{credits} credits</span>
+            {statsTotal} total · {statsParsed} parsed · <span className="text-primary font-semibold">{credits} credits</span>
           </p>
         </div>
         <div className="flex gap-4">
@@ -257,13 +257,13 @@ export default function CandidatesPage() {
           >
             Shortlist
           </button>
-          <button 
+          <button
             onClick={() => setIsUploadModalOpen(true)}
             className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-sm font-bold hover:cursor-pointer flex items-center gap-2 transition-all hover:shadow-lg hover:shadow-primary/20"
           >
             <UserPlus className="size-4" /> Upload resumes
           </button>
-          <button 
+          <button
             onClick={() => refetch()}
             className="bg-secondary text-secondary-foreground px-4 py-2.5 rounded-xl text-sm font-bold hover:cursor-pointer transition-all hover:bg-secondary/80"
           >
@@ -274,141 +274,141 @@ export default function CandidatesPage() {
 
       <SectionCard className="overflow-hidden p-0 border-border/40">
         <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-muted-foreground uppercase border-b border-border bg-muted/30">
-            <tr>
-              <th className="px-4 py-3 font-medium">NAME</th>
-              <th className="px-4 py-3 font-medium">PHONE</th>
-              <th className="px-4 py-3 font-medium">ROLE</th>
-              <th className="px-4 py-3 font-medium text-center">EXP</th>
-              <th className="px-4 py-3 font-medium">SKILLS</th>
-              <th className="px-4 py-3 font-medium">LINKS</th>
-              <th className="px-4 py-3 font-medium text-center">DATA</th>
-              <th className="px-4 py-3 font-medium text-center">STATUS</th>
-              <th className="px-4 py-3 font-medium text-center">FILES</th>
-              <th className="px-4 py-3 text-right">ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">Loading candidates...</td></tr>
-            ) : candidates.length === 0 ? (
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-muted-foreground uppercase border-b border-border bg-muted/30">
               <tr>
-                <td colSpan={10} className="px-4 py-12 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <p className="text-muted-foreground italic text-sm">No candidates found in the pipeline.</p>
-                  </div>
-                </td>
+                <th className="px-4 py-3 font-medium">NAME</th>
+                <th className="px-4 py-3 font-medium">PHONE</th>
+                <th className="px-4 py-3 font-medium">ROLE</th>
+                <th className="px-4 py-3 font-medium text-center">EXP</th>
+                <th className="px-4 py-3 font-medium">SKILLS</th>
+                <th className="px-4 py-3 font-medium">LINKS</th>
+                <th className="px-4 py-3 font-medium text-center">DATA</th>
+                <th className="px-4 py-3 font-medium text-center">STATUS</th>
+                <th className="px-4 py-3 font-medium text-center">FILES</th>
+                <th className="px-4 py-3 text-right">ACTION</th>
               </tr>
-            ) : candidates.map((c: any) => (
-              <tr key={c.id} className="border-b border-border hover:bg-muted/10">
-                <td className="px-4 py-3 text-primary font-medium">{c.name || "—"}</td>
-                <td className="px-4 py-3 text-primary font-medium">{c.phone_number || "—"}</td>
-                <td className="px-4 py-3 text-foreground font-medium">{c.key_role || "—"}</td>
-                <td className="px-4 py-3 text-center text-primary font-medium">{c.experience_years || 0} yr</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1 max-w-[150px]">
-                    {(c.skills || []).slice(0, 2).map((skill: string) => (
-                      <span key={skill} className="bg-primary/5 text-primary text-[10px] px-2 py-0.5 rounded border border-primary/10 font-medium">
-                        {skill}
-                      </span>
-                    ))}
-                    {(c.skills || []).length > 2 && (
-                      <span className="text-primary text-[10px] font-bold">+{(c.skills || []).length - 2}</span>
-                    )}
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-1 items-center">
-                    {c.linkedin_url && (
-                      <a 
-                        href={c.linkedin_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-[#0a66c2] hover:text-[#0a66c2]/80 transition-colors p-1 hover:bg-[#0a66c2]/5 rounded" 
-                        title="LinkedIn Profile"
-                      >
-                        <Linkedin className="size-4 shrink-0" />
-                      </a>
-                    )}
-                    {c.github_url && (
-                      <a 
-                        href={c.github_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-[#24292e] dark:text-foreground hover:text-foreground/80 transition-colors p-1 hover:bg-muted rounded" 
-                        title="GitHub Profile"
-                      >
-                        <Github className="size-4 shrink-0" />
-                      </a>
-                    )}
-                    {!c.linkedin_url && !c.github_url && <span className="text-muted-foreground ml-1">—</span>}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <button 
-                    onClick={() => { setSelectedCandidate(c); setIsJsonModalOpen(true); }}
-                    className="border border-primary/20 text-primary px-3 py-1 rounded text-[11px] font-medium bg-primary/5 hover:bg-primary/10 transition-colors"
-                  >
-                    View JSON
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className="bg-success/10 text-success border border-success px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider">
-                    {c.status || "Completed"}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <div className="flex gap-1 justify-center">
-                    <button 
-                      onClick={() => handleViewFile(c.id, c.resume_blob_url)}
-                      className="bg-warning/10 text-warning border border-warning/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-warning/20"
-                    >
-                      PDF
-                    </button>
-                    <button 
-                      onClick={() => handleViewFile(c.id, c.parsed_md_url)}
-                      className="bg-success/10 text-success border border-success/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-success/20"
-                    >
-                      MD
-                    </button>
-                    <button 
-                      onClick={() => handleViewFile(c.id, c.dossier_md_url)}
-                      className="bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-primary/20"
-                    >
-                      AI
-                    </button>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end items-center gap-2">
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">Loading candidates...</td></tr>
+              ) : candidates.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-muted-foreground italic text-sm">No candidates found in the pipeline.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : candidates.map((c: any) => (
+                <tr key={c.id} className="border-b border-border hover:bg-muted/10">
+                  <td className="px-4 py-3 text-primary font-medium">{c.name || "—"}</td>
+                  <td className="px-4 py-3 text-primary font-medium">{c.phone_number || "—"}</td>
+                  <td className="px-4 py-3 text-foreground font-medium">{c.key_role || "—"}</td>
+                  <td className="px-4 py-3 text-center text-primary font-medium">{c.experience_years || 0} yr</td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1 max-w-[150px]">
+                      {(c.skills || []).slice(0, 2).map((skill: string) => (
+                        <span key={skill} className="bg-primary/5 text-primary text-[10px] px-2 py-0.5 rounded border border-primary/10 font-medium">
+                          {skill}
+                        </span>
+                      ))}
+                      {(c.skills || []).length > 2 && (
+                        <span className="text-primary text-[10px] font-bold">+{(c.skills || []).length - 2}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-1 items-center">
+                      {c.linkedin_url && (
+                        <a
+                          href={c.linkedin_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#0a66c2] hover:text-[#0a66c2]/80 transition-colors p-1 hover:bg-[#0a66c2]/5 rounded"
+                          title="LinkedIn Profile"
+                        >
+                          <Linkedin className="size-4 shrink-0" />
+                        </a>
+                      )}
+                      {c.github_url && (
+                        <a
+                          href={c.github_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#24292e] dark:text-foreground hover:text-foreground/80 transition-colors p-1 hover:bg-muted rounded"
+                          title="GitHub Profile"
+                        >
+                          <Github className="size-4 shrink-0" />
+                        </a>
+                      )}
+                      {!c.linkedin_url && !c.github_url && <span className="text-muted-foreground ml-1">—</span>}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
                     <button
-                      onClick={() => setApplyCandidateId(c.id)}
-                      className="bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/20 transition-all"
+                      onClick={() => { setSelectedCandidate(c); setIsJsonModalOpen(true); }}
+                      className="border border-primary/20 text-primary px-3 py-1 rounded text-[11px] font-medium bg-primary/5 hover:bg-primary/10 transition-colors"
                     >
-                      Add to Job
+                      View JSON
                     </button>
-                    <button 
-                      onClick={() => handleOpenEdit(c)}
-                      className="text-muted-foreground hover:text-primary transition-colors p-2 hover:bg-primary/10 rounded-lg"
-                      title="Edit Candidate"
-                    >
-                      <Pencil className="size-4 shrink-0" />
-                    </button>
-                    <button 
-                      onClick={() => setDeleteId(c.id)}
-                      className="text-muted-foreground hover:text-destructive transition-colors p-2 hover:bg-destructive/10 rounded-lg"
-                      title="Delete Candidate"
-                    >
-                      <Trash2 className="size-4 shrink-0" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="bg-success/10 text-success border border-success px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider">
+                      {c.status || "Completed"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex gap-1 justify-center">
+                      <button
+                        onClick={() => handleViewFile(c.id, c.resume_blob_url)}
+                        className="bg-warning/10 text-warning border border-warning/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-warning/20"
+                      >
+                        PDF
+                      </button>
+                      <button
+                        onClick={() => handleViewFile(c.id, c.parsed_md_url)}
+                        className="bg-success/10 text-success border border-success/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-success/20"
+                      >
+                        MD
+                      </button>
+                      <button
+                        onClick={() => handleViewFile(c.id, c.dossier_md_url)}
+                        className="bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-primary/20"
+                      >
+                        AI
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end items-center gap-2">
+                      {/* <button
+                        onClick={() => setApplyCandidateId(c.id)}
+                        className="bg-primary/10 text-primary border border-primary/20 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/20 transition-all"
+                      >
+                        Add to Job
+                      </button> */}
+                      <button
+                        onClick={() => handleOpenEdit(c)}
+                        className="text-muted-foreground hover:text-primary transition-colors p-2 hover:bg-primary/10 rounded-lg"
+                        title="Edit Candidate"
+                      >
+                        <Pencil className="size-4 shrink-0" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteId(c.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors p-2 hover:bg-destructive/10 rounded-lg"
+                        title="Delete Candidate"
+                      >
+                        <Trash2 className="size-4 shrink-0" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </SectionCard>
 
       {/* Lazy Loaded Modals */}
@@ -442,7 +442,7 @@ export default function CandidatesPage() {
       {/* JSON Viewer Modal */}
       <Modal isOpen={isJsonModalOpen} onClose={() => setIsJsonModalOpen(false)} title="Extracted profile JSON">
         <div className="relative group">
-          <button 
+          <button
             onClick={() => {
               if (selectedCandidate) {
                 const { id, user_id, status, investigation_mode, name, email, phone_number, linkedin_url, github_url, key_role, experience_years, skills, education } = selectedCandidate;

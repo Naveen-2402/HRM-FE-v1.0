@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, CheckCircle2, Fingerprint, ShieldCheck, UserCog } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { setAuthTokens } from "@repo/utils";
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
@@ -104,13 +104,27 @@ function CandidateCallbackContent() {
     exchangeGoogleCode();
   }, [searchParams, router, login, tenant]);
 
+  const getStepIndex = () => {
+    if (statusText === "Exchanging Google authorization code...") return 1;
+    if (statusText === "Checking profile enrollment status...") return 2;
+    return 0;
+  };
+  const stepIndex = getStepIndex();
+
+  const steps = [
+    { title: "Connection Established", description: "Securing candidate session", icon: Fingerprint },
+    { title: "Google Authentication", description: "Verifying credentials", icon: ShieldCheck },
+    { title: "Profile Verification", description: "Checking enrollment status", icon: UserCog }
+  ];
+
   return (
-    <div className="w-full max-w-md p-8 rounded-[2.5rem] border border-slate-800 bg-slate-900/40 backdrop-blur-2xl text-center space-y-6 relative">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+    <div className="w-full max-w-sm text-center relative z-10 px-4">
+      {/* Dynamic ambient background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-64 bg-indigo-500/10 blur-[80px] pointer-events-none" />
 
       {error ? (
-        <div className="space-y-4">
-          <div className="size-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-500/20 animate-pulse">
+        <div className="space-y-4 py-4 relative z-10">
+          <div className="size-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-500/20 animate-pulse shadow-[0_0_30px_rgba(244,63,94,0.2)]">
             <AlertCircle className="size-8 text-rose-400" />
           </div>
           <h2 className="text-xl font-black text-white">Authentication Failed</h2>
@@ -120,18 +134,48 @@ function CandidateCallbackContent() {
           </p>
         </div>
       ) : (
-        <div className="space-y-6 py-6">
-          <div className="relative flex items-center justify-center">
-            <div className="absolute size-20 border-4 border-indigo-500/20 rounded-full animate-ping" />
-            <div className="size-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/30 z-10">
-              <Loader2 className="size-6 text-white animate-spin" />
+        <div className="space-y-8 py-4 relative z-10">
+          {/* Header Icon */}
+          <div className="flex flex-col items-center justify-center space-y-3">
+            <div className="relative">
+              <div className="size-16 bg-slate-950 border border-indigo-500/30 rounded-2xl flex items-center justify-center relative overflow-hidden shadow-[0_0_40px_rgba(79,70,229,0.2)]">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-50" />
+                <Fingerprint className="size-7 text-indigo-400 animate-pulse relative z-10" />
+              </div>
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-white tracking-tight">Authenticating</h2>
+              <p className="text-xs text-slate-400 font-medium">Please do not close this window</p>
             </div>
           </div>
-          <div className="space-y-2">
-            <h2 className="text-lg font-black text-white">{statusText}</h2>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Please keep this window open while we secure your account details.
-            </p>
+
+          {/* Steps Container */}
+          <div className="space-y-4 text-left px-2 sm:px-4">
+            {steps.map((step, idx) => {
+              const isActive = stepIndex === idx;
+              const isPast = stepIndex > idx;
+              const Icon = step.icon;
+
+              return (
+                <div key={idx} className={`flex items-center gap-4 transition-all duration-500 ${isActive ? 'opacity-100 scale-105 transform-gpu' : isPast ? 'opacity-70' : 'opacity-30'}`}>
+                  <div className={`size-10 rounded-2xl flex items-center justify-center shrink-0 border transition-all duration-500 ${
+                    isActive ? 'bg-indigo-500/20 border-indigo-500/50 shadow-[0_0_20px_rgba(79,70,229,0.3)]' :
+                    isPast ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
+                    'bg-slate-800/50 border-slate-700/50 text-slate-500'
+                  }`}>
+                    {isPast ? <CheckCircle2 className="size-5 text-emerald-400" /> : 
+                     isActive ? <Loader2 className="size-5 animate-spin text-indigo-400" /> : 
+                     <Icon className="size-5" />}
+                  </div>
+                  <div>
+                    <h4 className={`text-sm font-bold transition-colors duration-500 ${isActive ? 'text-indigo-300' : isPast ? 'text-emerald-400' : 'text-slate-400'}`}>
+                      {step.title}
+                    </h4>
+                    <p className={`text-xs transition-colors duration-500 ${isActive ? 'text-slate-300' : 'text-slate-500'}`}>{step.description}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

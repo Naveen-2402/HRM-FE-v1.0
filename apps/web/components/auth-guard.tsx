@@ -90,8 +90,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const isPublicPath = publicPaths.some((path) => cleanPath.startsWith(path)) || cleanPath === "/";
 
     if (!isAuthenticated && !isPublicPath) {
-      // SCENARIO 1: Not logged in + trying to access a private page -> Kick to login
-      router.replace("/login");
+      // SCENARIO 1: Not logged in + trying to access a private page -> Kick to login on root domain
+      const rawDomain = process.env.NEXT_PUBLIC_DOMAIN || "http://localhost:3000";
+      window.location.href = `${rawDomain}/login`;
     } else if (
       isAuthenticated && 
       isPublicPath && 

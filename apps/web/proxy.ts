@@ -65,11 +65,14 @@ export function proxy(req: NextRequest) {
   }
 
   // --- 3. GENERAL AUTH PROTECTION & ADMIN RBAC ---
-  if (currentPath.startsWith('/dashboard')) {
+  // ADD /settings to the protected paths list
+  const isProtectedRoute = currentPath.startsWith('/dashboard') || currentPath.startsWith('/settings');
+
+  if (isProtectedRoute) {
     // If accessing a protected route without a valid token, redirect to login
     if (!token || !decodedToken) {
       url.pathname = '/login';
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(url); // This redirects cleanly without doubling the domain
     }
 
     const adminPaths = ['/dashboard/employees', '/dashboard/auth'];

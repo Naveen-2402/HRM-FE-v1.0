@@ -25,7 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       //   console.error("Failed to fetch user profile", error);
       //   // If this fails with a 401, your Axios interceptor handles the logout automatically
       // } finally {
-        setIsFetchingProfile(false);
+      setIsFetchingProfile(false);
       // }
     };
 
@@ -44,9 +44,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
-        <DashboardShell>
-            {children}
-        </DashboardShell>
+      <DashboardShell>
+        {children}
+      </DashboardShell>
     </div>
   );
 }
+

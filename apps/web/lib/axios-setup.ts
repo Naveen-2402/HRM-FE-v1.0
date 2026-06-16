@@ -86,6 +86,23 @@ export function setupAxiosInterceptors() {
       originalRequest._retry = true;
       isRefreshing = true;
 
+      // Determine if the user is a candidate (checks roles and fallback path)
+      let isCandidateUser = false;
+      try {
+        const token = getClientAuthToken();
+        if (token) {
+          const decoded: any = jwtDecode(token);
+          isCandidateUser = !!decoded?.realm_access?.roles?.includes("candidate");
+        }
+      } catch (e) {
+        if (typeof window !== "undefined") {
+          isCandidateUser = window.location.pathname.includes("/candidate") || window.location.pathname.includes("/job");
+        }
+      }
+      if (!isCandidateUser && typeof window !== "undefined") {
+        isCandidateUser = window.location.pathname.includes("/candidate") || window.location.pathname.includes("/job");
+      }
+
       // DEBUG: log which URL triggered the 401
       console.warn('[Auth] 401 received on:', originalRequest.url, '— attempting token refresh');
 
@@ -95,9 +112,6 @@ export function setupAxiosInterceptors() {
       if (!refreshToken) {
         clearAuthToken();
         useAuthStore.getState().logout();
-        if (typeof window !== "undefined" && window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
         return Promise.reject(error);
       }
 
@@ -107,9 +121,6 @@ export function setupAxiosInterceptors() {
           // Refresh token is already expired — no point calling the endpoint
           clearAuthToken();
           useAuthStore.getState().logout();
-          if (typeof window !== "undefined" && window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
           return Promise.reject(error);
         }
       } catch {
@@ -127,7 +138,8 @@ export function setupAxiosInterceptors() {
         });
 
         // Ensure we respect your backend URL structure after your rewrite rules
-        const response = await refreshAxios.post('/auth/refresh', {
+        const refreshUrl = isCandidateUser ? '/candidate/auth/refresh' : '/auth/refresh';
+        const response = await refreshAxios.post(refreshUrl, {
           refresh_token: refreshToken
         });
 
@@ -154,10 +166,6 @@ export function setupAxiosInterceptors() {
         processQueue(refreshError, null);
         clearAuthToken();
         useAuthStore.getState().logout();
-
-        if (typeof window !== "undefined" && window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
         return Promise.reject(refreshError);
       } finally {
         // Unlock the queue

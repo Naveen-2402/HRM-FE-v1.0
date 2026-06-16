@@ -34,21 +34,41 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ user }),
 
   logout: () => {
+    // Detect candidate role before clearing state
+    const isCandidateUser = useAuthStore.getState().user?.realm_access?.roles?.includes("candidate") ||
+      (typeof window !== "undefined" && (window.location.pathname.includes("/candidate") || window.location.pathname.includes("/job")));
+
     // 1. Clear the cross-domain cookie
     clearAuthToken();
 
     // 2. Clear local state
-    setTimeout(() => {
-      set({ isAuthenticated: false, user: null });
-    }, 500);
+    set({ isAuthenticated: false, user: null });
 
-    // 3. Hard redirect back to the root domain login page
-    // if (typeof window !== "undefined") {
-    //   const baseDomain = window.location.hostname.includes(`${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}`)
-    //     ? `${process.env.NEXT_PUBLIC_LOCAL_DOMAIN}:3000`
-    //     : `${process.env.NEXT_PUBLIC_HOSTED_DOMAIN}`
+    // 3. Hard redirect back to the correct login page
+    if (typeof window !== "undefined") {
+      if (isCandidateUser) {
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const firstPart = pathParts[0];
+        const isGeneral = firstPart ? ["login", "signup", "forgot-password", "auth", "superadmin", "dashboard", "pricing"].includes(firstPart) : false;
+        let tenant = firstPart && !isGeneral ? firstPart : undefined;
 
-    //   window.location.href = `http://${baseDomain}/login`;
-    // }
+        // Fallback to subdomain
+        if (!tenant) {
+          const hostname = window.location.hostname;
+          const hostParts = hostname.split('.');
+          if (hostParts.length > 2) {
+            tenant = hostParts[0];
+          }
+        }
+
+        if (tenant) {
+          window.location.href = `${window.location.origin}/${tenant}/candidate/login`;
+          return;
+        }
+      }
+
+      const rawDomain = process.env.NEXT_PUBLIC_DOMAIN || "http://localhost:3000";
+      window.location.href = `${rawDomain}/login`;
+    }
   },
 }));

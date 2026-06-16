@@ -1,304 +1,514 @@
 "use client";
 
-import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useState, useMemo } from "react";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { 
-  Briefcase, 
-  MapPin, 
-  Clock, 
-  Search, 
-  ChevronRight, 
-  Sparkles, 
-  ArrowRight,
-  User, 
-  LogOut,
-  SlidersHorizontal,
-  Building
+import {
+  Search,
+  RotateCcw,
+  Check,
+  ChevronRight,
+  MapPin,
+  Clock,
+  Sparkles,
+  Hexagon,
+  AlertCircle,
+  Briefcase,
+  AlertTriangle
 } from "lucide-react";
+import Link from "next/link";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
+import { useGetCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
 import { useListJobsPublicApiV1JobsPublicListGet } from "@repo/orval-config/src/api/job/jobs/jobs";
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "react-toastify";
+import { CandidateTopbar } from "@/app/[tenant]/components/candidate-topbar";
+import { CandidateSidebar } from "@/app/[tenant]/components/candidate-sidebar";
 
+// --- API Types ---
 interface Job {
   id: number;
   title: string;
   description: string;
-  requirements_json: any;
+  requirements_json: Record<string, string | number | boolean> | null;
   start_time: string | null;
   end_time: string | null;
   pipeline_stages: string[] | null;
   created_at: string;
 }
 
+interface Tenant {
+  id: string;
+  name: string;
+}
+
+// --- UI Mapped Type ---
+interface MappedJob {
+  id: string;
+  title: string;
+  location: string;
+  country: string;
+  continent: string;
+  type: string;
+  experience: string;
+  jobNo: string;
+  skillRequired: string;
+  qualifications: string;
+  about: string;
+  postedAt: string;
+  category: string;
+}
+
 export default function TenantPublicJobBoard() {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const tenant = params.tenant as string;
 
   const { isAuthenticated, user, logout } = useAuthStore();
+  const isCandidate = user?.realm_access?.roles?.includes("candidate");
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
 
-  // Orval Query: Get Tenant by Subdomain
+
+  // --- API Calls ---
   const tenantQuery = useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet(
     tenant,
-    {
-      query: {
-        enabled: !!tenant,
-      }
-    } as any
+    { query: { enabled: !!tenant } } as any
   );
-
   const tenantDetails = tenantQuery.data as any;
 
-  // Orval Query: List Public Jobs scoped by resolved Tenant ID header
-  const jobsQuery = useListJobsPublicApiV1JobsPublicListGet({
+  // Fetch candidate profile to check if it's missing
+  const profileQuery = useGetCandidateMeApiV1CandidatesMeGet({
     request: {
-      headers: {
-        "X-Tenant-Id": tenantDetails?.id || "",
-      }
+      headers: { "X-Tenant-Id": tenantDetails?.id || "" }
     },
     query: {
-      enabled: !!tenantDetails?.id,
+      enabled: !!tenantDetails?.id && !!user && isCandidate,
+      retry: false,
     }
   } as any);
 
-  const jobs = (jobsQuery.data as Job[]) || [];
-  const loading = tenantQuery.isLoading || jobsQuery.isLoading;
+  const existingProfile = profileQuery.data as any;
+  const isProfileIncomplete = profileQuery.isSuccess && (!existingProfile ||
+    !existingProfile.name ||
+    !existingProfile.key_role ||
+    existingProfile.experience_years === undefined ||
+    existingProfile.experience_years === null ||
+    !existingProfile.resume_blob_url);
 
-  // Filter jobs based on search query and category
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          job.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Simple category mapping
-    if (selectedCategory === "All") return matchesSearch;
-    if (selectedCategory === "Engineering") return matchesSearch && (job.title.toLowerCase().includes("engineer") || job.title.toLowerCase().includes("developer") || job.title.toLowerCase().includes("tech"));
-    if (selectedCategory === "Product") return matchesSearch && (job.title.toLowerCase().includes("product") || job.title.toLowerCase().includes("designer"));
-    if (selectedCategory === "Sales") return matchesSearch && (job.title.toLowerCase().includes("sales") || job.title.toLowerCase().includes("market") || job.title.toLowerCase().includes("account"));
-    return matchesSearch;
+  const isProfileMissing = isAuthenticated && isCandidate && (
+    (profileQuery.isError && (profileQuery.error as any)?.response?.status === 404) ||
+    isProfileIncomplete
+  );
+
+  const jobsQuery = useListJobsPublicApiV1JobsPublicListGet({
+    request: { headers: { "X-Tenant-Id": tenantDetails?.id || "" } },
+    query: { enabled: !!tenantDetails?.id } as any
   });
 
-  const categories = ["All", "Engineering", "Product", "Sales"];
+  const rawJobs = (jobsQuery.data as Job[]) || [];
+  const loading = tenantQuery.isLoading || jobsQuery.isLoading;
+  const isError = tenantQuery.isError || jobsQuery.isError;
+
+  // --- Smart Data Mapper ---
+  const mappedJobs: MappedJob[] = useMemo(() => {
+    return rawJobs.map((job) => {
+      const titleLower = (job.title || "").toLowerCase();
+      const descLower = (job.description || "").toLowerCase();
+
+      // 1. Heuristic Category assignment
+      let category = "General";
+      if (/(engineer|developer|tech|programmer|architect)/.test(titleLower)) category = "Engineering";
+      else if (/(product|design|ux|ui)/.test(titleLower)) category = "Product";
+      else if (/(sales|market|account|executive)/.test(titleLower)) category = "Sales";
+      else if (/(data|analytic|scientist|researcher)/.test(titleLower)) category = "Data";
+      else if (/(ops|operations|success|support|manager)/.test(titleLower)) category = "Operations";
+
+      // 2. Heuristic Experience level
+      let experience = "Mid Level (3-5 years)";
+      if (/(senior|lead|principal|director|head|manager)/.test(titleLower)) experience = "Senior (5+ years)";
+      else if (/(junior|entry|intern|associate)/.test(titleLower)) experience = "Entry Level (0-2 years)";
+
+      // 3. Heuristic Geography
+      let location = "Remote";
+      let country = "Anywhere";
+      let continent = "Global";
+
+      if (descLower.includes("new york") || titleLower.includes("new york") || titleLower.includes(" ny ")) {
+        location = "New York"; country = "USA"; continent = "North America";
+      } else if (descLower.includes("san francisco") || titleLower.includes("sf")) {
+        location = "San Francisco"; country = "USA"; continent = "North America";
+      } else if (descLower.includes("london")) {
+        location = "London"; country = "UK"; continent = "Europe";
+      } else if (descLower.includes("hybrid") || titleLower.includes("hybrid")) {
+        location = "Hybrid";
+      } else if (descLower.includes("on-site") || descLower.includes("onsite")) {
+        location = "On-site";
+      }
+
+      // 4. Job Type
+      let type = "Full time";
+      if (descLower.includes("contract") || titleLower.includes("contract")) type = "Contract";
+      else if (descLower.includes("part-time") || titleLower.includes("part time")) type = "Part time";
+
+      // 5. Requirements Parser
+      let skillRequired = "See job description for specific requirements.";
+      if (job.requirements_json && typeof job.requirements_json === 'object' && !Array.isArray(job.requirements_json)) {
+        const reqKeys = Object.keys(job.requirements_json);
+        if (reqKeys.length > 0) {
+          skillRequired = reqKeys.join(", ");
+        }
+      }
+
+      return {
+        id: String(job.id),
+        title: job.title || "Untitled Position",
+        location,
+        country,
+        continent,
+        type,
+        experience,
+        jobNo: `JOB-${job.id}`,
+        category,
+        skillRequired,
+        qualifications: "Relevant degree or equivalent practical experience required.",
+        about: job.description || "No description provided.",
+        postedAt: job.created_at || new Date().toISOString()
+      };
+    });
+  }, [rawJobs]);
+
+  // --- Filter State ---
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedContinent, setSelectedContinent] = useState<string[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<string[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
+  const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
+  const [selectedType, setSelectedType] = useState<string[]>([]);
+  // Navigation State
+
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSelectJob = (job: MappedJob | null) => {
+    if (job) {
+      router.push(`/${tenant}/job/${job.id}`);
+    }
+  };
+
+  const toggleFilter = (setState: React.Dispatch<React.SetStateAction<string[]>>, opt: string) => {
+    setState((prev) =>
+      prev.includes(opt) ? prev.filter((item) => item !== opt) : [...prev, opt]
+    );
+  };
+
+
+  // --- Dynamic Option Availability (Geographic Dependencies) ---
+  const availableContinents = useMemo(() => {
+    return new Set(mappedJobs.filter(j =>
+      (selectedCountry.length === 0 || selectedCountry.includes(j.country)) &&
+      (selectedLocation.length === 0 || selectedLocation.includes(j.location))
+    ).map(j => j.continent));
+  }, [mappedJobs, selectedCountry, selectedLocation]);
+
+  const availableCountries = useMemo(() => {
+    return new Set(mappedJobs.filter(j =>
+      (selectedContinent.length === 0 || selectedContinent.includes(j.continent)) &&
+      (selectedLocation.length === 0 || selectedLocation.includes(j.location))
+    ).map(j => j.country));
+  }, [mappedJobs, selectedContinent, selectedLocation]);
+
+  const availableLocations = useMemo(() => {
+    return new Set(mappedJobs.filter(j =>
+      (selectedContinent.length === 0 || selectedContinent.includes(j.continent)) &&
+      (selectedCountry.length === 0 || selectedCountry.includes(j.country))
+    ).map(j => j.location));
+  }, [mappedJobs, selectedContinent, selectedCountry]);
+
+
+  // --- Filtering Logic for Main Display ---
+  const filteredJobs = useMemo(() => {
+    return mappedJobs.filter((job) => {
+
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        job.title.toLowerCase().includes(searchLower) ||
+        job.skillRequired.toLowerCase().includes(searchLower) ||
+        job.about.toLowerCase().includes(searchLower);
+
+      if (!matchesSearch) return false;
+
+      if (selectedContinent.length > 0 && !selectedContinent.includes(job.continent)) return false;
+      if (selectedCountry.length > 0 && !selectedCountry.includes(job.country)) return false;
+      if (selectedLocation.length > 0 && !selectedLocation.includes(job.location)) return false;
+      if (selectedCategory.length > 0 && !selectedCategory.includes(job.category)) return false;
+      if (selectedExperience.length > 0 && !selectedExperience.includes(job.experience)) return false;
+      if (selectedType.length > 0 && !selectedType.includes(job.type)) return false;
+
+      return true;
+    });
+  }, [mappedJobs, searchQuery, selectedContinent, selectedCountry, selectedLocation, selectedCategory, selectedExperience, selectedType]);
+
+
+
+
+  // --- Filter Configuration Configurations ---
+  const continents = Array.from(new Set(mappedJobs.map(j => j.continent)));
+  const countries = Array.from(new Set(mappedJobs.map(j => j.country)));
+  const locations = Array.from(new Set(mappedJobs.map(j => j.location)));
+  const categories = Array.from(new Set(mappedJobs.map(j => j.category)));
+  const jobTypes = Array.from(new Set(mappedJobs.map(j => j.type)));
+  const experiences = [
+    "Entry Level (0-2 years)",
+    "Mid Level (3-5 years)",
+    "Senior (5+ years)"
+  ];
+
+  const activeFilterCount =
+    selectedContinent.length +
+    selectedCountry.length +
+    selectedLocation.length +
+    selectedCategory.length +
+    selectedExperience.length +
+    selectedType.length +
+    (searchQuery ? 1 : 0);
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedContinent([]);
+    setSelectedCountry([]);
+    setSelectedLocation([]);
+    setSelectedCategory([]);
+    setSelectedExperience([]);
+    setSelectedType([]);
+  };
+
+  const filterBlocks = [
+    { title: "Continent", state: selectedContinent, setter: setSelectedContinent, options: continents, validSet: availableContinents },
+    { title: "Country", state: selectedCountry, setter: setSelectedCountry, options: countries, validSet: availableCountries },
+    { title: "Location", state: selectedLocation, setter: setSelectedLocation, options: locations, validSet: availableLocations },
+    { title: "Department", state: selectedCategory, setter: setSelectedCategory, options: categories },
+    { title: "Job Type", state: selectedType, setter: setSelectedType, options: jobTypes },
+    { title: "Experience", state: selectedExperience, setter: setSelectedExperience, options: experiences },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col relative selection:bg-indigo-500/30 overflow-x-hidden">
-      
-      {/* Ambient background glows */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-violet-600/10 rounded-full blur-[150px] pointer-events-none" />
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 flex flex-col relative overflow-hidden">
 
-      {/* Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-slate-800/60 bg-slate-950/60 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="size-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/30">
-              <Building className="size-5 text-white" />
-            </div>
-            <span className="font-bold text-lg tracking-tight">
-              {tenantDetails ? tenantDetails.name : "Company Portal"}
-            </span>
-          </div>
+      {/* Ambient Background Glows */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-[radial-gradient(ellipse_at_top,rgba(var(--primary),0.15),transparent_70%)] pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_bottom_right,rgba(var(--primary),0.1),transparent_50%)] pointer-events-none" />
 
-          <div className="flex items-center gap-3">
-            {isAuthenticated && user?.realm_access?.roles?.includes("candidate") ? (
-              <>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => router.push(`/${tenant}/candidate/dashboard`)}
-                  className="text-xs hover:bg-slate-900 rounded-lg text-slate-300"
-                >
-                  <User className="size-4 mr-2 text-indigo-400" />
-                  My Applications
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => { logout(); toast.info("Logged out successfully"); }}
-                  className="text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg"
-                >
-                  <LogOut className="size-4 mr-2" />
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => router.push(`/${tenant}/candidate/login`)}
-                  className="text-xs hover:bg-slate-900 rounded-lg text-slate-300"
-                >
-                  Candidate Sign In
-                </Button>
-                <Button 
-                  onClick={() => router.push(`/${tenant}/candidate/register`)}
-                  className="text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-lg shadow-indigo-600/20"
-                >
-                  Sign Up
-                </Button>
-              </>
-            )}
-          </div>
+      {/* Unified Candidate Topbar */}
+      <CandidateTopbar
+        tenant={tenant}
+        tenantName={tenantDetails?.name || "Company Portal"}
+        isAuthenticated={isAuthenticated}
+        user={user}
+        logout={() => { logout(); toast.info("Logged out successfully"); }}
+        onBrandClick={() => { handleSelectJob(null); }}
+        onSignIn={() => router.push(`/${tenant}/candidate/login`)}
+        onSignUp={() => router.push(`/${tenant}/candidate/register`)}
+        onMyApplications={() => router.push(`/${tenant}/candidate/dashboard`)}
+        onProfile={() => router.push(`/${tenant}/candidate/profile`)}
+      />
+
+      {/* ── Static Hover-Expandable Sidebar ── */}
+      <CandidateSidebar tenant={tenant} isProfileMissing={!!isProfileMissing} />
+
+      {/* Global Missing Profile Banner (Fixed under Topbar) */}
+      {isProfileMissing && (
+        <div className="fixed top-16 left-0 w-full z-[55] bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-sm font-medium px-4 py-2 flex items-center justify-center gap-2 backdrop-blur-md">
+          <AlertTriangle className="size-4" />
+          <span>
+            You haven't completed your profile.{" "}
+            <Link href={`/${tenant}/candidate/profile?edit=true`} className="underline font-bold hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors">
+              Complete here.
+            </Link>
+          </span>
         </div>
-      </header>
+      )}
 
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 text-center max-w-4xl mx-auto flex flex-col items-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="space-y-6"
-        >
-          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 px-3.5 py-1 text-xs font-semibold bg-indigo-950/40 text-indigo-400 backdrop-blur-sm shadow-[0_0_20px_-5px_rgba(99,102,241,0.2)]">
-            <Sparkles className="size-3.5" /> Open Positions
-          </div>
+      {/* MAIN CONTENT AREA */}
+      <main className={`w-full max-w-[1600px] mx-auto px-6 lg:px-12 ${isProfileMissing ? 'pt-[152px]' : 'pt-28'} pb-20 flex-1 relative z-10 transition-all duration-300 ${isAuthenticated && isCandidate ? 'pl-24 lg:pl-28' : ''}`}>
 
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-white">
-            Build the future of technology with{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-pink-400">
-              {tenantDetails ? tenantDetails.name : "us"}
-            </span>
-          </h1>
-
-          <p className="text-base text-slate-400 max-w-2xl mx-auto font-medium">
-            Explore our open vacancies and find the perfect match for your career trajectory. 
-            All of our applications are assessed powered by modern AI matching.
-          </p>
-        </motion.div>
-      </section>
-
-      {/* Filter and Search Section */}
-      <section className="max-w-7xl mx-auto px-4 w-full mb-12">
-        <div className="p-6 rounded-[2rem] border border-slate-800/80 bg-slate-900/30 backdrop-blur-xl space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 size-4.5" />
-              <Input
-                type="text"
-                placeholder="Search jobs by title, keyword, or skills..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 bg-slate-950 border-slate-800 rounded-xl focus:border-indigo-500 text-sm text-slate-100 placeholder:text-slate-500"
-              />
-            </div>
-            
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
-              <SlidersHorizontal className="size-4 text-slate-400 shrink-0" />
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`text-xs px-3.5 py-2 rounded-lg font-bold transition-all ${
-                    selectedCategory === cat
-                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/10"
-                      : "bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Jobs Grid */}
-      <main className="max-w-7xl mx-auto px-4 w-full flex-1 pb-24">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="size-10 border-4 border-indigo-600/30 border-t-indigo-500 rounded-full animate-spin" />
-            <p className="text-slate-400 text-sm font-semibold">Loading open positions...</p>
-          </div>
-        ) : filteredJobs.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-slate-800 rounded-3xl bg-slate-900/10">
-            <Briefcase className="size-12 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-300">No positions found</h3>
-            <p className="text-slate-500 text-sm mt-1 max-w-sm mx-auto">
-              We don't have any open listings matching your criteria at the moment. Please check back later!
-            </p>
+        {isError ? (
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <AlertCircle className="size-16 text-destructive mb-6" />
+            <h2 className="text-3xl font-bold text-foreground mb-3">Failed to load opportunities</h2>
+            <p className="text-muted-foreground mb-8 max-w-md">There was an error communicating with the server. Please try refreshing the page or check your connection.</p>
+            <Button onClick={() => window.location.reload()} variant="outline" className="border-border text-foreground hover:bg-muted rounded-full px-8">
+              Refresh Page
+            </Button>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredJobs.map((job, idx) => (
-              <motion.div
-                key={job.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: idx * 0.05 }}
-                className="group p-6 rounded-3xl border border-slate-800/80 bg-slate-900/20 hover:bg-slate-900/40 hover:border-slate-700/60 transition-all duration-300 flex flex-col justify-between"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between">
-                    <span className="inline-flex items-center rounded-lg bg-indigo-500/10 px-2.5 py-1 text-[10px] font-bold text-indigo-400 border border-indigo-500/20">
-                      Full-time
-                    </span>
-                    <span className="flex items-center text-[10px] text-slate-500 font-semibold">
-                      <Clock className="size-3 mr-1" />
-                      {new Date(job.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
+          /* VIEW 2: JOB LIST & FILTERS VIEW */
+          <div className="flex flex-col md:flex-row gap-10">
 
-                  <div className="space-y-1.5">
-                    <h3 className="text-lg font-black text-slate-100 group-hover:text-indigo-400 transition-colors">
-                      {job.title}
-                    </h3>
-                    <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed font-medium">
-                      {job.description}
-                    </p>
-                  </div>
+            {/* LEFT COLUMN: Scrollable Sidebar */}
+            <aside className="w-full md:w-[280px] shrink-0 md:sticky md:top-28 self-start max-h-[calc(100vh-140px)] overflow-y-auto custom-scrollbar pr-4 pb-10">
+              <div className="flex items-center justify-between mb-8 sticky top-0 bg-background pt-2 pb-4 z-10">
+                <h2 className="text-xl font-bold text-foreground text-tight">Refine Search</h2>
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs font-semibold flex items-center gap-1.5 text-primary hover:opacity-80 transition-colors bg-primary/10 px-3 py-1.5 rounded-full"
+                  >
+                    Reset <RotateCcw className="size-3" />
+                  </button>
+                )}
+              </div>
 
-                  {/* Requirements Preview */}
-                  {job.requirements_json && (
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {Object.keys(job.requirements_json).slice(0, 3).map((reqKey) => (
-                        <span 
-                          key={reqKey}
-                          className="inline-flex text-[10px] bg-slate-950 text-slate-500 px-2 py-0.5 rounded-md border border-slate-800"
-                        >
-                          {reqKey}
-                        </span>
-                      ))}
-                      {Object.keys(job.requirements_json).length > 3 && (
-                        <span className="inline-flex text-[10px] text-slate-500 px-1 py-0.5">
-                          +{Object.keys(job.requirements_json).length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  )}
+              <div className="space-y-8">
+                {/* Search */}
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 block">Keywords</label>
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground size-4 group-focus-within:text-primary transition-colors" />
+                    <Input
+                      type="text"
+                      placeholder="Search jobs..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-11 bg-input/50 border-border text-sm rounded-xl text-foreground h-12 focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all placeholder:text-muted-foreground"
+                    />
+                  </div>
                 </div>
 
-                <div className="pt-6 mt-6 border-t border-slate-800/80 flex items-center justify-between">
-                  <span className="flex items-center text-xs text-slate-400 font-semibold">
-                    <MapPin className="size-3.5 mr-1 text-slate-500" />
-                    Remote / Hybrid
-                  </span>
+                {/* Filter Blocks */}
+                {filterBlocks.map((filter) => (
+                  <div key={filter.title}>
+                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 block">{filter.title}</label>
+                    <div className="space-y-2.5">
+                      <label
+                        className="flex items-center group cursor-pointer"
+                        onClick={() => filter.setter([])}
+                      >
+                        <div className={`size-5 rounded-md border flex items-center justify-center transition-all duration-200 ${filter.state.length === 0
+                          ? "bg-primary border-primary shadow-sm"
+                          : "bg-card border-border group-hover:border-primary/50"
+                          }`}>
+                          {filter.state.length === 0 && <Check className="size-3.5 text-primary-foreground" />}
+                        </div>
+                        <span className={`ml-3 text-sm transition-colors ${filter.state.length === 0 ? "text-foreground font-medium" : "text-muted-foreground group-hover:text-foreground"}`}>
+                          All
+                        </span>
+                      </label>
 
-                  <Button
-                    onClick={() => router.push(`/${tenant}/job/${job.id}`)}
-                    variant="ghost"
-                    className="text-xs font-bold text-indigo-400 group-hover:text-indigo-300 flex items-center p-0 hover:bg-transparent"
-                  >
-                    View Details
-                    <ChevronRight className="size-4 ml-1 transition-transform group-hover:translate-x-0.5" />
+                      {filter.options.map((opt) => {
+                        const isActive = filter.state.includes(opt);
+                        const isDisabled = filter.validSet ? !filter.validSet.has(opt) : false;
+
+                        return (
+                          <label
+                            key={opt}
+                            className={`flex items-center group ${isDisabled ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+                            onClick={(e) => {
+                              if (isDisabled) {
+                                e.preventDefault();
+                                return;
+                              }
+                              toggleFilter(filter.setter, opt);
+                            }}
+                          >
+                            <div className={`size-5 rounded-md border flex items-center justify-center transition-all duration-200 ${isActive
+                              ? "bg-primary border-primary shadow-sm"
+                              : isDisabled
+                                ? "bg-card border-border"
+                                : "bg-card border-border group-hover:border-primary/50"
+                              }`}>
+                              {isActive && <Check className="size-3.5 text-primary-foreground" />}
+                            </div>
+                            <span className={`ml-3 text-sm transition-colors ${isActive
+                              ? "text-foreground font-medium"
+                              : isDisabled
+                                ? "text-muted-foreground"
+                                : "text-muted-foreground group-hover:text-foreground"
+                              }`}>
+                              {opt}
+                            </span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </aside>
+
+            {/* RIGHT COLUMN: Premium Job Feed */}
+            <div className="flex-1 w-full min-w-0">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-8 gap-4">
+                <div>
+                  <h1 className="text-3xl font-extrabold text-foreground mb-2 text-tighter">Open Opportunities</h1>
+                  <p className="text-muted-foreground text-sm">Showing {filteredJobs.length} roles powered by intelligent processing.</p>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-32 gap-5 text-center rounded-3xl border border-dashed border-border bg-card/30">
+                  <div className="size-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                  <p className="text-muted-foreground text-sm font-semibold">Loading open positions...</p>
+                </div>
+              ) : filteredJobs.length === 0 ? (
+                <div className="py-32 text-center rounded-3xl border border-dashed border-border bg-card/30">
+                  <Briefcase className="size-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-2xl font-bold text-foreground mb-3 text-tight">No positions found</p>
+                  <p className="text-muted-foreground text-sm">Try tweaking your keywords or filters to discover active opportunities.</p>
+                  <Button onClick={clearFilters} variant="outline" className="mt-6 border-border text-foreground hover:bg-muted rounded-full px-6">
+                    Clear all filters
                   </Button>
                 </div>
-              </motion.div>
-            ))}
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {filteredJobs.map((job) => (
+                    <motion.div
+                      key={job.id}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      onClick={() => handleSelectJob(job)}
+                      className="group flex flex-col md:flex-row md:items-center justify-between p-6 rounded-2xl glass-card hover:bg-card/80 hover:border-primary/30 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
+                    >
+                      <div className="flex-1 pr-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="px-2.5 py-1 rounded-md bg-muted border border-border text-xs font-semibold text-foreground">
+                            {job.category}
+                          </span>
+                          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Clock className="size-3" /> {new Date(job.postedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+
+                        <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors text-tight flex items-center gap-3">
+                          {job.title}
+                        </h3>
+
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1.5"><MapPin className="size-3.5" /> {job.location}, {job.country}</span>
+                          <span className="size-1 rounded-full bg-border" />
+                          <span>{job.type}</span>
+                          <span className="size-1 rounded-full bg-border" />
+                          <span>{job.experience}</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 md:mt-0 shrink-0 flex justify-end">
+                        <div className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/10 px-5 py-2.5 rounded-full opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                          View Details <ChevronRight className="size-4" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="w-full border-t border-slate-900 bg-slate-950 py-8 text-center text-xs text-slate-600">
-        <div className="max-w-7xl mx-auto px-4">
-          <p>© {new Date().getFullYear()} {tenantDetails ? tenantDetails.name : "Company"}. Powered by AgentsFactory HRM Platform.</p>
-        </div>
-      </footer>
     </div>
   );
 }

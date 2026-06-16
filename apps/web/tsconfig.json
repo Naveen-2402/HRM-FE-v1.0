@@ -7,9 +7,12 @@
       }
     ],
     "strictNullChecks": true,
-    "baseUrl": ".",
+    // "baseUrl": ".", This got deprecated in TypeScript 6.0, and is no longer needed when using "paths"
+    "ignoreDeprecations": "5.0",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
   "include": [
@@ -19,5 +22,7 @@
     "next.config.js",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
