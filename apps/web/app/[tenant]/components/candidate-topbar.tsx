@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { User, LogOut, Bell, Settings } from "lucide-react";
+import { User, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { ModeToggle } from "@/components/theme-toggle";
+import { NotificationDropdown } from "@/components/notification-dropdown";
 
 interface CandidateTopbarProps {
   tenant: string;
@@ -96,12 +97,7 @@ export function CandidateTopbar({
 
           {isAuthenticated && isCandidate ? (
             <div className="flex items-center gap-2">
-              <button
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-xl transition-colors cursor-pointer"
-                aria-label="Notifications"
-              >
-                <Bell className="size-5" />
-              </button>
+              <NotificationDropdown />
 
               <div className="h-5 w-[1px] bg-border mx-1 hidden sm:block" />
 

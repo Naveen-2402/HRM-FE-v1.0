@@ -29,7 +29,7 @@ export default function BillingSuccessPage() {
         if (prev <= 1) {
           clearInterval(timer);
           
-          redirectToTenantDashboard();
+          redirectToTenantDashboard("/dashboard");
           return 0;
         }
         return prev - 1;

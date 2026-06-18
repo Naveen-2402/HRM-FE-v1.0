@@ -1,4 +1,5 @@
 import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 import { getCookieRootDomain } from "./domain";
 
 const getCookieDomain = () => {
@@ -66,4 +67,17 @@ export const getClientRefreshToken = () => {
 export const getClientIdToken = () => {
   if (typeof window === "undefined") return null;
   return Cookies.get("id_token");
+};
+
+export const isCandidateToken = (token: string | null | undefined): boolean => {
+  if (!token) return false;
+  try {
+    const decoded: any = jwtDecode(token);
+    return !!(
+      decoded?.realm_access?.roles?.includes("candidate") ||
+      decoded?.iss?.includes("hrm-candidates")
+    );
+  } catch {
+    return false;
+  }
 };

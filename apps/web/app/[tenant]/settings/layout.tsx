@@ -3,15 +3,15 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
-  ChevronLeft,
   Loader2,
-  Bell,
-  Moon,
-  Sun,
   LogOut,
   User,
+  Settings,
 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { usePermissions } from "@/hooks/usePermissions";
+import { ModeToggle } from "@/components/theme-toggle";
+import { NotificationDropdown } from "@/components/notification-dropdown";
 
 export default function SettingsLayout({
   children,
@@ -19,19 +19,10 @@ export default function SettingsLayout({
   children: React.ReactNode;
 }) {
   const { user, setUser, logout } = useAuthStore();
-  const [isFetchingProfile, setIsFetchingProfile] = useState(!user);
-
-  // ── States for UI toggles ──
-  const [isDark, setIsDark] = useState(false);
+  const { hasPermission } = usePermissions();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isFetchingProfile, setIsFetchingProfile] = useState(!user);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Initialize theme based on document class
-  useEffect(() => {
-    if (document.documentElement.classList.contains("dark")) {
-      setIsDark(true);
-    }
-  }, []);
 
   // Handle clicking outside of profile dropdown to close it
   useEffect(() => {
@@ -57,12 +48,6 @@ export default function SettingsLayout({
     };
     fetchUserProfile();
   }, [user, setUser]);
-
-  // ── Functions ──
-  const toggleTheme = () => {
-    const isDarkMode = document.documentElement.classList.toggle("dark");
-    setIsDark(isDarkMode);
-  };
 
   const handleLogout = () => {
     setIsProfileOpen(false);
@@ -119,50 +104,52 @@ export default function SettingsLayout({
 
           {/* Right Side: Tools & Profile */}
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="size-9 flex items-center justify-center rounded-full border border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-            >
-              {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </button>
+            <div className="flex items-center gap-2">
+              <ModeToggle />
+              <NotificationDropdown />
 
-            <button className="size-9 flex items-center justify-center rounded-full border border-border/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer">
-              <Bell className="size-4" />
-            </button>
+              {/* Profile Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="size-9 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground shadow-sm cursor-pointer"
+                >
+                  {userName ? userInitials : <User className="size-4" />}
+                </button>
 
-            <div className="h-5 w-[1px] bg-border mx-1 hidden sm:block" />
+                {/* Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-3 border-b border-border/50 mb-1">
+                      <p className="text-sm font-bold text-foreground truncate">
+                        {userName}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {userEmail}
+                      </p>
+                    </div>
 
-            {/* Profile Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="size-9 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground shadow-sm"
-              >
-                {userName ? userInitials : <User className="size-4" />}
-              </button>
+                    {hasPermission("candidate:read") && (
+                      <Link
+                        href="/settings"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full text-left"
+                      >
+                        <Settings className="size-4" />
+                        Settings
+                      </Link>
+                    )}
 
-              {/* Dropdown Menu */}
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 py-3 border-b border-border/50 mb-1">
-                    <p className="text-sm font-bold text-foreground truncate">
-                      {userName}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">
-                      {userEmail}
-                    </p>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
+                    >
+                      <LogOut className="size-4" />
+                      Logout
+                    </button>
                   </div>
-
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
-                  >
-                    <LogOut className="size-4" />
-                    Logout
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>

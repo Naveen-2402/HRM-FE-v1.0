@@ -31,6 +31,74 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
+ * Root-level health check endpoint.
+ * @summary Root Health Check
+ */
+export const rootHealthCheckHealthGet = (
+    
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<unknown>(
+      {url: `/health`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getRootHealthCheckHealthGetQueryKey = () => {
+    return [
+    `/health`
+    ] as const;
+    }
+
+    
+export const getRootHealthCheckHealthGetQueryOptions = <TData = Awaited<ReturnType<typeof rootHealthCheckHealthGet>>, TError = unknown>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof rootHealthCheckHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getRootHealthCheckHealthGetQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof rootHealthCheckHealthGet>>> = ({ signal }) => rootHealthCheckHealthGet(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof rootHealthCheckHealthGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type RootHealthCheckHealthGetQueryResult = NonNullable<Awaited<ReturnType<typeof rootHealthCheckHealthGet>>>
+export type RootHealthCheckHealthGetQueryError = unknown
+
+
+/**
+ * @summary Root Health Check
+ */
+
+export function useRootHealthCheckHealthGet<TData = Awaited<ReturnType<typeof rootHealthCheckHealthGet>>, TError = unknown>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof rootHealthCheckHealthGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getRootHealthCheckHealthGetQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
  * Returns basic application health status for load balancers
  * @summary Basic health check
  */

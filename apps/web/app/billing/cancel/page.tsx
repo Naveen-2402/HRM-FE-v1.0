@@ -55,7 +55,7 @@ export default function BillingCancelPage() {
             
             <Button 
               variant="outline"
-              onClick={() => redirectToTenantDashboard()}
+              onClick={() => redirectToTenantDashboard("/dashboard")}
               className="w-full h-12 text-base font-semibold hover:cursor-pointer border-border hover:bg-muted transition-all"
             >
               <Home className="mr-2 size-5" /> Go to Dashboard

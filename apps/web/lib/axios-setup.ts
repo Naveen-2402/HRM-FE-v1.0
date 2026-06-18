@@ -5,7 +5,8 @@ import {
   getClientRefreshToken,
   setAuthTokens,
   clearAuthToken,
-  getClientIdToken
+  getClientIdToken,
+  isCandidateToken
 } from '@repo/utils';
 import { jwtDecode } from 'jwt-decode';
 
@@ -87,26 +88,21 @@ export function setupAxiosInterceptors() {
       isRefreshing = true;
 
       // Determine if the user is a candidate (checks roles and fallback path)
+      const token = getClientAuthToken();
+      const refreshToken = getClientRefreshToken();
+
       let isCandidateUser = false;
-      try {
-        const token = getClientAuthToken();
-        if (token) {
-          const decoded: any = jwtDecode(token);
-          isCandidateUser = !!decoded?.realm_access?.roles?.includes("candidate");
-        }
-      } catch (e) {
-        if (typeof window !== "undefined") {
-          isCandidateUser = window.location.pathname.includes("/candidate") || window.location.pathname.includes("/job");
-        }
-      }
-      if (!isCandidateUser && typeof window !== "undefined") {
-        isCandidateUser = window.location.pathname.includes("/candidate") || window.location.pathname.includes("/job");
+      if (token && isCandidateToken(token)) {
+        isCandidateUser = true;
+      } else if (refreshToken && isCandidateToken(refreshToken)) {
+        isCandidateUser = true;
+      } else if (typeof window !== "undefined") {
+        const pathSegments = window.location.pathname.split('/').filter(Boolean);
+        isCandidateUser = pathSegments.includes("candidate") || pathSegments.includes("job");
       }
 
       // DEBUG: log which URL triggered the 401
       console.warn('[Auth] 401 received on:', originalRequest.url, '— attempting token refresh');
-
-      const refreshToken = getClientRefreshToken();
 
       // If no refresh token exists, immediately log out
       if (!refreshToken) {

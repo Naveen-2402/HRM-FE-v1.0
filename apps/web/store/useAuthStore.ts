@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { clearAuthToken, getClientAuthToken } from "@repo/utils";
+import { clearAuthToken, getClientAuthToken, getClientRefreshToken, isCandidateToken } from "@repo/utils";
 
 export interface UserProfile {
   sub: string;
@@ -35,8 +35,20 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     // Detect candidate role before clearing state
-    const isCandidateUser = useAuthStore.getState().user?.realm_access?.roles?.includes("candidate") ||
-      (typeof window !== "undefined" && (window.location.pathname.includes("/candidate") || window.location.pathname.includes("/job")));
+    const token = getClientAuthToken();
+    const refreshToken = getClientRefreshToken();
+
+    let isCandidateUser = false;
+    if (useAuthStore.getState().user?.realm_access?.roles?.includes("candidate")) {
+      isCandidateUser = true;
+    } else if (token && isCandidateToken(token)) {
+      isCandidateUser = true;
+    } else if (refreshToken && isCandidateToken(refreshToken)) {
+      isCandidateUser = true;
+    } else if (typeof window !== "undefined") {
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      isCandidateUser = pathSegments.includes("candidate") || pathSegments.includes("job");
+    }
 
     // 1. Clear the cross-domain cookie
     clearAuthToken();
