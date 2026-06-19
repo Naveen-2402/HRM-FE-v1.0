@@ -13,8 +13,11 @@ import {
 
 import { Button } from "@repo/ui/components/ui/button";
 import { AccentBar, SectionCard } from "@/components/_shared";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function CreditsTab() {
+  const { hasPermission } = usePermissions();
+
   // ── Data Fetching ──
   const { data: balanceData, isLoading: isLoadingBalance } = useGetCreditBalanceApiV1BillingCreditsGet();
   const { data: plansData, isLoading: isLoadingPlans } = useListPlansApiV1SuperadminPlansGet();
@@ -164,13 +167,17 @@ export default function CreditsTab() {
                             {price.currency} Total
                           </p>
                         </div>
-                          <button
-                            onClick={() => handleBuyCredits(price.price_id)}
-                            disabled={isProcessing}
-                            className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/30 disabled:opacity-50"
-                          >
-                            {isProcessing ? "Wait..." : "Buy Now"}
-                          </button>
+                          {hasPermission("billing:access") ? (
+                            <button
+                              onClick={() => handleBuyCredits(price.price_id)}
+                              disabled={isProcessing}
+                              className="bg-primary text-primary-foreground px-6 py-2.5 rounded-xl text-xs font-bold hover:cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/30 disabled:opacity-50"
+                            >
+                              {isProcessing ? "Wait..." : "Buy Now"}
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic font-medium">Admin only</span>
+                          )}
                         </div>
                       </div>
                     </div>

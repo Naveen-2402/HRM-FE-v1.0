@@ -500,8 +500,11 @@ import {
 } from "@repo/orval-config/src/api/billing/billing";
 
 import { Button } from "@repo/ui/components/ui/button";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function CreditsTab() {
+  const { hasPermission } = usePermissions();
+
   // ── Data Fetching ──
   const { data: balanceData, isLoading: isLoadingBalance } = useGetCreditBalanceApiV1BillingCreditsGet();
   const { data: plansData, isLoading: isLoadingPlans } = useListPlansApiV1SuperadminPlansGet();
@@ -694,19 +697,23 @@ export default function CreditsTab() {
                       </div>
                     </div>
 
-                    <Button
-                      onClick={() => handleBuyCredits(price.price_id)}
-                      disabled={isProcessing}
-                      variant={isHighlighted ? "default" : "secondary"}
-                      className={`shrink-0 rounded-full font-semibold transition-all ${isHighlighted ? "shadow-md hover:shadow-lg" : ""
-                        }`}
-                    >
-                      {isProcessing ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <>Buy <ArrowUpRight className="ml-1.5 size-4 opacity-70" /></>
-                      )}
-                    </Button>
+                    {hasPermission("billing:access") ? (
+                      <Button
+                        onClick={() => handleBuyCredits(price.price_id)}
+                        disabled={isProcessing}
+                        variant={isHighlighted ? "default" : "secondary"}
+                        className={`shrink-0 rounded-full font-semibold transition-all ${isHighlighted ? "shadow-md hover:shadow-lg" : ""
+                          }`}
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <>Buy <ArrowUpRight className="ml-1.5 size-4 opacity-70" /></>
+                        )}
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic font-medium px-4">Admin only</span>
+                    )}
                   </div>
                 </div>
               );

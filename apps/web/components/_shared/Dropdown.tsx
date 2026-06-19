@@ -18,6 +18,8 @@ interface DropdownProps {
   label?: string;
   disabled?: boolean;
   className?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
 }
 
 export function Dropdown({
@@ -28,12 +30,15 @@ export function Dropdown({
   label,
   disabled = false,
   className = "",
+  searchable = true,
+  searchPlaceholder = "Search...",
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Find selected option (safely handles empty strings)
-  const selectedOption = options.find((opt) => opt.value === value) || options[0];
+  // Find selected option
+  const selectedOption = options.find((opt) => opt.value === value);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -46,10 +51,21 @@ export function Dropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
+  // Reset search query when dropdown opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSearchQuery("");
+    }
+  }, [isOpen]);
+
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
     setIsOpen(false);
   };
+
+  const filteredOptions = options.filter((option) =>
+    option.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className={`relative flex flex-col gap-1.5 ${className}`} ref={dropdownRef}>
@@ -94,13 +110,25 @@ export function Dropdown({
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute left-0 top-full z-50 mt-1.5 w-full min-w-[10rem] rounded-md border border-border bg-card shadow-lg"
           >
+            {searchable && (
+              <div className="px-2 pt-2 pb-1 border-b border-border">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="w-full bg-background text-foreground border border-input rounded px-2 py-1 text-xs focus:ring-1 focus:ring-ring outline-none"
+                  onClick={(e) => e.stopPropagation()} // Prevent click from bubbling and closing dropdown
+                />
+              </div>
+            )}
             <div className="max-h-[180px] overflow-y-scroll overscroll-contain custom-scrollbar p-1.5 space-y-0.5">
-              {options.length === 0 ? (
+              {filteredOptions.length === 0 ? (
                 <div className="py-3 px-2 text-center text-sm text-muted-foreground">
-                  No options
+                  No options found
                 </div>
               ) : (
-                options.map((option, index) => {
+                filteredOptions.map((option, index) => {
                   const isSelected = option.value === value;
                   return (
                     <button

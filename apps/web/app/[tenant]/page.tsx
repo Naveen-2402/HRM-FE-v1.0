@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
 import { useGetCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
 import { useListJobsPublicApiV1JobsPublicListGet } from "@repo/orval-config/src/api/job/jobs/jobs";
+import { useGetEnumValuesApiV1SuperadminEnumsGet } from "@repo/orval-config/src/api/superadmin/superadmin";
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -37,6 +38,16 @@ interface Job {
   end_time: string | null;
   pipeline_stages: string[] | null;
   created_at: string;
+  jobCategory?: string;
+  experienceLevel?: string;
+  employmentType?: string;
+  workplaceModel?: string;
+  location?: { city: string; state?: string; country: string } | null;
+  department?: string;
+  roleDescription?: { roleSummary?: string; keyResponsibilities?: string[] } | null;
+  candidateQualifications?: { mustHaveRequirements?: string[]; preferredQualifications?: string[] } | null;
+  compensationAndBenefits?: { salaryMin?: number; salaryMax?: number; currency?: string; compensationType?: string; benefitsSummary?: string[] } | null;
+  applicationLogistics?: { applicationDeadline?: string } | null;
 }
 
 interface Tenant {
@@ -108,6 +119,9 @@ export default function TenantPublicJobBoard() {
     query: { enabled: !!tenantDetails?.id } as any
   });
 
+  const enumsQuery = useGetEnumValuesApiV1SuperadminEnumsGet();
+  const enums = enumsQuery.data as any;
+
   const rawJobs = (jobsQuery.data as Job[]) || [];
   const loading = tenantQuery.isLoading || jobsQuery.isLoading;
   const isError = tenantQuery.isError || jobsQuery.isError;
@@ -115,52 +129,48 @@ export default function TenantPublicJobBoard() {
   // --- Smart Data Mapper ---
   const mappedJobs: MappedJob[] = useMemo(() => {
     return rawJobs.map((job) => {
-      const titleLower = (job.title || "").toLowerCase();
-      const descLower = (job.description || "").toLowerCase();
-
-      // 1. Heuristic Category assignment
-      let category = "General";
-      if (/(engineer|developer|tech|programmer|architect)/.test(titleLower)) category = "Engineering";
-      else if (/(product|design|ux|ui)/.test(titleLower)) category = "Product";
-      else if (/(sales|market|account|executive)/.test(titleLower)) category = "Sales";
-      else if (/(data|analytic|scientist|researcher)/.test(titleLower)) category = "Data";
-      else if (/(ops|operations|success|support|manager)/.test(titleLower)) category = "Operations";
-
-      // 2. Heuristic Experience level
-      let experience = "Mid Level (3-5 years)";
-      if (/(senior|lead|principal|director|head|manager)/.test(titleLower)) experience = "Senior (5+ years)";
-      else if (/(junior|entry|intern|associate)/.test(titleLower)) experience = "Entry Level (0-2 years)";
-
-      // 3. Heuristic Geography
-      let location = "Remote";
-      let country = "Anywhere";
-      let continent = "Global";
-
-      if (descLower.includes("new york") || titleLower.includes("new york") || titleLower.includes(" ny ")) {
-        location = "New York"; country = "USA"; continent = "North America";
-      } else if (descLower.includes("san francisco") || titleLower.includes("sf")) {
-        location = "San Francisco"; country = "USA"; continent = "North America";
-      } else if (descLower.includes("london")) {
-        location = "London"; country = "UK"; continent = "Europe";
-      } else if (descLower.includes("hybrid") || titleLower.includes("hybrid")) {
-        location = "Hybrid";
-      } else if (descLower.includes("on-site") || descLower.includes("onsite")) {
-        location = "On-site";
+      const category = job.jobCategory || "General";
+      const experience = job.experienceLevel || "Mid-level";
+      const type = job.employmentType || "Full-time";
+      
+      const city = job.location?.city || "";
+      const country = job.location?.country || "Anywhere";
+      
+      let location = job.workplaceModel || "Remote";
+      if (city) {
+        location = `${city} (${job.workplaceModel || "On-site"})`;
       }
 
-      // 4. Job Type
-      let type = "Full time";
-      if (descLower.includes("contract") || titleLower.includes("contract")) type = "Contract";
-      else if (descLower.includes("part-time") || titleLower.includes("part time")) type = "Part time";
+      let continent = "Global";
+      const countryLower = country.toLowerCase();
+      if (["usa", "us", "canada", "united states"].some(c => countryLower.includes(c))) {
+        continent = "North America";
+      } else if (["uk", "united kingdom", "london", "germany", "france", "europe", "italy", "spain", "netherlands"].some(c => countryLower.includes(c))) {
+        continent = "Europe";
+      } else if (["india", "singapore", "japan", "china", "asia"].some(c => countryLower.includes(c))) {
+        continent = "Asia";
+      } else if (["australia"].some(c => countryLower.includes(c))) {
+        continent = "Oceania";
+      } else if (["brazil", "argentina"].some(c => countryLower.includes(c))) {
+        continent = "South America";
+      }
 
-      // 5. Requirements Parser
       let skillRequired = "See job description for specific requirements.";
-      if (job.requirements_json && typeof job.requirements_json === 'object' && !Array.isArray(job.requirements_json)) {
+      if (job.candidateQualifications?.mustHaveRequirements && job.candidateQualifications.mustHaveRequirements.length > 0) {
+        skillRequired = job.candidateQualifications.mustHaveRequirements.join(", ");
+      } else if (job.requirements_json && typeof job.requirements_json === 'object' && !Array.isArray(job.requirements_json)) {
         const reqKeys = Object.keys(job.requirements_json);
         if (reqKeys.length > 0) {
           skillRequired = reqKeys.join(", ");
         }
       }
+
+      let qualifications = "Relevant degree or equivalent practical experience required.";
+      if (job.candidateQualifications?.preferredQualifications && job.candidateQualifications.preferredQualifications.length > 0) {
+        qualifications = job.candidateQualifications.preferredQualifications.join(", ");
+      }
+
+      const about = job.roleDescription?.roleSummary || job.description || "No description provided.";
 
       return {
         id: String(job.id),
@@ -173,8 +183,8 @@ export default function TenantPublicJobBoard() {
         jobNo: `JOB-${job.id}`,
         category,
         skillRequired,
-        qualifications: "Relevant degree or equivalent practical experience required.",
-        about: job.description || "No description provided.",
+        qualifications,
+        about,
         postedAt: job.created_at || new Date().toISOString()
       };
     });
@@ -257,16 +267,27 @@ export default function TenantPublicJobBoard() {
 
 
   // --- Filter Configuration Configurations ---
-  const continents = Array.from(new Set(mappedJobs.map(j => j.continent)));
-  const countries = Array.from(new Set(mappedJobs.map(j => j.country)));
-  const locations = Array.from(new Set(mappedJobs.map(j => j.location)));
-  const categories = Array.from(new Set(mappedJobs.map(j => j.category)));
-  const jobTypes = Array.from(new Set(mappedJobs.map(j => j.type)));
-  const experiences = [
-    "Entry Level (0-2 years)",
-    "Mid Level (3-5 years)",
-    "Senior (5+ years)"
-  ];
+  const continents = useMemo(() => Array.from(new Set(mappedJobs.map(j => j.continent))), [mappedJobs]);
+  const countries = useMemo(() => Array.from(new Set(mappedJobs.map(j => j.country))), [mappedJobs]);
+  const locations = useMemo(() => Array.from(new Set(mappedJobs.map(j => j.location))), [mappedJobs]);
+  
+  const categories = useMemo(() => {
+    return enums?.job_categories || [
+      "Engineering", "Design", "Marketing", "Sales", "Product", "HR", "Finance", "Operations", "Other"
+    ];
+  }, [enums]);
+
+  const jobTypes = useMemo(() => {
+    return enums?.employment_types || [
+      "Full-time", "Part-time", "Contract", "Internship", "Temporary"
+    ];
+  }, [enums]);
+
+  const experiences = useMemo(() => {
+    return enums?.experience_levels || [
+      "Internship", "Entry-level", "Associate", "Mid-level", "Senior", "Director", "Executive"
+    ];
+  }, [enums]);
 
   const activeFilterCount =
     selectedContinent.length +
@@ -399,7 +420,7 @@ export default function TenantPublicJobBoard() {
                         </span>
                       </label>
 
-                      {filter.options.map((opt) => {
+                      {filter.options.map((opt: string) => {
                         const isActive = filter.state.includes(opt);
                         const isDisabled = filter.validSet ? !filter.validSet.has(opt) : false;
 

@@ -21,13 +21,23 @@ import { useGetEnumValuesApiV1SuperadminEnumsGet } from "@repo/orval-config/src/
 import { AccentBar, TestSectionCard } from "@/components/_shared"; 
 import { Dropdown } from "@/components/_shared/Dropdown";
 
-// ── Role Label Mapping ───────────────────────────────────────────────────────
 const roleLabels: Record<string, string> = {
   "employee": "Employee",
   "manager": "Manager",
   "tenant-admin": "Administrator",
   "admin": "Administrator",
   "recruiter": "Recruiter",
+  "viewer": "Viewer",
+  "hiring-manager": "Hiring Manager",
+  "interviewer": "Interviewer",
+  "recruiting-manager": "Recruiting Manager",
+  "candidate": "Candidate",
+  "hr-director": "HR Director",
+  "hr-manager": "HR Manager",
+  "hrbp": "HRBP",
+  "hr-generalist": "HR Generalist",
+  "payroll-manager": "Payroll Manager",
+  "payroll-specialist": "Payroll Specialist",
 };
 
 // ── Validation Helpers ────────────────────────────────────────────────────────
@@ -45,6 +55,14 @@ const validateOptionalEmail = (val: string) => {
   if (!val || val.trim() === "") return undefined;
   const result = z.string().email("Please enter a valid email").safeParse(val);
   return result?.success ? undefined : result?.error?.issues[0]?.message;
+};
+
+// ── Role Normalizer Helper ───────────────────────────────────────────────────
+const normalizeRole = (rawRole: string | undefined): string => {
+  if (!rawRole) return "employee";
+  let role = rawRole.toLowerCase().trim().replace(/[\s_]+/g, '-');
+  if (role === "admin") return "tenant-admin";
+  return role;
 };
 
 // ── Fallback ID Generator ─────────────────────────────────────────────────────
@@ -73,6 +91,8 @@ export default function EmployeeInvitePage() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<"manual" | "csv">("manual");
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deployProgress, setDeployProgress] = useState<{ current: number; total: number } | null>(null);
   
   const user = useAuthStore((state) => state.user);
   const orgClaim = user?.organization || {};
@@ -123,19 +143,65 @@ export default function EmployeeInvitePage() {
       try {
         const text = event.target?.result as string;
         const rows = text.split(/\r?\n/).filter(row => row.trim().length > 0);
-        const dataRows = rows.slice(1); 
-        
-        const newEmployees: StagedEmployee[] = dataRows.map(row => {
-          const [first, last, email, contactEmail, role] = row.split(',').map(item => item.trim());
+        if (rows.length < 2) {
+          setGlobalError("The CSV file must contain at least a header row and one data row.");
+          return;
+        }
+
+        const parseCSVLine = (line: string): string[] => {
+          const result: string[] = [];
+          let current = "";
+          let inQuotes = false;
+          for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              result.push(current.trim());
+              current = "";
+            } else {
+              current += char;
+            }
+          }
+          result.push(current.trim());
+          return result;
+        };
+
+        const headers = parseCSVLine(rows[0] || "").map(h => h.toLowerCase().replace(/[\s_]/g, ''));
+        const firstNameIdx = headers.findIndex(h => h === "firstname" || h === "first" || h === "givenname");
+        const lastNameIdx = headers.findIndex(h => h === "lastname" || h === "last" || h === "surname");
+        const emailIdx = headers.findIndex(h => h === "email" || h === "mail" || h === "workemail");
+        const contactEmailIdx = headers.findIndex(h => h === "contactemail" || h === "personalemail" || h === "deliveryemail");
+        const roleIdx = headers.findIndex(h => h === "tenantrole" || h === "role" || h === "workspacerole");
+
+        if (firstNameIdx === -1 || lastNameIdx === -1 || emailIdx === -1) {
+          setGlobalError("Required headers not found. The CSV must contain columns for First Name, Last Name, and Email.");
+          return;
+        }
+
+        const dataRows = rows.slice(1);
+        const newEmployees: StagedEmployee[] = dataRows.map(rowLine => {
+          const columns = parseCSVLine(rowLine);
+          const email = columns[emailIdx] || "";
+          const firstName = columns[firstNameIdx] || "";
+          const lastName = columns[lastNameIdx] || "";
+          const contactEmail = contactEmailIdx !== -1 ? columns[contactEmailIdx] : undefined;
+          const rawRole = roleIdx !== -1 ? columns[roleIdx] : "employee";
+          
           return {
-            id: generateId(), 
-            first_name: first || "",
-            last_name: last || "",
-            email: email || "",
-            contact_email: contactEmail || undefined,
-            tenant_role: role ? role.toLowerCase() : "employee" 
+            id: generateId(),
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            contact_email: contactEmail && contactEmail.trim() !== "" ? contactEmail : undefined,
+            tenant_role: normalizeRole(rawRole)
           };
-        }).filter(emp => emp.email && emp.first_name); 
+        }).filter(emp => emp.email && emp.first_name);
+
+        if (newEmployees.length === 0) {
+          setGlobalError("No valid employee records were found in the CSV.");
+          return;
+        }
 
         setStagedEmployees(prev => [...prev, ...newEmployees]);
         if (fileInputRef.current) fileInputRef.current.value = "";
@@ -155,47 +221,90 @@ export default function EmployeeInvitePage() {
     if (stagedEmployees.length === 0) return;
     setGlobalError(null);
     setIsSuccess(false);
-    
-    try {
-      const payload = {
-        organization_id: orgId,
-        employees: stagedEmployees.map(({ first_name, last_name, email, contact_email, tenant_role }) => ({
-          first_name,
-          last_name,
-          email,
-          contact_email,
-          tenant_role
-        }))
-      };
+    setIsDeploying(true);
+    setDeployProgress({ current: 0, total: stagedEmployees.length });
 
-      await inviteMutation.mutateAsync({ data: payload });
-      
-      setIsSuccess(true);
-      setStagedEmployees([]);
-      
-      setTimeout(() => setIsSuccess(false), 3000);
-    } catch (error: any) {
-      console.log(error?.response?.data);
-      let errorMsg = "Failed to invite employees. Please try again.";
-      const data = error?.response?.data;
-      if (data) {
-        if (typeof data.detail === "string") {
-          errorMsg = data.detail;
-        } else if (Array.isArray(data.detail)) {
-          errorMsg = data.detail[0]?.msg || data.detail[0]?.message || JSON.stringify(data.detail);
-        } else if (data.errors?.[0]?.msg) {
-          errorMsg = data.errors[0].msg;
-        } else if (data.message) {
-          errorMsg = data.message;
+    const CHUNK_SIZE = 50; 
+    const allEmployees = [...stagedEmployees];
+    const failedOnboard: StagedEmployee[] = [];
+    const errorDetails: string[] = [];
+
+    try {
+      for (let i = 0; i < allEmployees.length; i += CHUNK_SIZE) {
+        const chunk = allEmployees.slice(i, i + CHUNK_SIZE);
+        const payload = {
+          organization_id: orgId,
+          employees: chunk.map(({ first_name, last_name, email, contact_email, tenant_role }) => ({
+            first_name,
+            last_name,
+            email,
+            contact_email: contact_email || undefined,
+            tenant_role
+          }))
+        };
+
+        try {
+          const response = await inviteMutation.mutateAsync({ data: payload });
+          const resData = (response as any)?.data || response || {};
+          
+          if (resData.failed && resData.failed.length > 0) {
+            for (const failedItem of resData.failed) {
+              const matchedEmp = chunk.find(e => e.email.toLowerCase() === failedItem.email.toLowerCase());
+              if (matchedEmp) {
+                failedOnboard.push({
+                  ...matchedEmp,
+                  first_name: `${matchedEmp.first_name} (Error: ${failedItem.error || "Failed"})`
+                });
+              }
+            }
+          }
+        } catch (error: any) {
+          console.error("Failed to deploy chunk starting at index", i, error);
+          let errorMsg = "API or Network Error";
+          const data = error?.response?.data;
+          if (data) {
+            if (typeof data.detail === "string") {
+              errorMsg = data.detail;
+            } else if (Array.isArray(data.detail)) {
+              errorMsg = data.detail[0]?.msg || data.detail[0]?.message || JSON.stringify(data.detail);
+            }
+          }
+          errorDetails.push(`Chunk ${Math.floor(i / CHUNK_SIZE) + 1}: ${errorMsg}`);
+          
+          for (const emp of chunk) {
+            failedOnboard.push({
+              ...emp,
+              first_name: `${emp.first_name} (Failed: ${errorMsg})`
+            });
+          }
         }
+
+        setDeployProgress({ current: Math.min(i + chunk.length, allEmployees.length), total: allEmployees.length });
       }
-      setGlobalError(errorMsg);
+
+      if (failedOnboard.length === 0) {
+        setIsSuccess(true);
+        setStagedEmployees([]);
+        setTimeout(() => setIsSuccess(false), 5000);
+      } else {
+        setStagedEmployees(failedOnboard);
+        let errorSummary = `Onboarded ${allEmployees.length - failedOnboard.length} of ${allEmployees.length} successfully. ${failedOnboard.length} failed.`;
+        if (errorDetails.length > 0) {
+          errorSummary += ` Errors: ${errorDetails.join("; ")}`;
+        }
+        setGlobalError(errorSummary);
+      }
+    } catch (err) {
+      setGlobalError("An unexpected error occurred during deployment.");
+    } finally {
+      setIsDeploying(false);
+      setDeployProgress(null);
     }
   };
 
   return (
     <div className="min-h-screen bg-background sm:px-8 px-4 py-8">
-      <div className="mx-auto max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="mx-auto max-w-7xl space-y-8 animate-in fade-in slide-in-from-bottom-3 duration-300">
 
         {/* ── Page Header ───────────────────────────────────────────────── */}
         <div className="space-y-1">
@@ -367,32 +476,96 @@ export default function EmployeeInvitePage() {
                     />
                   </form>
                 ) : (
-                  <div className="flex flex-col items-center justify-center border border-dashed border-border rounded-xl py-12 px-6 bg-muted/20 text-center transition-all hover:bg-muted/40 hover:border-foreground/30">
-                    <div className="flex size-14 items-center justify-center rounded-full border border-border bg-card mb-4">
-                      <Database className="size-6 text-muted-foreground" />
+                  <div className="space-y-6">
+                    {/* CSV Upload Dropzone */}
+                    <div className="flex flex-col items-center justify-center border border-dashed border-border rounded-xl py-10 px-6 bg-muted/20 text-center transition-all hover:bg-muted/40 hover:border-foreground/30">
+                      <div className="flex size-14 items-center justify-center rounded-full border border-border bg-card mb-4">
+                        <Database className="size-6 text-muted-foreground" />
+                      </div>
+                      <h3 className="font-semibold text-foreground mb-1 text-sm">Upload Data File</h3>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Upload a CSV file containing your employee roster.
+                      </p>
+                      
+                      <input 
+                        type="file" 
+                        accept=".csv" 
+                        className="hidden" 
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                      />
+                      <div className="flex flex-wrap justify-center gap-3">
+                        <Button 
+                          onClick={() => fileInputRef.current?.click()} 
+                          variant="outline"
+                          className="hover:cursor-pointer bg-card text-xs h-9"
+                        >
+                          <UploadCloud className="mr-2 size-3.5" /> Select .CSV File
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            const headers = "First Name,Last Name,Email,Personal Email,Workspace Role\n";
+                            const example1 = "Jane,Doe,jane.doe@company.com,jane.doe@personal.com,employee\n";
+                            const example2 = "John,Smith,john.smith@company.com,,hiring-manager\n";
+                            const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(headers + example1 + example2);
+                            const link = document.createElement("a");
+                            link.setAttribute("href", csvContent);
+                            link.setAttribute("download", "employee_invite_template.csv");
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }} 
+                          variant="secondary"
+                          className="hover:cursor-pointer text-xs h-9"
+                        >
+                          Download Template
+                        </Button>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-foreground mb-1">Upload Data File</h3>
-                    <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                      Your CSV must contain exactly these headers in row 1:
-                      <span className="block font-mono text-[10px] bg-card p-2 rounded-md border border-border mt-3 text-card-foreground">
-                        first_name, last_name, email, contact_email, tenant_role
-                      </span>
-                    </p>
-                    
-                    <input 
-                      type="file" 
-                      accept=".csv" 
-                      className="hidden" 
-                      ref={fileInputRef}
-                      onChange={handleFileUpload}
-                    />
-                    <Button 
-                      onClick={() => fileInputRef.current?.click()} 
-                      variant="outline"
-                      className="hover:cursor-pointer bg-card"
-                    >
-                      <UploadCloud className="mr-2 size-4" /> Select .CSV File
-                    </Button>
+
+                    {/* CSV Guidelines & Roles list */}
+                    <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-4">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                        <Database className="size-4 text-chart-2" />
+                        <span>CSV Format & Guidelines</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                        <div className="space-y-2">
+                          <p className="font-semibold text-muted-foreground">Required Columns</p>
+                          <ul className="list-disc pl-4 space-y-1 text-muted-foreground leading-relaxed">
+                            <li><strong className="text-foreground">First Name</strong> (e.g. Jane)</li>
+                            <li><strong className="text-foreground">Last Name</strong> (e.g. Doe)</li>
+                            <li><strong className="text-foreground">Email</strong> (e.g. jane@company.com)</li>
+                            <li><strong className="text-foreground">Personal Email</strong> (delivery email)</li>
+                          </ul>
+                          <p className="font-semibold text-muted-foreground mt-3">Optional Columns</p>
+                          <ul className="list-disc pl-4 space-y-1 text-muted-foreground leading-relaxed">sss
+                            <li><strong className="text-foreground">Workspace Role</strong> (defaults to 'employee')</li>
+                          </ul>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div>
+                            <p className="font-semibold text-muted-foreground mb-1.5">Allowed Workspace Roles</p>
+                            <div className="flex flex-wrap gap-1">
+                              {roleOptions.map((role: { label: string; value: string }) => (
+                                <span 
+                                  key={role.value} 
+                                  className="bg-card border border-border text-foreground px-2 py-0.5 rounded-md text-[10px] font-mono"
+                                  title={role.label}
+                                >
+                                  {role.value}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            💡 <strong className="text-foreground font-medium">Auto-Correction:</strong> Roles are case-insensitive and spaces are automatically converted to hyphens (e.g., <code className="bg-muted px-1 py-0.5 rounded">Hiring Manager</code> is auto-corrected to <code className="bg-muted px-1 py-0.5 rounded">hiring-manager</code>).
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -491,13 +664,28 @@ export default function EmployeeInvitePage() {
                     <p>{globalError}</p>
                   </div>
                 )}
+
+                {deployProgress && (
+                  <div className="w-full space-y-2">
+                    <div className="flex justify-between text-xs font-medium text-muted-foreground">
+                      <span>Deploying accounts...</span>
+                      <span>{deployProgress.current} / {deployProgress.total}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-300"
+                        style={{ width: `${(deployProgress.current / deployProgress.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
                 
                 <Button 
                   onClick={handleSubmitAll}
-                  disabled={stagedEmployees.length === 0 || inviteMutation.isPending}
+                  disabled={stagedEmployees.length === 0 || isDeploying}
                   className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer font-semibold shadow-sm h-11 rounded-xl"
                 >
-                  {inviteMutation.isPending ? (
+                  {isDeploying ? (
                     <><Loader2 className="mr-2 size-4 animate-spin" /> Deploying...</>
                   ) : (
                     <>Deploy {stagedEmployees.length} Accounts <ArrowRight className="ml-2 size-4" /></>

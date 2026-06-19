@@ -365,7 +365,7 @@ export default function SettingsPage() {
     new Date(subscription.current_period_end) < new Date();
 
   const allTabs = [
-    { id: "Subscription", label: "Subscription", icon: CreditCard, permission: "billing:access" },
+    { id: "Subscription", label: "Subscription", icon: CreditCard, permission: "billing:read" },
     { id: "Credits", label: "Credits", icon: CircleDollarSign, permission: "credits:read" },
     { id: "Security", label: "Security", icon: ShieldCheck, permission: "tenant:access" },
     { id: "Github", label: "Github Config", icon: Github, permission: "github:manage" },
@@ -481,12 +481,14 @@ export default function SettingsPage() {
                   <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <ShieldCheck className="size-4" /> Secured by Stripe
                   </div>
-                  <Button
-                    onClick={() => (window.location.href = `${getRootOrigin()}/pricing`)}
-                    className="rounded-xl font-bold px-6"
-                  >
-                    {isActive ? "Change Plan" : "Upgrade Now"} <ArrowRight className="ml-2 size-4" />
-                  </Button>
+                  {hasPermission("billing:access") && (
+                    <Button
+                      onClick={() => (window.location.href = `${getRootOrigin()}/pricing`)}
+                      className="rounded-xl font-bold px-6"
+                    >
+                      {isActive ? "Change Plan" : "Upgrade Now"} <ArrowRight className="ml-2 size-4" />
+                    </Button>
+                  )}
                 </div>
               </SectionCard>
             </div>

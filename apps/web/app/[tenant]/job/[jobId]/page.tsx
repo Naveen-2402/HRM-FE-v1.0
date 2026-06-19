@@ -17,7 +17,9 @@ import {
   AlertTriangle,
   LogOut,
   User,
-  Share2
+  Share2,
+  DollarSign,
+  Check
 } from "lucide-react";
 import Link from "next/link";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
@@ -43,6 +45,16 @@ interface Job {
   end_time: string | null;
   pipeline_stages: string[] | null;
   created_at: string;
+  jobCategory?: string;
+  experienceLevel?: string;
+  employmentType?: string;
+  workplaceModel?: string;
+  location?: { city: string; state?: string; country: string } | null;
+  department?: string;
+  roleDescription?: { roleSummary?: string; keyResponsibilities?: string[] } | null;
+  candidateQualifications?: { mustHaveRequirements?: string[]; preferredQualifications?: string[] } | null;
+  compensationAndBenefits?: { salaryMin?: number; salaryMax?: number; currency?: string; compensationType?: string; benefitsSummary?: string[] } | null;
+  applicationLogistics?: { applicationDeadline?: string } | null;
 }
 
 interface MappedJob {
@@ -62,52 +74,48 @@ interface MappedJob {
 }
 
 function mapJobToMappedJob(job: Job): MappedJob {
-  const titleLower = (job.title || "").toLowerCase();
-  const descLower = (job.description || "").toLowerCase();
-
-  // 1. Heuristic Category assignment
-  let category = "General";
-  if (/(engineer|developer|tech|programmer|architect)/.test(titleLower)) category = "Engineering";
-  else if (/(product|design|ux|ui)/.test(titleLower)) category = "Product";
-  else if (/(sales|market|account|executive)/.test(titleLower)) category = "Sales";
-  else if (/(data|analytic|scientist|researcher)/.test(titleLower)) category = "Data";
-  else if (/(ops|operations|success|support|manager)/.test(titleLower)) category = "Operations";
-
-  // 2. Heuristic Experience level
-  let experience = "Mid Level (3-5 years)";
-  if (/(senior|lead|principal|director|head|manager)/.test(titleLower)) experience = "Senior (5+ years)";
-  else if (/(junior|entry|intern|associate)/.test(titleLower)) experience = "Entry Level (0-2 years)";
-
-  // 3. Heuristic Geography
-  let location = "Remote";
-  let country = "Anywhere";
-  let continent = "Global";
-
-  if (descLower.includes("new york") || titleLower.includes("new york") || titleLower.includes(" ny ")) {
-    location = "New York"; country = "USA"; continent = "North America";
-  } else if (descLower.includes("san francisco") || titleLower.includes("sf")) {
-    location = "San Francisco"; country = "USA"; continent = "North America";
-  } else if (descLower.includes("london")) {
-    location = "London"; country = "UK"; continent = "Europe";
-  } else if (descLower.includes("hybrid") || titleLower.includes("hybrid")) {
-    location = "Hybrid";
-  } else if (descLower.includes("on-site") || descLower.includes("onsite")) {
-    location = "On-site";
+  const category = job.jobCategory || "General";
+  const experience = job.experienceLevel || "Mid-level";
+  const type = job.employmentType || "Full-time";
+  
+  const city = job.location?.city || "";
+  const country = job.location?.country || "Anywhere";
+  
+  let location = job.workplaceModel || "Remote";
+  if (city) {
+    location = `${city} (${job.workplaceModel || "On-site"})`;
   }
 
-  // 4. Job Type
-  let type = "Full time";
-  if (descLower.includes("contract") || titleLower.includes("contract")) type = "Contract";
-  else if (descLower.includes("part-time") || titleLower.includes("part time")) type = "Part time";
+  let continent = "Global";
+  const countryLower = country.toLowerCase();
+  if (["usa", "us", "canada", "united states"].some(c => countryLower.includes(c))) {
+    continent = "North America";
+  } else if (["uk", "united kingdom", "london", "germany", "france", "europe", "italy", "spain", "netherlands"].some(c => countryLower.includes(c))) {
+    continent = "Europe";
+  } else if (["india", "singapore", "japan", "china", "asia"].some(c => countryLower.includes(c))) {
+    continent = "Asia";
+  } else if (["australia"].some(c => countryLower.includes(c))) {
+    continent = "Oceania";
+  } else if (["brazil", "argentina"].some(c => countryLower.includes(c))) {
+    continent = "South America";
+  }
 
-  // 5. Requirements Parser
   let skillRequired = "See job description for specific requirements.";
-  if (job.requirements_json && typeof job.requirements_json === 'object' && !Array.isArray(job.requirements_json)) {
+  if (job.candidateQualifications?.mustHaveRequirements && job.candidateQualifications.mustHaveRequirements.length > 0) {
+    skillRequired = job.candidateQualifications.mustHaveRequirements.join(", ");
+  } else if (job.requirements_json && typeof job.requirements_json === 'object' && !Array.isArray(job.requirements_json)) {
     const reqKeys = Object.keys(job.requirements_json);
     if (reqKeys.length > 0) {
       skillRequired = reqKeys.join(", ");
     }
   }
+
+  let qualifications = "Relevant degree or equivalent practical experience required.";
+  if (job.candidateQualifications?.preferredQualifications && job.candidateQualifications.preferredQualifications.length > 0) {
+    qualifications = job.candidateQualifications.preferredQualifications.join(", ");
+  }
+
+  const about = job.roleDescription?.roleSummary || job.description || "No description provided.";
 
   return {
     id: String(job.id),
@@ -120,8 +128,8 @@ function mapJobToMappedJob(job: Job): MappedJob {
     jobNo: `JOB-${job.id}`,
     category,
     skillRequired,
-    qualifications: "Relevant degree or equivalent practical experience required.",
-    about: job.description || "No description provided.",
+    qualifications,
+    about,
     postedAt: job.created_at || new Date().toISOString()
   };
 }
@@ -416,32 +424,172 @@ export default function JobDetailPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
             <div className="lg:col-span-2 space-y-12 text-foreground/90 text-lg leading-relaxed">
+              {/* About the Role */}
               <section>
                 <h2 className="text-2xl font-bold text-foreground mb-6">About the Role</h2>
-                <p className="text-muted-foreground whitespace-pre-wrap">{mappedJob.about}</p>
+                {job?.roleDescription?.roleSummary ? (
+                  <p className="text-muted-foreground mb-4 font-semibold">{job.roleDescription.roleSummary}</p>
+                ) : null}
               </section>
 
+              {/* Key Responsibilities */}
+              {job?.roleDescription?.keyResponsibilities && job.roleDescription.keyResponsibilities.length > 0 && (
+                <section>
+                  <h2 className="text-2xl font-bold text-foreground mb-6">Key Responsibilities</h2>
+                  <ul className="space-y-4">
+                    {job.roleDescription.keyResponsibilities.map((resp, idx) => (
+                      <li key={idx} className="flex items-start gap-3 text-sm md:text-base">
+                        <Check className="mt-1 size-4 text-primary shrink-0" />
+                        <span className="text-muted-foreground">{resp}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {/* Requirements */}
               <section>
                 <h2 className="text-2xl font-bold text-foreground mb-6">Requirements</h2>
-                <ul className="space-y-4">
-                  <li className="flex items-start gap-3">
-                    <div className="mt-2 size-1.5 rounded-full bg-primary" />
-                    <span><strong className="text-foreground">Core Skills:</strong> <span className="text-muted-foreground">{mappedJob.skillRequired}</span></span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="mt-2 size-1.5 rounded-full bg-primary" />
-                    <span><strong className="text-foreground">Experience:</strong> <span className="text-muted-foreground">{mappedJob.experience} of industry matching experience.</span></span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="mt-2 size-1.5 rounded-full bg-primary" />
-                    <span><strong className="text-foreground">Education:</strong> <span className="text-muted-foreground">{mappedJob.qualifications}</span></span>
-                  </li>
-                </ul>
+                <div className="space-y-6">
+                  {job?.candidateQualifications?.mustHaveRequirements && job.candidateQualifications.mustHaveRequirements.length > 0 ? (
+                    <div>
+                      <h3 className="text-base font-bold text-foreground mb-3 uppercase tracking-wider text-primary/80">Must-Have Qualifications</h3>
+                      <ul className="space-y-3">
+                        {job.candidateQualifications.mustHaveRequirements.map((req, idx) => (
+                          <li key={idx} className="flex items-start gap-3 text-sm md:text-base">
+                            <div className="mt-2.5 size-1.5 rounded-full bg-primary shrink-0" />
+                            <span className="text-muted-foreground">{req}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <ul className="space-y-4">
+                      <li className="flex items-start gap-3">
+                        <div className="mt-2 size-1.5 rounded-full bg-primary" />
+                        <span><strong className="text-foreground">Core Skills:</strong> <span className="text-muted-foreground">{mappedJob.skillRequired}</span></span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="mt-2 size-1.5 rounded-full bg-primary" />
+                        <span><strong className="text-foreground">Experience:</strong> <span className="text-muted-foreground">{mappedJob.experience} of industry matching experience.</span></span>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className="mt-2 size-1.5 rounded-full bg-primary" />
+                        <span><strong className="text-foreground">Education:</strong> <span className="text-muted-foreground">{mappedJob.qualifications}</span></span>
+                      </li>
+                    </ul>
+                  )}
+
+                  {job?.candidateQualifications?.preferredQualifications && job.candidateQualifications.preferredQualifications.length > 0 && (
+                    <div className="pt-4">
+                      <h3 className="text-base font-bold text-foreground mb-3 uppercase tracking-wider text-muted-foreground">Preferred Qualifications</h3>
+                      <ul className="space-y-3">
+                        {job.candidateQualifications.preferredQualifications.map((pref, idx) => (
+                          <li key={idx} className="flex items-start gap-3 text-sm md:text-base">
+                            <div className="mt-2.5 size-1.5 rounded-full bg-muted-foreground shrink-0" />
+                            <span className="text-muted-foreground">{pref}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </section>
+
+              {/* Compensation & Benefits */}
+              {((job?.compensationAndBenefits?.salaryMin || job?.compensationAndBenefits?.salaryMax) || 
+                (job?.compensationAndBenefits?.benefitsSummary && job.compensationAndBenefits.benefitsSummary.length > 0)) && (
+                <section>
+                  <h2 className="text-2xl font-bold text-foreground mb-6">Compensation & Benefits</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {((job.compensationAndBenefits?.salaryMin || job.compensationAndBenefits?.salaryMax)) && (
+                      <div className="p-6 rounded-2xl bg-card border border-border shadow-sm flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-primary/10 text-primary">
+                          <DollarSign className="size-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm text-muted-foreground font-semibold">Salary Range</h4>
+                          <p className="text-lg font-bold text-foreground mt-1">
+                            {job.compensationAndBenefits.salaryMin ? `${job.compensationAndBenefits.currency || "USD"} ${job.compensationAndBenefits.salaryMin.toLocaleString()}` : ""}
+                            {job.compensationAndBenefits.salaryMin && job.compensationAndBenefits.salaryMax ? " - " : ""}
+                            {job.compensationAndBenefits.salaryMax ? `${job.compensationAndBenefits.currency || "USD"} ${job.compensationAndBenefits.salaryMax.toLocaleString()}` : ""}
+                          </p>
+                          {job.compensationAndBenefits.compensationType && (
+                            <span className="inline-block mt-2 text-xs font-bold text-muted-foreground bg-muted px-2 py-1 rounded">
+                              {job.compensationAndBenefits.compensationType}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {job.compensationAndBenefits?.benefitsSummary && job.compensationAndBenefits.benefitsSummary.length > 0 && (
+                    <div>
+                      <h3 className="text-base font-bold text-foreground mb-4 uppercase tracking-wider text-primary/80">Perks & Benefits</h3>
+                      <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {job.compensationAndBenefits.benefitsSummary.map((benefit, idx) => (
+                          <li key={idx} className="flex items-center gap-3 text-sm md:text-base border border-border/50 p-4 rounded-xl bg-muted/10">
+                            <Sparkles className="size-4 text-amber-500 shrink-0" />
+                            <span className="text-muted-foreground font-medium">{benefit}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </section>
+              )}
             </div>
 
-            {/* Right Column: Sticky Sidebar with Actions and Similar Roles */}
+            {/* Right Column: Sticky Sidebar with Actions and Job Overview */}
             <div className="lg:col-span-1 lg:sticky lg:top-32 self-start space-y-8">
+              {/* Job Overview Card */}
+              <div className="p-6 rounded-2xl border border-border bg-card shadow-sm space-y-4">
+                <h3 className="text-lg font-bold text-foreground mb-4">Job Overview</h3>
+                <div className="space-y-3">
+                  {job?.department && (
+                    <div className="flex justify-between items-center text-sm py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Department</span>
+                      <span className="font-semibold text-foreground">{job.department}</span>
+                    </div>
+                  )}
+                  {job?.jobCategory && !job?.department && (
+                    <div className="flex justify-between items-center text-sm py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Category</span>
+                      <span className="font-semibold text-foreground">{job.jobCategory}</span>
+                    </div>
+                  )}
+                  {job?.employmentType && (
+                    <div className="flex justify-between items-center text-sm py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Job Type</span>
+                      <span className="font-semibold text-foreground">{job.employmentType}</span>
+                    </div>
+                  )}
+                  {job?.workplaceModel && (
+                    <div className="flex justify-between items-center text-sm py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Workplace</span>
+                      <span className="font-semibold text-foreground">{job.workplaceModel}</span>
+                    </div>
+                  )}
+                  {job?.experienceLevel && (
+                    <div className="flex justify-between items-center text-sm py-2 border-b border-border/50">
+                      <span className="text-muted-foreground">Experience</span>
+                      <span className="font-semibold text-foreground">{job.experienceLevel}</span>
+                    </div>
+                  )}
+                  {job?.applicationLogistics?.applicationDeadline && (
+                    <div className="flex justify-between items-center text-sm py-2">
+                      <span className="text-muted-foreground">Deadline</span>
+                      <span className="font-semibold text-foreground">
+                        {new Date(job.applicationLogistics.applicationDeadline).toLocaleDateString(undefined, {
+                          year: 'numeric', month: 'long', day: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Actions */}
               <div className="space-y-4">
                 {!alreadyApplied && !appliedSuccess ? (

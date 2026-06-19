@@ -120,7 +120,7 @@ export default function SettingsPage() {
 
   // ── Permission-based Tab Visibility ──
   const allTabs = [
-    { id: "Subscription", label: "Subscription", icon: CreditCard,       permission: "billing:access" },
+    { id: "Subscription", label: "Subscription", icon: CreditCard,       permission: "billing:read" },
     { id: "Credits",      label: "Credits",      icon: CircleDollarSign, permission: "credits:read" },
     { id: "Security",     label: "Security",     icon: ShieldCheck,      permission: "tenant:access" },
     { id: "Email",        label: "Email Config", icon: Mail,             permission: "tenant:access" },
@@ -291,14 +291,16 @@ export default function SettingsPage() {
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <ShieldCheck className="size-3.5" /> Secured by Stripe
               </div>
-              <Button
-                onClick={() => (window.location.href = `${getRootOrigin()}/pricing`)}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90
-                           font-medium text-sm px-5 py-2 rounded-xl shadow-sm transition-all hover:shadow-md hover:cursor-pointer"
-              >
-                {isActive ? "Change Plan" : "Upgrade Now"}
-                <ArrowRight className="size-4" />
-              </Button>
+              {hasPermission("billing:access") && (
+                <Button
+                  onClick={() => (window.location.href = `${getRootOrigin()}/pricing`)}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90
+                             font-medium text-sm px-5 py-2 rounded-xl shadow-sm transition-all hover:shadow-md hover:cursor-pointer"
+                >
+                  {isActive ? "Change Plan" : "Upgrade Now"}
+                  <ArrowRight className="size-4" />
+                </Button>
+              )}
             </div>
           </SectionCard>
         )}
