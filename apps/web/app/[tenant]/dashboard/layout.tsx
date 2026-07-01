@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
 import { DashboardShell } from "@/components/dashboard-layout";
+import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, setUser } = useAuthStore();
   const [isFetchingProfile, setIsFetchingProfile] = useState(!user);
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -38,6 +40,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
         <Loader2 className="size-10 animate-spin text-primary mb-4" />
         <p className="text-muted-foreground font-medium">Loading workspace...</p>
+      </div>
+    );
+  }
+
+  // Paths that should NOT have the DashboardShell (Topbar/Sidebar)
+  const isInterviewRoute = pathname.includes("/interviews/");
+
+  if (isInterviewRoute) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col w-full">
+        {children}
       </div>
     );
   }

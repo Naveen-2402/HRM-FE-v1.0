@@ -43,6 +43,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     { name: "Employees", href: "/dashboard/employees", permission: "employee:manage" },
     { name: "Jobs", href: "/dashboard/jobs", permission: "job:read" },
     { name: "Candidates", href: "/dashboard/candidates", permission: "candidate:read" },
+    { name: "Interviews", href: "/dashboard/interviews", permission: "job:read" },
     { name: "Approvals", href: "/dashboard/approvals", permission: "approval:read" },
   ];
 
@@ -121,50 +122,50 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <ModeToggle />
               <NotificationDropdown />
 
-            {/* Profile Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="size-9 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground shadow-sm cursor-pointer"
-              >
-                {userName ? userInitials : <User className="size-4" />}
-              </button>
+              {/* Profile Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="size-9 flex items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground shadow-sm cursor-pointer"
+                >
+                  {userName ? userInitials : <User className="size-4" />}
+                </button>
 
-              {/* Dropdown Menu */}
-              {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 py-3 border-b border-border/50 mb-1">
-                    <p className="text-sm font-bold text-foreground truncate">
-                      {userName}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate mt-0.5">
-                      {userEmail}
-                    </p>
-                  </div>
+                {/* Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-xl border border-border bg-card shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="px-4 py-3 border-b border-border/50 mb-1">
+                      <p className="text-sm font-bold text-foreground truncate">
+                        {userName}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {userEmail}
+                      </p>
+                    </div>
 
-                  {hasPermission("candidate:read") && (
-                    <Link
-                      href="/settings"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full text-left"
+                    {hasPermission("candidate:read") && (
+                      <Link
+                        href="/settings"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors w-full text-left"
+                      >
+                        <Settings className="size-4" />
+                        Settings
+                      </Link>
+                    )}
+
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full text-left cursor-pointer"
                     >
-                      <Settings className="size-4" />
-                      Settings
-                    </Link>
-                  )}
+                      <LogOut className="size-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
 
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
-                  >
-                    <LogOut className="size-4" />
-                    Logout
-                  </button>
-                </div>
-              )}
             </div>
-
-          </div>
           </div>
         </div>
       </header>

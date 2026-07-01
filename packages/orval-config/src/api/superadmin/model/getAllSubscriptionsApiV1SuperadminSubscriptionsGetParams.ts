@@ -9,4 +9,5 @@ export type GetAllSubscriptionsApiV1SuperadminSubscriptionsGetParams = {
 page?: number;
 page_size?: number;
 status?: string;
+plan?: string;
 };

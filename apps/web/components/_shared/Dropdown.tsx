@@ -26,16 +26,17 @@ export function Dropdown({
   options = [],
   value,
   onChange,
-  placeholder = "Select...",
+  placeholder = "Select",
   label,
   disabled = false,
   className = "",
   searchable = true,
-  searchPlaceholder = "Search...",
+  searchPlaceholder = "Search",
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Find selected option
   const selectedOption = options.find((opt) => opt.value === value);
@@ -53,7 +54,11 @@ export function Dropdown({
 
   // Reset search query when dropdown opens/closes
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    } else {
       setSearchQuery("");
     }
   }, [isOpen]);
@@ -91,7 +96,7 @@ export function Dropdown({
       >
         <div className="flex items-center gap-2 truncate">
           {selectedOption?.icon && <span className="text-muted-foreground">{selectedOption.icon}</span>}
-          <span className="font-medium">
+          <span className={selectedOption ? "font-medium text-foreground" : "text-muted-foreground"}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
         </div>
@@ -113,6 +118,7 @@ export function Dropdown({
             {searchable && (
               <div className="px-2 pt-2 pb-1 border-b border-border">
                 <input
+                  ref={inputRef}
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -144,8 +150,8 @@ export function Dropdown({
                       <span className="absolute left-2.5 flex h-3.5 w-3.5 items-center justify-center">
                         {isSelected && <Check className="size-4 text-primary" />}
                       </span>
-                      <div className="flex items-center gap-2 truncate">
-                        {option.icon && <span className="text-muted-foreground size-4">{option.icon}</span>}
+                      <div className="flex items-center gap-3 truncate">
+                        {option.icon && <span className="text-muted-foreground flex items-center shrink-0 [&>svg]:size-4">{option.icon}</span>}
                         <span className="truncate">{option.label}</span>
                       </div>
                     </button>

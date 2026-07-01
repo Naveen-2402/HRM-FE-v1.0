@@ -27,7 +27,7 @@ import {
   useCandidateLoginApiV1CandidateAuthLoginPost,
   candidateGoogleLoginUrlApiV1CandidateAuthGoogleLoginUrlGet
 } from "@repo/orval-config/src/api/auth/candidate-auth/candidate-auth";
-import { getCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+import { getCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import { getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
 import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/input";
@@ -130,17 +130,18 @@ function CandidateLoginFormContent() {
           });
         } catch (err: any) {
           if (err?.response?.status === 404 || err?.response?.data?.detail === "Profile not found") {
-            // No profile -> redirect to profile setup
-            router.push(`/${tenant}/candidate/profile${redirectUrl ? `?redirect=${redirectUrl}` : ""}`);
+            // No profile -> explicitly open the CreateProfileModal via the global state
+            useAuthStore.getState().setProfileModalOpen(true);
+            router.push(`/${tenant}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`);
             return;
           }
         }
 
-        // If redirect param exists, go there. Otherwise, go to dashboard
+        // If redirect param exists, go there. Otherwise, go to the tenant home page (job board)
         if (redirectUrl) {
           window.location.href = redirectUrl;
         } else {
-          router.push(`/${tenant}/candidate/dashboard`);
+          router.push(`/${tenant}`);
         }
       } catch (err: any) {
         console.error("Candidate login error:", err);
@@ -176,62 +177,6 @@ function CandidateLoginFormContent() {
 
   const loading = loginMutation.isPending;
 
-  if (loading || googleLoading) {
-    const activeIndex = googleLoading ? 0 : Math.max(0, loginStep - 1);
-
-    const steps = [
-      { title: googleLoading ? "Google Authentication" : "Verifying Credentials", description: "Authenticating user identity", icon: Fingerprint },
-      { title: "Securing Session", description: "Establishing encrypted connection", icon: ShieldCheck },
-      { title: "Profile Synchronization", description: "Loading candidate data", icon: UserCog }
-    ];
-
-    return (
-      <div className="flex flex-col items-center justify-center py-20 w-full max-w-sm mx-auto animate-in fade-in zoom-in-95 duration-500">
-        {/* Header Icon */}
-        <div className="flex flex-col items-center justify-center space-y-4 mb-10">
-          <div className="relative">
-            <div className="absolute inset-0 bg-indigo-500/20 blur-[40px] rounded-full" />
-            <div className="size-20 bg-slate-900 border border-indigo-500/30 rounded-3xl flex items-center justify-center relative overflow-hidden shadow-[0_0_40px_rgba(79,70,229,0.2)]">
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-transparent opacity-50" />
-              <Fingerprint className="size-8 text-indigo-400 animate-pulse relative z-10" />
-            </div>
-          </div>
-          <div className="text-center space-y-1">
-            <h2 className="text-2xl font-black text-white tracking-tight">Authenticating</h2>
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-widest">Please Wait</p>
-          </div>
-        </div>
-
-        {/* Steps Container */}
-        <div className="space-y-5 text-left w-full">
-          {steps.map((step, idx) => {
-            const isActive = activeIndex === idx;
-            const isPast = activeIndex > idx;
-            const Icon = step.icon;
-
-            return (
-              <div key={idx} className={`flex items-center gap-5 transition-all duration-500 ${isActive ? 'opacity-100 scale-105 transform-gpu' : isPast ? 'opacity-70' : 'opacity-30'}`}>
-                <div className={`size-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all duration-500 ${isActive ? 'bg-indigo-500/20 border-indigo-500/50 shadow-[0_0_20px_rgba(79,70,229,0.3)]' :
-                    isPast ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                      'bg-slate-800/50 border-slate-700/50 text-slate-500'
-                  }`}>
-                  {isPast ? <CheckCircle2 className="size-6 text-emerald-400" /> :
-                    isActive ? <Loader2 className="size-6 animate-spin text-indigo-400" /> :
-                      <Icon className="size-6" />}
-                </div>
-                <div>
-                  <h4 className={`text-base font-bold transition-colors duration-500 ${isActive ? 'text-indigo-300' : isPast ? 'text-emerald-400' : 'text-slate-400'}`}>
-                    {step.title}
-                  </h4>
-                  <p className={`text-xs mt-0.5 transition-colors duration-500 ${isActive ? 'text-slate-300' : 'text-slate-500'}`}>{step.description}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -341,7 +286,7 @@ function CandidateLoginFormContent() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 group"
+              className="w-full h-12 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2 group cursor-pointer"
             >
               {loading ? (
                 <>
@@ -373,7 +318,7 @@ function CandidateLoginFormContent() {
             disabled={loading || googleLoading}
             type="button"
             variant="outline"
-            className="w-full h-12 bg-transparent hover:bg-slate-900/50 border-slate-700 text-slate-300 hover:text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-3"
+            className="w-full h-12 bg-transparent hover:bg-slate-900/50 border-slate-700 text-slate-300 hover:text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-3 cursor-pointer"
           >
             {googleLoading ? (
               <div className="size-4 border-2 border-slate-400 border-t-slate-200 rounded-full animate-spin" />

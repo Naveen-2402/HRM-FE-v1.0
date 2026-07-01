@@ -492,12 +492,14 @@ export default function ApprovalsPage() {
             ) : selectedRequest.action_type === "ACCEPT_CANDIDATE" ? (
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-                  <div className="text-xs font-bold text-primary/60 uppercase tracking-widest mb-1">
-                    Current Stage
-                  </div>
-                  <div className="text-base font-black text-primary uppercase">
-                    {selectedRequest.request_payload?.stage_name || "PENDING"}
-                  </div>
+                    <div className="text-xs font-bold text-primary/60 uppercase tracking-widest mb-1">
+                      Current Stage
+                    </div>
+                    <div className="text-base font-black text-primary uppercase">
+                      {typeof selectedRequest.request_payload?.stage_name === "object" && selectedRequest.request_payload.stage_name !== null
+                        ? selectedRequest.request_payload.stage_name.name
+                        : (selectedRequest.request_payload?.stage_name || "PENDING")}
+                    </div>
                 </div>
 
                 <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col items-center justify-center text-center">
@@ -550,7 +552,11 @@ export default function ApprovalsPage() {
               {selectedRequest.request_payload?.stage_name && (
                 <div className="flex border-b border-border/40 pb-2">
                   <span className="text-xs font-bold text-muted-foreground uppercase w-36 shrink-0 tracking-wider">Pipeline Round</span>
-                  <span className="text-sm font-semibold">{selectedRequest.request_payload.stage_name}</span>
+                  <span className="text-sm font-semibold">
+                    {typeof selectedRequest.request_payload.stage_name === "object" && selectedRequest.request_payload.stage_name !== null
+                      ? selectedRequest.request_payload.stage_name.name
+                      : selectedRequest.request_payload.stage_name}
+                  </span>
                 </div>
               )}
 

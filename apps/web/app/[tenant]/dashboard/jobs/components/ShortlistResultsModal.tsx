@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Modal } from "@/components/_shared/Modal";
-import { 
+import {
   useGetJobEvaluationsApiV1JobsJobIdEvaluationsGet,
   useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch
 } from "@repo/orval-config/src/api/job/jobs/jobs";
@@ -11,8 +11,11 @@ import {
   useGetPendingApprovalsApiV1ApprovalsPendingGet
 } from "@repo/orval-config/src/api/tenant/approvals/approvals";
 import { EvaluationDetailModal } from "./EvaluationDetailModal";
-import { RefreshCw, Check, X } from "lucide-react";
+import { InterviewSchedulingModal } from "./InterviewSchedulingModal";
+import { RefreshCw, Check, X, Calendar } from "lucide-react";
 import { toast } from "react-toastify";
+
+import { useListInterviewsApiV1InterviewsGet } from "@repo/orval-config/src/api/interview/interviews/interviews";
 
 
 
@@ -29,6 +32,8 @@ interface ShortlistResultsModalProps {
 export default function ShortlistResultsModal({ isOpen, onClose, job }: ShortlistResultsModalProps) {
   const [selectedEvaluation, setSelectedEvaluation] = React.useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
+  const [schedulingEvaluation, setSchedulingEvaluation] = React.useState<any>(null);
+  const [isSchedulingOpen, setIsSchedulingOpen] = React.useState(false);
   const [activeTabIndex, setActiveTabIndex] = React.useState(0);
 
   const { mutate: updateEvaluation } = useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch();
@@ -54,15 +59,23 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
     } as any
   });
 
+  const { data: interviewsResponse, refetch: refetchInterviews } = useListInterviewsApiV1InterviewsGet({
+    job_id: job?.id
+  }, {
+    query: {
+      enabled: isOpen && !!job?.id,
+    } as any,
+  });
+
   const allRequests = [
     ...(Array.isArray(myRequestsResponse) ? myRequestsResponse : []),
     ...(Array.isArray(pendingApprovalsResponse) ? pendingApprovalsResponse : [])
   ];
 
   const getCandidateApprovalRequest = (evalId: any) => {
-    return allRequests.find((req: any) => 
-      req.entity_type === "JobEvaluation" && 
-      String(req.entity_id) === String(evalId) && 
+    return allRequests.find((req: any) =>
+      req.entity_type === "JobEvaluation" &&
+      String(req.entity_id) === String(evalId) &&
       req.status === "pending"
     );
   };
@@ -71,11 +84,33 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
     refetch();
     refetchMyRequests();
     refetchPendingApprovals();
+    refetchInterviews();
   };
 
+  const allInterviews = Array.isArray(interviewsResponse) ? interviewsResponse : [];
   const allEvaluations = Array.isArray(evaluationsResponse) ? evaluationsResponse : [];
-  const evaluations = allEvaluations.filter((ev: any) => (ev.current_stage_index || 0) === activeTabIndex);
-  const stages = job?.pipeline_stages || ["Evaluations"];
+
+  const filteredEvaluations = allEvaluations.filter((ev: any) => (ev.current_stage_index || 0) === activeTabIndex);
+  const evaluations = filteredEvaluations.map((ev: any) => {
+    const interview = allInterviews.find((iv: any) => iv.candidate_id === ev.candidate_id && iv.round_number === ev.current_stage_index);
+    return {
+      ...ev,
+      interview_status: interview?.status,
+      display_status: interview?.status ? interview.status.replace(/_/g, " ").toLowerCase() : (ev.status || "completed").toLowerCase()
+    };
+  }).sort((a: any, b: any) => {
+    if (a.display_status === "failed" && b.display_status !== "failed") return -1;
+    if (b.display_status === "failed" && a.display_status !== "failed") return 1;
+    return 0;
+  });
+  const stages = React.useMemo(() => {
+    if (!job?.pipeline_stages) {
+      return ["Evaluations"];
+    }
+    return job.pipeline_stages.map((stage: any) =>
+      typeof stage === "string" ? stage : (stage?.name || "Unknown Round")
+    );
+  }, [job]);
 
   const getInitials = (name: string) => {
     if (!name) return "??";
@@ -105,7 +140,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
 
   const handleQuickAction = (ev: any, action: "forward" | "reject") => {
     if (!job) return;
-    
+
     const isForward = action === "forward";
     const nextStageIndex = isForward ? (ev.current_stage_index || 0) + 1 : ev.current_stage_index;
     const isLastStage = nextStageIndex >= (job.pipeline_stages?.length || 1);
@@ -142,7 +177,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
       <div className="flex flex-col gap-4">
         <div className="-mt-3 flex justify-between items-center">
           <p className="text-sm text-primary font-medium">{job?.title}</p>
-          <button 
+          <button
             onClick={handleRefetch}
             disabled={isFetching}
             className="text-primary hover:text-primary/80 disabled:opacity-50 transition-all p-1 hover:bg-primary/5 rounded-full"
@@ -158,11 +193,10 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
               <button
                 key={idx}
                 onClick={() => setActiveTabIndex(idx)}
-                className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap hover:cursor-pointer ${
-                  activeTabIndex === idx 
-                    ? "border-primary text-primary" 
+                className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap hover:cursor-pointer ${activeTabIndex === idx
+                    ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground"
-                }`}
+                  }`}
               >
                 {stage}
                 <span className="ml-2 text-[10px] bg-muted/30 px-1.5 py-0.5 rounded-full font-bold">
@@ -182,19 +216,20 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                   <th className="px-4 py-3 text-center">SCORE</th>
                   <th className="px-4 py-3 text-center">VERDICT</th>
                   <th className="px-4 py-3 text-center">STATUS</th>
+                  <th className="px-4 py-3 text-center">SCHEDULE</th>
                   <th className="px-4 py-3 text-right">ACTION</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground italic">
+                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground italic">
                       Fetching results...
                     </td>
                   </tr>
                 ) : evaluations.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground italic">
+                    <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground italic">
                       No results found for this job.
                     </td>
                   </tr>
@@ -234,7 +269,23 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                         )}
                       </td>
                       <td className="px-4 py-4 text-center text-[11px] text-primary/70 font-medium lowercase">
-                        {ev.status || "completed"}
+                        {ev.display_status}
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center">
+                          {activeTabIndex > 0 && ev.selection_status !== "Rejected" && ev.selection_status !== "Not_Selected" && (
+                            <button
+                              onClick={() => {
+                                setSchedulingEvaluation(ev);
+                                setIsSchedulingOpen(true);
+                              }}
+                              className="w-7 h-7 flex items-center justify-center rounded bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer"
+                              title="Interview Scheduling"
+                            >
+                              <Calendar className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -247,16 +298,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                               <Check className="w-4 h-4" />
                             </button>
                           )}
-                          {activeTabIndex > 0 && ev.selection_status !== "Rejected" && ev.selection_status !== "Not_Selected" && (
-                            <button
-                              onClick={() => handleQuickAction(ev, "reject")}
-                              className="w-7 h-7 flex items-center justify-center rounded bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors"
-                              title="Reject candidate"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
-                          <button 
+                          <button
                             onClick={() => handleDetailsClick(ev)}
                             className="text-primary text-xs font-bold hover:underline hover:cursor-pointer ml-2"
                           >
@@ -273,11 +315,18 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
           </div>
         </div>
       </div>
-      
-      <EvaluationDetailModal 
+
+      <EvaluationDetailModal
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         evaluation={selectedEvaluation}
+        onSuccess={handleRefetch}
+      />
+
+      <InterviewSchedulingModal
+        isOpen={isSchedulingOpen}
+        onClose={() => setIsSchedulingOpen(false)}
+        evaluation={schedulingEvaluation}
         onSuccess={handleRefetch}
       />
     </Modal>

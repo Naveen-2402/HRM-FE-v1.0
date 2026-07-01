@@ -7,7 +7,7 @@ import { jwtDecode } from "jwt-decode";
 import { setAuthTokens } from "@repo/utils";
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { candidateGoogleCallbackApiV1CandidateAuthGoogleCallbackPost } from "@repo/orval-config/src/api/auth/candidate-auth/candidate-auth";
-import { getCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+import { getCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import { getTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
 import { toast } from "react-toastify";
 
@@ -17,6 +17,7 @@ function CandidateCallbackContent() {
   const searchParams = useSearchParams();
   const tenant = params.tenant as string;
   const login = useAuthStore((state) => state.login);
+  const setProfileModalOpen = useAuthStore((state) => state.setProfileModalOpen);
 
   const [error, setError] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Securing your candidate session...");
@@ -82,15 +83,16 @@ function CandidateCallbackContent() {
           });
           
           toast.success("Welcome back!");
-          router.push(`/${tenant}/candidate/dashboard`);
+          router.push(`/${tenant}`);
         } catch (profileErr: any) {
           if (profileErr?.response?.status === 404) {
             // Setup profile wizard is required for new candidates
             toast.info("Successfully authenticated! Let's setup your candidate profile.");
-            router.push(`/${tenant}/candidate/profile`);
+            setProfileModalOpen(true);
+            router.push(`/${tenant}`);
           } else {
-            // Profile failed to load for another reason, fallback to dashboard
-            router.push(`/${tenant}/candidate/dashboard`);
+            // Profile failed to load for another reason, fallback to tenant page
+            router.push(`/${tenant}`);
           }
         }
 

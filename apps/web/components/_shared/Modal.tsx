@@ -20,7 +20,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm">
       <div className="bg-card border border-border shadow-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl flex flex-col">
         <div className="flex justify-between items-center p-4 border-b border-border sticky top-0 bg-card z-10">
           <h2 className="text-lg font-bold text-foreground">{title}</h2>

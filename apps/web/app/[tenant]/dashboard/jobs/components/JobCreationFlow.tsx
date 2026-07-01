@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useCreateJobApiV1JobsPost } from "@repo/orval-config/src/api/job/jobs/jobs";
 import { useExecuteWorkflowApiV1OrchestrateExecutePost, useConfirmWorkflowApiV1OrchestrateConfirmPost } from "@repo/orval-config/src/api/orchestrator/orchestrate/orchestrate";
-import { useUploadSasApiV1CandidatesUploadSasPost } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+import { useUploadSasApiV1CandidatesUploadSasPost } from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import { useListEmployeesApiV1EmployeesGet } from "@repo/orval-config/src/api/employees/employees";
 import { useGetEnumValuesApiV1SuperadminEnumsGet } from "@repo/orval-config/src/api/superadmin/superadmin";
 import { toast } from "react-toastify";
@@ -14,6 +14,7 @@ import { DateTimePicker } from "@/components/_shared/DateTimePicker";
 import { Country, State, City } from "country-state-city";
 import { z } from "zod";
 import { validateWith } from "@repo/ui/lib/validators";
+import HiringRoundsPipelineBuilder from "./HiringRoundsPipelineBuilder";
 
 // Zod validation schemas for job fields
 const titleSchema = z.string().min(3, "Job title must be at least 3 characters.");
@@ -54,7 +55,7 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
   const { mutateAsync: executeWorkflow, isPending: isExecuting } = useExecuteWorkflowApiV1OrchestrateExecutePost();
   const { mutateAsync: confirmWorkflow, isPending: isConfirming } = useConfirmWorkflowApiV1OrchestrateConfirmPost();
   const { mutateAsync: getSasUrl } = useUploadSasApiV1CandidatesUploadSasPost();
-  
+
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const isBusy = isExecuting || isConfirming || isUploadingFiles;
 
@@ -65,20 +66,17 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
   // Fetch enums from superadmin service
   const { data: enums } = useGetEnumValuesApiV1SuperadminEnumsGet();
 
-  const hiringManagerOptions = [
-    { label: "Select Hiring Manager", value: "" },
-    ...employeesList.map((emp: any) => ({
-      label: `${emp.first_name} ${emp.last_name} (${emp.email})`,
-      value: String(emp.id),
-    })),
-  ];
-
-  const recruiterOptions = [
-    { label: "Select Recruiter", value: "" },
-    ...employeesList.map((emp: any) => ({
-      label: `${emp.first_name} ${emp.last_name} (${emp.email})`,
-      value: String(emp.id),
-    })),
+  const recruitingManagerOptions = [
+    { label: "Select Recruiting Manager", value: "" },
+    ...employeesList
+      .filter((emp: any) => {
+        const roleStr = (emp.tenant_role || emp.role || "").toLowerCase();
+        return roleStr.includes("recruiting-manager") || roleStr.includes("recruiting manager") || roleStr.includes("recruiting_manager");
+      })
+      .map((emp: any) => ({
+        label: `${emp.first_name} ${emp.last_name} (${emp.email})`,
+        value: String(emp.id),
+      })),
   ];
 
   // Map enum lists to DropdownOptions
@@ -118,8 +116,8 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
   ];
 
   const form = useForm({
-    defaultValues: { 
-      title: "", 
+    defaultValues: {
+      title: "",
       jobCategory: "",
       experienceLevel: "",
       employmentType: "",
@@ -138,10 +136,11 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
       compensationType: "",
       benefitsSummary: "",
       applicationDeadline: "",
-      pipeline_stages: "Applied, AI screening, HR Screening, Interview, Offer", 
+      pipeline_stages: [
+        { name: "AI Screening" }
+      ],
       max_outside_applicants: "",
-      hiring_manager_id: "",
-      recruiter_id: ""
+      hiring_manager_id: ""
     },
     onSubmit: async ({ value }) => {
       // Validate Step 3 fields before submitting using Zod
@@ -176,7 +175,6 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
 
       const role_bindings: Record<string, string> = {};
       if (value.hiring_manager_id) role_bindings["hiring-manager"] = value.hiring_manager_id;
-      if (value.recruiter_id) role_bindings["recruiter"] = value.recruiter_id;
 
       // Construct API payload matching JSON Schema 100%
       const payload = {
@@ -217,14 +215,13 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
             : [],
         },
         applicationLogistics: value.applicationDeadline
-          ? {
-              applicationDeadline: new Date(value.applicationDeadline).toISOString(),
-            }
+          ? { applicationDeadline: new Date(value.applicationDeadline).toISOString() }
           : undefined,
-        pipeline_stages: value.pipeline_stages 
-          ? value.pipeline_stages.split(",").map(s => s.trim()).filter(Boolean) 
-          : ["Applied", "AI screening", "HR Screening", "Interview", "Offer"],
+        pipeline_stages: value.pipeline_stages && value.pipeline_stages.length > 0
+          ? value.pipeline_stages
+          : [{ name: "AI Screening" }],
         max_outside_applicants: value.max_outside_applicants ? parseInt(value.max_outside_applicants, 10) : undefined,
+
         role_bindings: Object.keys(role_bindings).length > 0 ? role_bindings : undefined,
       };
 
@@ -303,16 +300,16 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
 
     try {
       const candidateIds: number[] = [];
-      
+
       for (const file of selectedFiles) {
         const res: any = await getSasUrl({ data: { filename: file.name } });
-        
+
         await fetch(res.upload_url, {
           method: "PUT",
           body: file,
           headers: { "x-ms-blob-type": "BlockBlob" },
         });
-        
+
         candidateIds.push(res.candidate_id);
       }
 
@@ -355,7 +352,7 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
           <h2 className="text-foreground text-xl font-bold mb-1">Job Created</h2>
           <p className="text-muted-foreground text-xs uppercase font-semibold">Job ID: {createdJobId}</p>
         </div>
-        
+
         <div className="bg-muted/30 border border-border border-dashed p-6 text-center rounded-xl mb-6">
           <input
             type="file"
@@ -365,8 +362,8 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
             id="resume-upload-job"
             onChange={(e) => setSelectedFiles(Array.from(e.target.files || []))}
           />
-          <label 
-            htmlFor="resume-upload-job" 
+          <label
+            htmlFor="resume-upload-job"
             className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-5 py-2.5 rounded-md font-medium hover:cursor-pointer inline-block transition-colors mb-4"
           >
             Browse Resumes
@@ -414,25 +411,22 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
         ].map((item, idx) => (
           <React.Fragment key={item.step}>
             <div className="flex flex-col items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs border-2 transition-all ${
-                currentStep === item.step
-                  ? "bg-primary border-primary text-primary-foreground"
-                  : currentStep > item.step
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs border-2 transition-all ${currentStep === item.step
+                ? "bg-primary border-primary text-primary-foreground"
+                : currentStep > item.step
                   ? "bg-success/20 border-success text-success"
                   : "bg-muted border-border text-muted-foreground"
-              }`}>
+                }`}>
                 {currentStep > item.step ? "✓" : item.step}
               </div>
-              <span className={`text-[10px] font-bold tracking-wider uppercase ${
-                currentStep === item.step ? "text-primary" : "text-muted-foreground"
-              }`}>
+              <span className={`text-[10px] font-bold tracking-wider uppercase ${currentStep === item.step ? "text-primary" : "text-muted-foreground"
+                }`}>
                 {item.label}
               </span>
             </div>
             {idx < 2 && (
-              <div className={`flex-1 h-[2px] mx-4 -mt-6 transition-all ${
-                currentStep > item.step ? "bg-success" : "bg-border"
-              }`} />
+              <div className={`flex-1 h-[2px] mx-4 -mt-6 transition-all ${currentStep > item.step ? "bg-success" : "bg-border"
+                }`} />
             )}
           </React.Fragment>
         ))}
@@ -759,7 +753,7 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="bg-muted/10 p-4 rounded-xl border border-border/50">
               <span className="text-foreground text-sm font-bold block mb-3">Workplace Location</span>
-              
+
               <div className="grid grid-cols-3 gap-3">
                 <form.Field
                   name="country"
@@ -830,8 +824,8 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
                             !currentCountryIso
                               ? "Select country first"
                               : states.length === 0
-                              ? "N/A (No states)"
-                              : "Select State"
+                                ? "N/A (No states)"
+                                : "Select State"
                           }
                           searchable={true}
                           searchPlaceholder="Search state..."
@@ -897,8 +891,8 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
                               !currentCountryIso
                                 ? "Select country first"
                                 : states.length > 0 && !currentStateIso
-                                ? "Select state first"
-                                : "Select City"
+                                  ? "Select state first"
+                                  : "Select City"
                             }
                             searchable={true}
                             searchPlaceholder="Search city..."
@@ -965,32 +959,17 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <form.Field
                 name="hiring_manager_id"
                 children={(field) => (
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-foreground text-sm font-semibold" htmlFor={field.name}>Hiring Manager</label>
+                    <label className="text-foreground text-sm font-semibold" htmlFor={field.name}>Recruiting Manager</label>
                     <Dropdown
-                      options={hiringManagerOptions}
+                      options={recruitingManagerOptions}
                       value={field.state.value || ""}
                       onChange={(val) => field.handleChange(val)}
-                      placeholder="Select Hiring Manager"
-                    />
-                  </div>
-                )}
-              />
-
-              <form.Field
-                name="recruiter_id"
-                children={(field) => (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-foreground text-sm font-semibold" htmlFor={field.name}>Recruiter</label>
-                    <Dropdown
-                      options={recruiterOptions}
-                      value={field.state.value || ""}
-                      onChange={(val) => field.handleChange(val)}
-                      placeholder="Select Recruiter"
+                      placeholder="Select Recruiting Manager"
                     />
                   </div>
                 )}
@@ -1000,18 +979,17 @@ export default function JobCreationFlow({ onComplete }: JobCreationFlowProps) {
             <form.Field
               name="pipeline_stages"
               children={(field) => (
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-foreground text-sm font-semibold" htmlFor={field.name}>Hiring Rounds (comma-separated)</label>
-                  <input
-                    id={field.name}
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="bg-background text-foreground border border-input rounded-md px-3 py-2 focus:ring-2 focus:ring-ring outline-none"
-                    placeholder="e.g. Applied, Resume Screen, Tech Interview, Offer"
+                <div className="mt-4">
+                  <HiringRoundsPipelineBuilder
+                    stages={field.state.value || []}
+                    onChange={(updated) => field.handleChange(updated)}
+                    employeesList={employeesList}
+                    isCreationMode={true}
                   />
                 </div>
               )}
             />
+
           </div>
         )}
 

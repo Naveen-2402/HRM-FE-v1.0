@@ -1,11 +1,23 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Modal } from "@/components/_shared/Modal";
 import { Dropdown } from "@/components/_shared/Dropdown";
-import { useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch } from "@repo/orval-config/src/api/job/jobs/jobs";
-import { useState } from "react";
+import { DateTimePicker } from "@/components/_shared/DateTimePicker";
 import { toast } from "react-toastify";
+import { format } from "date-fns";
+import { useParams, useRouter } from "next/navigation";
+import {
+  Copy,
+  Check,
+  AlertTriangle,
+  ExternalLink,
+} from "lucide-react";
+
+// Job & Employee Hooks
+import {
+  useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch,
+} from "@repo/orval-config/src/api/job/jobs/jobs";
 
 interface EvaluationDetailModalProps {
   isOpen: boolean;
@@ -15,6 +27,10 @@ interface EvaluationDetailModalProps {
 }
 
 export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }: EvaluationDetailModalProps) {
+  const params = useParams();
+  const router = useRouter();
+  const tenantSubdomain = params.tenant as string;
+
   const { mutate: updateEvaluation, isPending: isUpdating } = useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch();
   const [selectedDecision, setSelectedDecision] = useState<string>("");
   const [overrideReason, setOverrideReason] = useState<string>("");
@@ -46,7 +62,6 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
 
   const handleOverride = () => {
     if (!selectedDecision) return;
-    
     const isSelect = selectedDecision === "Select";
     
     updateEvaluation(
@@ -63,12 +78,12 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
       {
         onSuccess: (data: any) => {
           if (data && data.status === "pending") {
-            toast.info(data.detail || "Override request submitted. Awaiting approval from recruiting-manager.");
+            toast.info(data.detail || "Override request submitted. Awaiting approval.");
           } else {
             toast.success("Candidate evaluation overridden successfully.");
           }
           onSuccess?.();
-          onClose(); // Optional: close or refetch parent
+          onClose();
         },
         onError: () => {
           toast.error("Failed to update candidate evaluation.");
@@ -77,13 +92,14 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
     );
   };
 
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={evaluation.candidate_name || "Candidate Details"}
     >
-      <div className="flex flex-col gap-6 mt-2">
+      <div className="flex flex-col gap-6 mt-2 max-h-[80vh] overflow-y-auto pr-1 custom-scrollbar">
         <div className="mb-2">
           <p className="text-sm text-primary/70">{evaluation.candidate_email}</p>
         </div>
@@ -111,7 +127,6 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
 
         {/* AI Reasoning Section */}
         <div className="flex flex-col gap-8">
-          {/* Reasoning Highlights */}
           {(evaluation.detailed_scoring_json?.phase2?.the_golden_trait || evaluation.detailed_scoring_json?.phase2?.the_fatal_flaw) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {evaluation.detailed_scoring_json.phase2.the_golden_trait && (
@@ -154,68 +169,9 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
               )}
             </div>
           </div>
-
-          {/* Interview Focus */}
-          {evaluation.detailed_scoring_json?.phase2?.interview_focus && (
-            <div>
-              <h3 className="text-[10px] font-black text-primary/50 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                Interview Focus
-                <div className="h-px bg-primary/10 flex-1"></div>
-              </h3>
-              <div className="bg-primary/5 border border-primary/20 border-dashed rounded-lg p-4">
-                <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
-                  {evaluation.detailed_scoring_json.phase2.interview_focus}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Verdict Why */}
-          {(evaluation.detailed_scoring_json?.phase2?.verdict_why || evaluation.detailed_scoring_json?.phase2?.fit_why) && (
-            <div>
-              <h3 className="text-[10px] font-black text-primary/50 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                Verdict Rationale
-                <div className="h-px bg-primary/10 flex-1"></div>
-              </h3>
-              <div className="flex flex-col gap-3">
-                {evaluation.detailed_scoring_json.phase2.verdict_why && (
-                  <div className="text-sm text-foreground/70 bg-muted/20 p-3 rounded border border-border/30">
-                    <span className="font-bold text-primary/60 mr-2">VERDICT:</span>
-                    {evaluation.detailed_scoring_json.phase2.verdict_why}
-                  </div>
-                )}
-                {evaluation.detailed_scoring_json.phase2.fit_why && (
-                  <div className="text-sm text-foreground/70 bg-muted/20 p-3 rounded border border-border/30">
-                    <span className="font-bold text-primary/60 mr-2">FIT:</span>
-                    {evaluation.detailed_scoring_json.phase2.fit_why}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Additional perspective notes if available */}
-        {evaluation.reasoning_json?.perspective_notes && (
-          <div>
-            <h3 className="text-[10px] font-black text-primary/50 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-              Perspective Notes
-              <div className="h-px bg-primary/10 flex-1"></div>
-            </h3>
-            <div className="flex flex-col gap-3">
-              {Object.entries(evaluation.reasoning_json.perspective_notes).map(([key, value]: [string, any]) => (
-                <div key={key} className="bg-primary/5 border border-primary/10 rounded-lg p-4">
-                   <h4 className="text-[10px] font-bold text-primary/60 uppercase tracking-wider mb-2">
-                    {formatKey(key)}
-                  </h4>
-                  <p className="text-sm text-foreground/80 leading-relaxed">
-                    {value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
 
         {/* HR Override Section - Only for Stage 0 (AI Screening) */}
         {(evaluation.current_stage_index || 0) === 0 && (

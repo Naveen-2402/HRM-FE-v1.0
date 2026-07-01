@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Modal } from "@/components/_shared/Modal";
 import {
   useGetCandidatesApiV1CandidatesGet,
-} from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+} from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import {
   useExecuteWorkflowApiV1OrchestrateExecutePost,
   useConfirmWorkflowApiV1OrchestrateConfirmPost,

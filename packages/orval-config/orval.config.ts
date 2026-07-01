@@ -148,4 +148,84 @@ export default defineConfig({
       },
     },
   },
+
+  interview: {
+    input: `${process.env.NEXT_PUBLIC_INTERVIEW_SERVICE_URL}/openapi.json`,
+    output: {
+      mode: 'tags-split',
+      target: 'src/api/interview/endpoints.ts',
+      schemas: 'src/api/interview/model',
+      client: 'react-query',
+      override: {
+        mutator: {
+          path: 'src/axios-setup.ts',
+          name: 'customInstance',
+        },
+      },
+    },
+  },
+
+  feedback: {
+    input: `${process.env.NEXT_PUBLIC_FEEDBACK_SERVICE_URL}/openapi.json`,
+    output: {
+      mode: 'tags-split',
+      target: 'src/api/feedback/endpoints.ts',
+      schemas: 'src/api/interview/model',
+      client: 'react-query',
+      override: {
+        mutator: {
+          path: 'src/axios-setup.ts',
+          name: 'customInstance',
+        },
+      },
+    },
+  },
+
+  scheduling: {
+    input: `${process.env.NEXT_PUBLIC_SCHEDULING_SERVICE_URL}/openapi.json`,
+    output: {
+      mode: 'tags-split',
+      target: 'src/api/scheduling/endpoints.ts',
+      schemas: 'src/api/scheduling/model',
+      client: 'react-query',
+      override: {
+        mutator: {
+          path: 'src/axios-setup.ts',
+          name: 'customInstance',
+        },
+      },
+    },
+  },
+
+  media: {
+    input: `${process.env.NEXT_PUBLIC_MEDIA_SERVICE_URL}/openapi.json`,
+    output: {
+      mode: 'tags-split',
+      target: 'src/api/media/endpoints.ts',
+      schemas: 'src/api/media/model',
+      client: 'react-query',
+      override: {
+        mutator: {
+          path: 'src/axios-setup.ts',
+          name: 'customInstance',
+        },
+      },
+    },
+  },
+
+  candidate: {
+    input: `${process.env.NEXT_PUBLIC_CANDIDATE_SERVICE_URL}/openapi.json`,
+    output: {
+      mode: 'tags-split',
+      target: 'src/api/candidate/endpoints.ts',
+      schemas: 'src/api/candidate/model',
+      client: 'react-query',
+      override: {
+        mutator: {
+          path: 'src/axios-setup.ts',
+          name: 'customInstance',
+        },
+      },
+    },
+  },
 });

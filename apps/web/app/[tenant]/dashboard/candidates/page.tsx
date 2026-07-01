@@ -13,7 +13,7 @@ import {
   useGetCandidatesApiV1CandidatesGet,
   useDeleteCandidateApiV1CandidatesCandidateIdDelete,
   getDownloadSasApiV1CandidatesCandidateIdDownloadSasGet
-} from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+} from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import {
   useGetCreditBalanceApiV1BillingCreditsGet
 } from "@repo/orval-config/src/api/billing/billing/billing";
@@ -348,7 +348,7 @@ export default function CandidatesPage() {
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => { setSelectedCandidate(c); setIsJsonModalOpen(true); }}
-                      className="border border-primary/20 text-primary px-3 py-1 rounded text-[11px] font-medium bg-primary/5 hover:bg-primary/10 transition-colors"
+                      className="border border-primary/20 text-primary px-3 py-1 rounded text-[11px] font-medium bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer"
                     >
                       View JSON
                     </button>

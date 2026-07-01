@@ -29,7 +29,7 @@ import {
   useListCandidateApplicationsApiV1JobsPublicMyApplicationsGet,
   useListJobsPublicApiV1JobsPublicListGet
 } from "@repo/orval-config/src/api/job/jobs/jobs";
-import { useGetCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+import { useGetCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import { Button } from "@repo/ui/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "react-toastify";

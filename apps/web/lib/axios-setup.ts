@@ -60,13 +60,22 @@ export function setupAxiosInterceptors() {
   const responseErrorInterceptor = async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-    // If 401, not retried yet, and not the refresh endpoint itself
+    // Avoid intercepting auth/login/register endpoints for token refresh
+    const isAuthRequest = originalRequest && originalRequest.url && (
+      originalRequest.url.includes('/login') ||
+      originalRequest.url.includes('/register') ||
+      originalRequest.url.includes('/refresh') ||
+      originalRequest.url.includes('/forgot-password') ||
+      originalRequest.url.includes('/check-domain') ||
+      originalRequest.url.includes('/callback')
+    );
+
+    // If 401, not retried yet, and not an auth/refresh endpoint
     if (
       error.response?.status === 401 &&
       originalRequest &&
       !originalRequest._retry &&
-      originalRequest.url !== '/auth/refresh' &&
-      originalRequest.url !== '/api/v1/auth/refresh'
+      !isAuthRequest
     ) {
 
       // 1. Queue concurrent requests if a refresh is already happening

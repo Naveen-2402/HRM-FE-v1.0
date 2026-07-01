@@ -9,4 +9,5 @@ export type ListEmployeesApiV1EmployeesGetParams = {
 skip?: number;
 limit?: number;
 status?: string;
+role?: string;
 };

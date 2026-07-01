@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Modal } from "@/components/_shared/Modal";
 import { Dropdown, DropdownOption } from "@/components/_shared/Dropdown";
-import { useUploadSasApiV1CandidatesUploadSasPost } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+import { useUploadSasApiV1CandidatesUploadSasPost } from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import {
   useExecuteWorkflowApiV1OrchestrateExecutePost,
   useConfirmWorkflowApiV1OrchestrateConfirmPost

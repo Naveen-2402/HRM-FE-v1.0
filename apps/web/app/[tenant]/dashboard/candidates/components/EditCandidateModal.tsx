@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/_shared/Modal";
-import { useUpdateCandidateApiV1CandidatesCandidateIdPatch } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+import { useUpdateCandidateApiV1CandidatesCandidateIdPatch } from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import { toast } from "react-toastify";
 
 interface EditCandidateModalProps {

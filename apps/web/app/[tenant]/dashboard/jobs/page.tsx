@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { useGetJobsApiV1JobsGet, useDeleteJobApiV1JobsJobIdDelete } from "@repo/orval-config/src/api/job/jobs/jobs";
 import { Modal } from "@/components/_shared/Modal";
 import { ConfirmModal } from "@/components/_shared/ConfirmModal";
@@ -16,6 +17,10 @@ import ShortlistJobModal from "./components/ShortlistJobModal";
 import EditPipelineModal from "./components/EditPipelineModal";
 
 export default function JobsPage() {
+  const router = useRouter();
+  const params = useParams();
+  const tenant = params.tenant as string;
+
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [resultsJob, setResultsJob] = useState<{ id: number; title: string; pipeline_stages?: string[] } | null>(null);
@@ -129,28 +134,33 @@ export default function JobsPage() {
           ) : jobs.map((job: any, index: number) => {
             const pendingUpdate = pendingUpdates[job.id];
             return (
-              <SectionCard key={job.id || `job-idx-${index}`} className="p-8 flex flex-col group">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-bold text-foreground tracking-tight text-tight leading-tight flex items-center gap-2">
-                    {job.title}
-                    {!job.is_active && !pendingUpdate && (
-                      <span className="text-[10px] uppercase font-bold bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full border border-border/50">
-                        Inactive
-                      </span>
-                    )}
-                    {pendingUpdate && (
-                      <span className="text-[10px] uppercase font-bold bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full border border-amber-500/20 animate-pulse">
-                        Pending Approval ({pendingUpdate.approver_role})
-                      </span>
-                    )}
-                  </h3>
-                  <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
-                    <Handshake className="size-4" />
+              <SectionCard key={job.id || `job-idx-${index}`} className="p-8 flex flex-col group hover:border-primary/45 transition-all duration-300 hover:shadow-premium">
+                <div 
+                  onClick={() => router.push(`/dashboard/jobs/${job.id}`)}
+                  className="cursor-pointer flex-grow"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold text-foreground tracking-tight text-tight leading-tight flex items-center gap-2 group-hover:text-primary transition-colors">
+                      {job.title}
+                      {!job.is_active && !pendingUpdate && (
+                        <span className="text-[10px] uppercase font-bold bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-full border border-border/50">
+                          Inactive
+                        </span>
+                      )}
+                      {pendingUpdate && (
+                        <span className="text-[10px] uppercase font-bold bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full border border-amber-500/20 animate-pulse">
+                          Pending Approval ({pendingUpdate.approver_role})
+                        </span>
+                      )}
+                    </h3>
+                    <div className="size-8 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10 group-hover:bg-primary/10 transition-colors">
+                      <Handshake className="size-4" />
+                    </div>
                   </div>
+                  <p className="text-[13.5px] text-muted-foreground/80 leading-relaxed mb-6 line-clamp-3">
+                    {job.description || "No description available for this role."}
+                  </p>
                 </div>
-                <p className="text-[13.5px] text-muted-foreground/80 leading-relaxed mb-6 line-clamp-3">
-                  {job.description || "No description available for this role."}
-                </p>
                 
                 <div className="mt-auto flex flex-wrap items-center gap-3 pt-6 border-t border-border/50">
                   <button 

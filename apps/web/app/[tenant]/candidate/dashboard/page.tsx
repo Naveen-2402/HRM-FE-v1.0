@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, Suspense } from "react";
+import React, { useEffect, Suspense, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { format } from "date-fns";
 import { motion } from "framer-motion";
 import {
   User,
@@ -20,17 +21,22 @@ import {
   AlertCircle,
   XCircle,
   ArrowRight,
-  Loader2
+  Loader2,
+  Video,
+  CalendarClock
 } from "lucide-react";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
 import {
   useGetCandidateMeApiV1CandidatesMeGet,
   getDownloadSasApiV1CandidatesCandidateIdDownloadSasGet
-} from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+} from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import { useListCandidateApplicationsApiV1JobsPublicMyApplicationsGet } from "@repo/orval-config/src/api/job/jobs/jobs";
+import { useListInterviewsApiV1InterviewsGet } from "@repo/orval-config/src/api/interview/interviews/interviews";
 import { Button } from "@repo/ui/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "react-toastify";
+import { SlotBookingModal } from "../components/SlotBookingModal";
+import { customInstance } from "@repo/orval-config/src/axios-setup";
 
 interface CandidateProfile {
   id: number;
@@ -68,7 +74,7 @@ function CandidateDashboardContent() {
   const router = useRouter();
   const tenant = params.tenant as string;
 
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   // Redirect to login if unauthenticated
   useEffect(() => {
@@ -77,6 +83,19 @@ function CandidateDashboardContent() {
       router.push(`/${tenant}/candidate/login`);
     }
   }, [isAuthenticated, user, tenant, router]);
+
+  // Timer state to update join button disabled status dynamically
+  const [now, setNow] = React.useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const isJoinDisabled = (scheduledStart: string | undefined | null) => {
+    if (!scheduledStart) return true;
+    const startTime = new Date(scheduledStart).getTime();
+    return now < startTime - 5 * 60 * 1000;
+  };
 
   // Orval Query: Tenant details by subdomain
   const tenantQuery = useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet(
@@ -136,13 +155,6 @@ function CandidateDashboardContent() {
     }
   };
 
-  // Handle missing profile redirect
-  useEffect(() => {
-    if (profileQuery.isError && (profileQuery.error as any)?.response?.status === 404) {
-      toast.info("Please fill out your candidate profile first");
-      router.push(`/${tenant}/candidate/profile`);
-    }
-  }, [profileQuery.isError, profileQuery.error, tenant, router]);
 
   // Orval Query: Candidate Job applications list
   const appsQuery = useListCandidateApplicationsApiV1JobsPublicMyApplicationsGet({
@@ -157,7 +169,76 @@ function CandidateDashboardContent() {
   } as any);
 
   const applications = (appsQuery.data as Application[]) || [];
-  const loading = tenantQuery.isLoading || profileQuery.isLoading || appsQuery.isLoading;
+
+  // Modal control states
+  const [isBookingOpen, setIsBookingOpen] = React.useState(false);
+  const [activeMagicLinkToken, setActiveMagicLinkToken] = React.useState<string | null>(null);
+  const [confirmingId, setConfirmingId] = React.useState<number | null>(null);
+
+  const handleConfirmInterview = async (interviewId: number) => {
+    try {
+      setConfirmingId(interviewId);
+      await customInstance({
+        url: `/api/v1/interviews/${interviewId}/confirm`,
+        method: "POST",
+        headers: {
+          "X-Tenant-Id": tenantDetails?.id || "",
+        }
+      } as any);
+      toast.success("Interview timing confirmed!");
+      refetchInterviews();
+    } catch (err) {
+      console.error("Failed to confirm interview timing:", err);
+      toast.error("Failed to confirm interview timing");
+    } finally {
+      setConfirmingId(null);
+    }
+  };
+
+  // Orval Query: Candidate interviews list
+  const { data: interviewsResponse, isLoading: isLoadingInterviews, refetch: refetchInterviews } = useListInterviewsApiV1InterviewsGet(
+    {},
+    {
+      query: {
+        enabled: !!tenantDetails?.id && isAuthenticated,
+      },
+      request: {
+        headers: {
+          "X-Tenant-Id": tenantDetails?.id || "",
+        },
+      },
+    } as any
+  );
+
+  const interviewsList = useMemo(() => {
+    return Array.isArray(interviewsResponse) ? (interviewsResponse as any[]) : [];
+  }, [interviewsResponse]);
+
+  // Build a job_id -> job_title lookup from the already-fetched applications list
+  const jobTitleMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    applications.forEach((app) => {
+      if (app.job_id && app.job_title) map[app.job_id] = app.job_title;
+    });
+    return map;
+  }, [applications]);
+
+  const bookedInterviews = useMemo(() => {
+    return interviewsList.filter(iv => 
+      (iv.status === "BOOKED" && iv.candidate_confirmed) || 
+      iv.status === "ACTIVE" || 
+      iv.status === "RESCHEDULED"
+    );
+  }, [interviewsList]);
+
+  const pendingInterviews = useMemo(() => {
+    return interviewsList.filter(iv => 
+      ((iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW") && iv.magic_link_token) ||
+      (iv.status === "BOOKED" && !iv.candidate_confirmed)
+    );
+  }, [interviewsList]);
+
+  const loading = tenantQuery.isLoading || profileQuery.isLoading || appsQuery.isLoading || isLoadingInterviews;
 
   // Status helpers
   const getStatusConfig = (status: string) => {
@@ -208,6 +289,147 @@ function CandidateDashboardContent() {
         {/* Applications Container (Aligned to 'A' in AgentsFactory) */}
         <div className="w-full space-y-8 md:pl-9">
 
+          {/* Action Required: Slot Booking & Confirmations */}
+          {pendingInterviews.length > 0 && (
+            <div className="space-y-4 mb-8">
+              <h2 className="text-xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+                <CalendarClock className="size-5 text-warning" />
+                Action Required: Interview Schedules
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pendingInterviews.map((iv) => {
+                  const isAwaitingBooking = iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW";
+                  return (
+                    <div key={iv.id} className="bg-card border-2 border-warning/30 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-warning/5 rounded-full blur-xl pointer-events-none" />
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] font-bold text-warning uppercase tracking-wider bg-warning/10 px-2.5 py-1 rounded-full">
+                            Round {iv.round_number} {
+                              iv.status === "INTERVIEWER_NO_SHOW"
+                                ? "(Rebook Required)"
+                                : isAwaitingBooking 
+                                  ? "(Awaiting Booking)" 
+                                  : "(Awaiting Confirmation)"
+                            }
+                          </span>
+                          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Clock className="size-3.5" />
+                            {iv.duration_minutes}m duration
+                          </span>
+                        </div>
+                        <h3 className="text-base font-bold text-foreground mb-1">{iv.title}</h3>
+                        {jobTitleMap[iv.job_id] && (
+                          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-1">
+                            <Briefcase className="size-3.5 shrink-0" />
+                            {jobTitleMap[iv.job_id]}
+                          </p>
+                        )}
+
+                        {!isAwaitingBooking && iv.scheduled_start && (
+                          <div className="bg-warning/5 border border-warning/20 rounded-xl p-3 my-3">
+                            <p className="text-xs font-bold text-warning uppercase tracking-wider mb-1">Proposed Timing:</p>
+                            <p className="text-sm font-semibold text-foreground">
+                              {format(new Date(iv.scheduled_start), "PPP p")}
+                            </p>
+                          </div>
+                        )}
+
+                        <p className="text-xs text-muted-foreground mb-4">
+                          {iv.status === "INTERVIEWER_NO_SHOW"
+                            ? "We apologize that the interviewer did not join the scheduled meeting. Please rebook your slot timings below."
+                            : isAwaitingBooking 
+                              ? "Please select an available date and time slot to confirm your interview attendance."
+                              : "An interview schedule has been dispatched. Please accept this timing."}
+                        </p>
+                      </div>
+
+                      {isAwaitingBooking ? (
+                        <Button
+                          onClick={() => {
+                            setActiveMagicLinkToken(iv.magic_link_token);
+                            setIsBookingOpen(true);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 font-bold cursor-pointer bg-warning hover:bg-warning/90 text-warning-foreground shadow-sm"
+                        >
+                          <Calendar className="size-4" />
+                          {iv.status === "INTERVIEWER_NO_SHOW" ? "Rebook Interview" : "Select Date & Time"}
+                        </Button>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button
+                            disabled={confirmingId === iv.id}
+                            onClick={() => handleConfirmInterview(iv.id)}
+                            className="w-full flex items-center justify-center gap-2 font-bold cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm text-xs"
+                          >
+                            {confirmingId === iv.id ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <CheckCircle className="size-4" />
+                            )}
+                            Accept & Confirm
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming Interviews Section */}
+          {bookedInterviews.length > 0 && (
+            <div className="space-y-4 mb-8">
+              <h2 className="text-xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+                <Video className="size-5 text-primary" />
+                Upcoming Interviews
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {bookedInterviews.map((iv) => {
+                  return (
+                    <div key={iv.id} className="bg-card border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/10 text-primary">
+                            Round {iv.round_number}
+                          </span>
+                          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                            <Clock className="size-3.5" />
+                            {iv.duration_minutes}m duration
+                          </span>
+                        </div>
+                        <h3 className="text-base font-bold text-foreground mb-1">{iv.title}</h3>
+                        {jobTitleMap[iv.job_id] && (
+                          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-1">
+                            <Briefcase className="size-3.5 shrink-0" />
+                            {jobTitleMap[iv.job_id]}
+                          </p>
+                        )}
+                        {iv.scheduled_start && (
+                          <p className="text-sm font-semibold text-muted-foreground mb-4">
+                            {format(new Date(iv.scheduled_start), "PPP p")}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <Button
+                          onClick={() => router.push(`/${tenant}/candidate/interviews/${iv.id}`)}
+                          disabled={isJoinDisabled(iv.scheduled_start)}
+                          title={isJoinDisabled(iv.scheduled_start) ? "Room opens 5 minutes before scheduled time" : "Join Interview Room"}
+                          className="w-full flex items-center justify-center gap-2 font-bold disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <Video className="size-4" />
+                          Join Interview Room
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -227,7 +449,7 @@ function CandidateDashboardContent() {
                 <Briefcase className="size-7 text-muted-foreground/50" />
               </div>
               <h4 className="font-bold text-foreground text-sm">No applications yet</h4>
-              <p className="text-muted-foreground text-xs mt-1.5 max-w-sm mx-auto leading-relaxed">
+              <p className="text-muted-foreground text-xs mt-1.5 max-w-sm mx-auto leading-relaxed mb-6">
                 You haven't submitted any job applications to {tenantDetails ? tenantDetails.name : "this company"} yet. Browse available positions to get started.
               </p>
               <Button
@@ -238,14 +460,22 @@ function CandidateDashboardContent() {
               </Button>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-6">
               {applications.map((app, index) => {
-                const statusConfig = getStatusConfig(app.selection_status);
-                const StatusIcon = statusConfig.icon;
-                const stages = app.pipeline_stages || ["Resume Screen", "Technical", "Manager Review", "Offer"];
-                const totalStages = stages.length;
-                const completedStages = app.current_stage_index + (app.stage_status === "CLEARED" ? 1 : 0);
-                const progressPercent = Math.round((completedStages / totalStages) * 100);
+                const statusInfo = getStatusConfig(app.selection_status);
+                const IconComponent = statusInfo.icon;
+                const rawStages = app.pipeline_stages || ["Applied", "Screening", "Interview", "Offer"];
+                const stages = rawStages.map((stage: any) =>
+                  typeof stage === "string" ? stage : (stage?.name || "Unknown Round")
+                );
+                
+                // Estimate progress based on current index
+                const progressPercent = Math.round(((app.current_stage_index + (app.stage_status === "CLEARED" ? 1 : 0)) / stages.length) * 100);
+
+                const completedCount = app.current_stage_index + (app.stage_status === "CLEARED" ? 1 : 0);
+                const fillPercent = stages.length > 1 ? Math.min((completedCount / (stages.length - 1)) * 100, 100) : 0;
+                const stepWidthPercent = 100 / stages.length;
+                const lineOffsetPercent = stepWidthPercent / 2;
 
                 return (
                   <motion.div
@@ -253,72 +483,75 @@ function CandidateDashboardContent() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="group rounded-2xl border border-border bg-card hover:bg-card/80 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md"
+                    className="bg-card border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
                   >
-                    {/* Card Header */}
-                    <div className="p-4 sm:p-5">
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-1.5">
-                            <span className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                              JOB-{app.job_id}
-                            </span>
-                            <span className="text-muted-foreground/30">•</span>
-                            <span className="text-[10px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1">
-                              <Calendar className="size-3.5" />
-                              Applied {new Date(app.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                            </span>
-                            {app.source && (
-                              <>
-                                <span className="text-muted-foreground/30">•</span>
-                                <span className="text-[10px] sm:text-xs font-medium text-muted-foreground capitalize">
-                                  via {app.source}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                          <h3 className="text-lg font-bold text-foreground line-clamp-1">
-                            {app.job_title}
-                          </h3>
-                        </div>
-
-                        {/* Status Badge */}
-                        <div className={`inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-full border shrink-0 ${statusConfig.className}`}>
-                          <StatusIcon className="size-3.5" />
-                          {statusConfig.label}
-                        </div>
+                    {/* Left: Job & Status */}
+                    <div className="space-y-3.5 flex-1">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border ${statusInfo.className}`}>
+                          <IconComponent className="size-3.5" />
+                          {statusInfo.label}
+                        </span>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Calendar className="size-3.5" />
+                          Applied {format(new Date(app.created_at), "MMM d, yyyy")}
+                        </span>
                       </div>
 
-                      {/* Pipeline Progress */}
-                      <div className="mt-5 space-y-3">
-                        {/* Progress bar */}
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
-                            <motion.div
-                              className="h-full bg-primary rounded-full"
-                              initial={{ width: 0 }}
-                              animate={{ width: `${progressPercent}%` }}
-                              transition={{ duration: 0.8, ease: "easeOut" }}
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-muted-foreground tabular-nums w-8 text-right">
+                      <div>
+                        <h3 className="text-lg font-black text-foreground tracking-tight leading-tight">{app.job_title}</h3>
+                        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                          <Layers className="size-3.5" />
+                          Current Stage: <span className="font-semibold text-foreground">{stages[app.current_stage_index] || "Under Review"}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right: Pipeline Progress Tracker */}
+                    <div className="flex-1 md:max-w-md w-full">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center text-xs font-bold text-muted-foreground">
+                          <span>Application Progress</span>
+                          <span className="text-primary flex items-center gap-1 font-mono">
+                            <TrendingUp className="size-3.5" />
                             {progressPercent}%
                           </span>
                         </div>
 
                         {/* Stage Steps */}
-                        <div className="flex items-center justify-between w-full pt-1">
+                        <div className="relative flex items-center justify-between w-full pt-1">
+                          {stages.length > 1 && (
+                            <>
+                              {/* Background Line */}
+                              <div 
+                                className="absolute top-[16px] h-[2px] bg-secondary"
+                                style={{ 
+                                  left: `${lineOffsetPercent}%`, 
+                                  right: `${lineOffsetPercent}%` 
+                                }} 
+                              />
+                              {/* Filled Progress Line */}
+                              <div 
+                                className="absolute top-[16px] h-[2px] bg-emerald-500 transition-all duration-500"
+                                style={{ 
+                                  left: `${lineOffsetPercent}%`, 
+                                  width: `${(fillPercent / 100) * (100 - stepWidthPercent)}%`
+                                }} 
+                              />
+                            </>
+                          )}
+
                           {stages.map((stage, idx) => {
                             const isCleared = idx < app.current_stage_index || (idx === app.current_stage_index && app.stage_status === "CLEARED");
                             const isActive = idx === app.current_stage_index && app.stage_status !== "CLEARED";
 
                             return (
-                              <div key={stage} className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
-                                <div className={`size-6 rounded-full border-[1.5px] flex items-center justify-center transition-all ${isCleared
+                              <div key={stage} className="flex flex-col items-center gap-1.5 flex-1 min-w-0 relative z-10">
+                                <div className={`size-6 rounded-full border-[1.5px] flex items-center justify-center transition-all relative z-10 ${isCleared
                                   ? "bg-emerald-500 border-emerald-400 text-white"
                                   : isActive
-                                    ? "bg-primary/10 border-primary text-primary"
-                                    : "bg-secondary border-border text-muted-foreground/40"
+                                    ? "bg-card border-primary text-primary"
+                                    : "bg-card border-border text-muted-foreground/40"
                                   }`}>
                                   {isCleared ? (
                                     <CheckCircle className="size-3.5" />
@@ -346,6 +579,19 @@ function CandidateDashboardContent() {
         </div>
 
       </main>
+
+      {activeMagicLinkToken && (
+        <SlotBookingModal
+          isOpen={isBookingOpen}
+          onClose={() => {
+            setIsBookingOpen(false);
+            setActiveMagicLinkToken(null);
+          }}
+          magicLinkToken={activeMagicLinkToken}
+          tenantId={tenantDetails?.id || ""}
+          onSuccess={refetchInterviews}
+        />
+      )}
     </>
   );
 }

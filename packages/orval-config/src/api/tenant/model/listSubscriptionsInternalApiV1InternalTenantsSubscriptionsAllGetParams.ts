@@ -9,4 +9,5 @@ export type ListSubscriptionsInternalApiV1InternalTenantsSubscriptionsAllGetPara
 page?: number;
 page_size?: number;
 status?: string | null;
+plan?: string | null;
 };

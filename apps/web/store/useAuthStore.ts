@@ -20,11 +20,14 @@ interface AuthState {
   login: (user: UserProfile) => void;
   setUser: (user: UserProfile) => void;
   logout: () => void;
+  isProfileModalOpen: boolean;
+  setProfileModalOpen: (isOpen: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   // Initialize auth state directly from the cross-domain cookie
   isAuthenticated: !!getClientAuthToken(),
+  isProfileModalOpen: false,
   user: null,
 
   login: (user: UserProfile) =>
@@ -32,6 +35,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setUser: (user: UserProfile) =>
     set({ user }),
+
+  setProfileModalOpen: (isOpen: boolean) =>
+    set({ isProfileModalOpen: isOpen }),
 
   logout: () => {
     // Detect candidate role before clearing state

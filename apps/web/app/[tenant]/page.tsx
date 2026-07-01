@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useParams, useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import * as countryLib from "countries-list";
 import {
   Search,
   RotateCcw,
@@ -18,7 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
-import { useGetCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/resume_parsing/candidates/candidates";
+import { useGetCandidateMeApiV1CandidatesMeGet } from "@repo/orval-config/src/api/candidate/candidates/candidates";
 import { useListJobsPublicApiV1JobsPublicListGet } from "@repo/orval-config/src/api/job/jobs/jobs";
 import { useGetEnumValuesApiV1SuperadminEnumsGet } from "@repo/orval-config/src/api/superadmin/superadmin";
 import { Button } from "@repo/ui/components/ui/button";
@@ -27,6 +28,8 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "react-toastify";
 import { CandidateTopbar } from "@/app/[tenant]/components/candidate-topbar";
 import { CandidateSidebar } from "@/app/[tenant]/components/candidate-sidebar";
+import { CreateProfileModal } from "@/app/[tenant]/candidate/components/CreateProfileModal";
+import { MissingProfileBanner } from "@/app/[tenant]/candidate/components/MissingProfileBanner";
 
 // --- API Types ---
 interface Job {
@@ -78,7 +81,7 @@ export default function TenantPublicJobBoard() {
   const pathname = usePathname();
   const tenant = params.tenant as string;
 
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { isAuthenticated, user, logout, isProfileModalOpen, setProfileModalOpen } = useAuthStore();
   const isCandidate = user?.realm_access?.roles?.includes("candidate");
 
 
@@ -119,7 +122,9 @@ export default function TenantPublicJobBoard() {
     query: { enabled: !!tenantDetails?.id } as any
   });
 
-  const enumsQuery = useGetEnumValuesApiV1SuperadminEnumsGet();
+  const enumsQuery = useGetEnumValuesApiV1SuperadminEnumsGet({
+    query: { enabled: isAuthenticated } as any
+  });
   const enums = enumsQuery.data as any;
 
   const rawJobs = (jobsQuery.data as Job[]) || [];
@@ -142,17 +147,38 @@ export default function TenantPublicJobBoard() {
       }
 
       let continent = "Global";
-      const countryLower = country.toLowerCase();
-      if (["usa", "us", "canada", "united states"].some(c => countryLower.includes(c))) {
-        continent = "North America";
-      } else if (["uk", "united kingdom", "london", "germany", "france", "europe", "italy", "spain", "netherlands"].some(c => countryLower.includes(c))) {
-        continent = "Europe";
-      } else if (["india", "singapore", "japan", "china", "asia"].some(c => countryLower.includes(c))) {
-        continent = "Asia";
-      } else if (["australia"].some(c => countryLower.includes(c))) {
-        continent = "Oceania";
-      } else if (["brazil", "argentina"].some(c => countryLower.includes(c))) {
-        continent = "South America";
+      if (country && country.toLowerCase() !== "anywhere") {
+        const countryLower = country.toLowerCase().trim();
+        
+        const manualMap: Record<string, string> = {
+          "usa": "North America",
+          "us": "North America",
+          "uk": "Europe",
+          "uae": "Asia"
+        };
+        
+        if (manualMap[countryLower]) {
+          continent = manualMap[countryLower];
+        } else {
+          const { countries, continents } = countryLib;
+          const countryCode = Object.keys(countries).find(
+            (code) => (countries as any)[code].name.toLowerCase() === countryLower
+          );
+          
+          if (countryCode) {
+            const continentCode = (countries as any)[countryCode].continent;
+            continent = (continents as any)[continentCode] || "Global";
+          } else {
+            // Fallback for partial matches (e.g. "Russian Federation" vs "Russia")
+            const fallbackCode = Object.keys(countries).find(
+              (code) => (countries as any)[code].name.toLowerCase().includes(countryLower) || countryLower.includes((countries as any)[code].name.toLowerCase())
+            );
+            if (fallbackCode) {
+              const continentCode = (countries as any)[fallbackCode].continent;
+              continent = (continents as any)[continentCode] || "Global";
+            }
+          }
+        }
       }
 
       let skillRequired = "See job description for specific requirements.";
@@ -341,21 +367,22 @@ export default function TenantPublicJobBoard() {
       {/* ── Static Hover-Expandable Sidebar ── */}
       <CandidateSidebar tenant={tenant} isProfileMissing={!!isProfileMissing} />
 
-      {/* Global Missing Profile Banner (Fixed under Topbar) */}
-      {isProfileMissing && (
-        <div className="fixed top-16 left-0 w-full z-[55] bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-600 dark:text-yellow-400 text-sm font-medium px-4 py-2 flex items-center justify-center gap-2 backdrop-blur-md">
-          <AlertTriangle className="size-4" />
-          <span>
-            You haven't completed your profile.{" "}
-            <Link href={`/${tenant}/candidate/profile?edit=true`} className="underline font-bold hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors">
-              Complete here.
-            </Link>
-          </span>
-        </div>
+      {/* Global Missing Profile Banner (Fixed under Topbar) - Shown only if modal is dismissed or not triggered */}
+      {!isProfileModalOpen && (
+        <MissingProfileBanner />
       )}
 
+      {/* Profile Creation Modal */}
+      <CreateProfileModal
+        isOpen={!!isProfileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        tenantDetails={tenantDetails}
+        existingProfile={existingProfile}
+        refetchProfile={() => profileQuery.refetch()}
+      />
+
       {/* MAIN CONTENT AREA */}
-      <main className={`w-full max-w-[1600px] mx-auto px-6 lg:px-12 ${isProfileMissing ? 'pt-[152px]' : 'pt-28'} pb-20 flex-1 relative z-10 transition-all duration-300 ${isAuthenticated && isCandidate ? 'pl-24 lg:pl-28' : ''}`}>
+      <main className={`w-full max-w-[1600px] mx-auto px-6 lg:px-12 ${(isProfileMissing && !isProfileModalOpen) ? 'pt-[152px]' : 'pt-28'} pb-20 flex-1 relative z-10 transition-all duration-300 ${isAuthenticated && isCandidate ? 'pl-24 lg:pl-28' : ''} ${isProfileModalOpen ? 'blur-sm grayscale-[0.2] pointer-events-none' : ''}`}>
 
         {isError ? (
           <div className="flex flex-col items-center justify-center py-32 text-center">

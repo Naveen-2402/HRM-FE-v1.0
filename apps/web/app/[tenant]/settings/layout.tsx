@@ -142,7 +142,7 @@ export default function SettingsLayout({
 
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full text-left cursor-pointer"
                     >
                       <LogOut className="size-4" />
                       Logout
