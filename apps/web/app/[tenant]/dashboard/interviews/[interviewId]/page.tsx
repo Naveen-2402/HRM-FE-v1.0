@@ -269,6 +269,9 @@ export default function InterviewRoomPage() {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSharingScreen, setIsSharingScreen] = useState(false);
   const [isInCall, setIsInCall] = useState(true);
+  // Tracks whether LiveKit actually connected successfully.
+  // Prevents onDisconnected from firing the leave-flow on failed initial connections.
+  const hasConnectedRef = React.useRef(false);
   const [isScorecardOpen, setIsScorecardOpen] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [errorCountdown, setErrorCountdown] = useState<number | null>(null);
@@ -408,7 +411,8 @@ export default function InterviewRoomPage() {
     }
   }, [tokenError]);
 
-  // Record Join Attendance on load
+  // Attendance mutation — join/leave fired only by handleJoinCall / handleEndCall,
+  // NOT automatically on page mount to avoid duplicate join records.
   const recordAttendanceMutation = useRecordAttendanceApiV1InterviewsInterviewIdAttendancePost({
     request: {
       headers: {
@@ -416,19 +420,6 @@ export default function InterviewRoomPage() {
       },
     },
   } as any);
-  
-  React.useEffect(() => {
-    if (interviewId && currentUserId) {
-      recordAttendanceMutation.mutate({
-        interviewId,
-        data: {
-          participant_id: currentUserId,
-          participant_role: "interviewer",
-          event: "join",
-        },
-      });
-    }
-  }, [interviewId, currentUserId]);
 
   // Mutations
   const submitEvaluationMutation = useSubmitEvaluationApiV1FeedbackInterviewIdEvaluationsPost();
@@ -678,7 +669,18 @@ export default function InterviewRoomPage() {
                   token={livekitToken}
                   serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL || (typeof window !== "undefined" ? `ws://${window.location.hostname}:7880` : "ws://localhost:7880")}
                   connect={true}
-                  onDisconnected={handleEndCall}
+                  onConnected={() => {
+                    // Mark as successfully connected so onDisconnected knows it's a real disconnect.
+                    hasConnectedRef.current = true;
+                  }}
+                  onDisconnected={() => {
+                    // Only trigger the leave flow if we were genuinely connected.
+                    // Ignores failed initial connections and React StrictMode remounts.
+                    if (hasConnectedRef.current) {
+                      hasConnectedRef.current = false;
+                      handleEndCall();
+                    }
+                  }}
                   className="w-full h-full"
                 >
                   <MyCustomConference
