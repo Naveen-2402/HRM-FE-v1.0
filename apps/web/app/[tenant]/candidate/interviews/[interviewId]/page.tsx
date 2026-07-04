@@ -389,7 +389,7 @@ export default function CandidateInterviewRoomPage() {
                   video={true}
                   audio={true}
                   token={livekitToken}
-                  serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL || (typeof window !== "undefined" ? `ws://${window.location.hostname}:7880` : "ws://localhost:7880")}
+                  serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
                   connect={true}
                   onConnected={() => {
                     // Mark as successfully connected so onDisconnected knows it's a real disconnect.
