@@ -31,6 +31,7 @@ export default function EmailTab() {
   const [smtpHost, setSmtpHost] = useState("");
   const [smtpPort, setSmtpPort] = useState<number>(587);
   const [smtpUsername, setSmtpUsername] = useState("");
+  const [fromEmail, setFromEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [isEditing, setIsEditing] = useState(false);
@@ -47,6 +48,7 @@ export default function EmailTab() {
       setSmtpHost(config.smtp_host || "");
       setSmtpPort(config.smtp_port || 587);
       setSmtpUsername(config.smtp_username || "");
+      setFromEmail(config.from_email || "");
       setPassword(config.has_password ? "***REDACTED***" : "");
       setIsEditing(false);
     } else {
@@ -81,6 +83,7 @@ export default function EmailTab() {
       payload.smtp_host = smtpHost;
       payload.smtp_port = Number(smtpPort);
       payload.smtp_username = smtpUsername;
+      payload.from_email = fromEmail || null;
       if (password && password !== "***REDACTED***") {
         payload.password = password;
       }
@@ -401,6 +404,19 @@ export default function EmailTab() {
                             className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                           />
                         </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          From Email Address
+                        </Label>
+                        <Input
+                          value={fromEmail}
+                          onChange={(e) => setFromEmail(e.target.value)}
+                          disabled={isFormLocked}
+                          placeholder="e.g. noreply@textro.io"
+                          className="h-10 border-input bg-background text-foreground font-mono text-sm focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
+                        />
                       </div>
                     </>
                   )}

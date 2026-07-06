@@ -21,5 +21,6 @@ export interface EmailConfigurationSaveRequest {
   smtp_host?: EmailConfigurationSaveRequestSmtpHost;
   smtp_port?: EmailConfigurationSaveRequestSmtpPort;
   smtp_username?: EmailConfigurationSaveRequestSmtpUsername;
+  from_email?: string | null;
   password?: EmailConfigurationSaveRequestPassword;
 }

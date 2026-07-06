@@ -18,6 +18,7 @@ export interface EmailConfigurationResponse {
   smtp_host?: EmailConfigurationResponseSmtpHost;
   smtp_port?: EmailConfigurationResponseSmtpPort;
   smtp_username?: EmailConfigurationResponseSmtpUsername;
+  from_email?: string | null;
   has_refresh_token?: boolean;
   has_password?: boolean;
 }
