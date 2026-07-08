@@ -6,7 +6,7 @@ import { DateTimePicker } from "@/components/_shared/DateTimePicker";
 import { toast } from "react-toastify";
 import { format } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
-import { Clock, Video, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { Clock, Video, Plus, ShieldCheck, Trash2, RefreshCw } from "lucide-react";
 
 import { useGetJobApiV1JobsJobIdGet } from "@repo/orval-config/src/api/job/jobs/jobs";
 import { useListEmployeesApiV1EmployeesGet } from "@repo/orval-config/src/api/employee/employees/employees";
@@ -84,7 +84,7 @@ export function InterviewSchedulingModal({ isOpen, onClose, evaluation, onSucces
   const teamMembers = useMemo(() => Array.isArray(teamMembersResponse) ? (teamMembersResponse as any[]) : [], [teamMembersResponse]);
 
   // ── Fetch Candidate's Interviews ──
-  const { data: interviewsResponse, refetch: refetchInterviews } = useListInterviewsApiV1InterviewsGet({
+  const { data: interviewsResponse, isFetching: isFetchingInterviews, refetch: refetchInterviews } = useListInterviewsApiV1InterviewsGet({
     job_id: evaluation?.job_id,
     candidate_id: evaluation?.candidate_id
   }, {
@@ -97,7 +97,7 @@ export function InterviewSchedulingModal({ isOpen, onClose, evaluation, onSucces
   }, [interviewsList, evaluation]);
 
   // ── Fetch reschedule requests ──
-  const { data: rescheduleRequests, refetch: refetchRescheduleRequests } =
+  const { data: rescheduleRequests, isFetching: isFetchingRescheduleRequests, refetch: refetchRescheduleRequests } =
     useGetInterviewRescheduleRequestsApiV1SchedulingInterviewIdRescheduleRequestsGet(
       currentInterview?.id || 0,
       {
@@ -196,7 +196,21 @@ export function InterviewSchedulingModal({ isOpen, onClose, evaluation, onSucces
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Interview Scheduling">
-      <div className="flex flex-col gap-6 mt-2 max-h-[80vh] overflow-y-auto pr-1 custom-scrollbar">
+      <div className="-mt-3 flex justify-between items-center mb-4">
+        <p className="text-sm text-primary font-medium">{evaluation?.candidate_name}</p>
+        <button
+          onClick={() => {
+            refetchInterviews();
+            refetchRescheduleRequests();
+          }}
+          disabled={isFetchingInterviews || isFetchingRescheduleRequests}
+          className="text-primary hover:text-primary/80 disabled:opacity-50 transition-all p-1 hover:bg-primary/5 rounded-full"
+          title="Refresh results"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 hover:cursor-pointer ${(isFetchingInterviews || isFetchingRescheduleRequests) ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+      <div className="flex flex-col gap-6 max-h-[80vh] overflow-y-auto pr-1 custom-scrollbar">
         {currentInterview ? (
           <div className="bg-white/5 border border-border p-5 rounded-2xl space-y-5">
             <div className="flex justify-between items-start gap-4">
@@ -214,42 +228,42 @@ export function InterviewSchedulingModal({ isOpen, onClose, evaluation, onSucces
             </div>
 
             {/* Sub-State: AWAITING_BOOKING / RESCHEDULE_APPROVED / INTERVIEWER_NO_SHOW / CANDIDATE_NO_SHOW */}
-            {(currentInterview.status === "AWAITING_BOOKING" || 
-              currentInterview.status === "RESCHEDULE_APPROVED" || 
-              currentInterview.status === "INTERVIEWER_NO_SHOW" || 
+            {(currentInterview.status === "AWAITING_BOOKING" ||
+              currentInterview.status === "RESCHEDULE_APPROVED" ||
+              currentInterview.status === "INTERVIEWER_NO_SHOW" ||
               currentInterview.status === "CANDIDATE_NO_SHOW") && (
-              <div className="space-y-4 pt-4 border-t border-border/40">
-                <h5 className="text-xs font-bold text-foreground">Propose Booking Slots</h5>
-                
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <DateTimePicker value={slotTime} onChange={setSlotTime} />
-                  </div>
-                  <button onClick={handleAddSlot} className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white px-3 rounded-lg flex items-center justify-center cursor-pointer transition-colors">
-                    <Plus className="size-4" />
-                  </button>
-                </div>
+                <div className="space-y-4 pt-4 border-t border-border/40">
+                  <h5 className="text-xs font-bold text-foreground">Propose Booking Slots</h5>
 
-                {proposedSlots.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase">Offered Slots:</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {proposedSlots.map((slot, idx) => (
-                        <div key={idx} className="flex justify-between items-center bg-white/5 border border-border p-2.5 rounded-lg text-xs">
-                          <span className="font-medium text-foreground">{format(new Date(slot), "PP p")}</span>
-                          <button onClick={() => handleRemoveSlot(idx)} className="text-muted-foreground hover:text-destructive">
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        </div>
-                      ))}
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <DateTimePicker value={slotTime} onChange={setSlotTime} />
                     </div>
-                    <button onClick={handleSubmitSlots} disabled={createSlotsMutation.isPending} className="w-full h-9 bg-primary text-primary-foreground font-bold text-xs rounded-lg hover:cursor-pointer transition-all">
-                      {createSlotsMutation.isPending ? "Saving..." : "Save Offered Slots"}
+                    <button onClick={handleAddSlot} className="bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-white px-3 rounded-lg flex items-center justify-center cursor-pointer transition-colors">
+                      <Plus className="size-4" />
                     </button>
                   </div>
-                )}
-              </div>
-            )}
+
+                  {proposedSlots.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[10px] font-bold text-muted-foreground uppercase">Offered Slots:</div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {proposedSlots.map((slot, idx) => (
+                          <div key={idx} className="flex justify-between items-center bg-white/5 border border-border p-2.5 rounded-lg text-xs">
+                            <span className="font-medium text-foreground">{format(new Date(slot), "PP p")}</span>
+                            <button onClick={() => handleRemoveSlot(idx)} className="text-muted-foreground hover:text-destructive">
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <button onClick={handleSubmitSlots} disabled={createSlotsMutation.isPending} className="w-full h-9 bg-primary text-primary-foreground font-bold text-xs rounded-lg hover:cursor-pointer transition-all">
+                        {createSlotsMutation.isPending ? "Saving..." : "Save Offered Slots"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
             {/* Sub-State: RESCHEDULE_REQUESTED */}
             {currentInterview.status === "RESCHEDULE_REQUESTED" && pendingRescheduleRequest && (
@@ -283,8 +297,8 @@ export function InterviewSchedulingModal({ isOpen, onClose, evaluation, onSucces
                   <div className="font-bold text-foreground">Date & Time:</div>
                   <div className="text-primary font-medium">{currentInterview.scheduled_start && format(new Date(currentInterview.scheduled_start), "PPP p")}</div>
                 </div>
-                <button 
-                  onClick={() => { onClose(); router.push(`/dashboard/interviews/${currentInterview.id}`); }} 
+                <button
+                  onClick={() => { onClose(); router.push(`/dashboard/interviews/${currentInterview.id}`); }}
                   disabled={isJoinDisabled(currentInterview.scheduled_start)}
                   title={isJoinDisabled(currentInterview.scheduled_start) ? "Room opens 5 minutes before scheduled time" : "Enter Meeting Room"}
                   className="w-full h-10 bg-primary text-white font-bold text-xs rounded-lg hover:cursor-pointer transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
