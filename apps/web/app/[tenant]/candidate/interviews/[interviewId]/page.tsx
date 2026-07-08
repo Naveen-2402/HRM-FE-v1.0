@@ -19,7 +19,8 @@ import {
   LiveKitRoom, 
   ParticipantTile, 
   ControlBar, 
-  useTracks 
+  useTracks,
+  RoomAudioRenderer
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import "@livekit/components-styles";
@@ -411,6 +412,7 @@ export default function CandidateInterviewRoomPage() {
                   className="w-full h-full"
                 >
                   <MyCustomConference />
+                  <RoomAudioRenderer />
                 </LiveKitRoom>
               ) : (
                 <div className="flex flex-col items-center gap-2">

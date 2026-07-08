@@ -28,7 +28,8 @@ import {
   LiveKitRoom,
   ParticipantTile,
   ControlBar,
-  useTracks
+  useTracks,
+  RoomAudioRenderer
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import "@livekit/components-styles";
@@ -690,6 +691,7 @@ export default function InterviewRoomPage() {
                     interviewId={interviewId}
                     roomName={(tokenData as any)?.room_name || interviewAny?.livekit_room_name}
                   />
+                  <RoomAudioRenderer />
                 </LiveKitRoom>
               ) : (
                 <div className="flex flex-col items-center gap-2">
