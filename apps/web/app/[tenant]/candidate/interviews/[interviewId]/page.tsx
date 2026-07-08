@@ -213,6 +213,7 @@ export default function CandidateInterviewRoomPage() {
     } as any
   );
   const livekitToken = (tokenData as any)?.token;
+  console.log(livekitToken);
 
   React.useEffect(() => {
     const axiosError = tokenError as any;
