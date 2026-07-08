@@ -19,10 +19,9 @@ import {
   LiveKitRoom, 
   ParticipantTile, 
   ControlBar, 
-  useTracks,
-  RoomAudioRenderer
+  useTracks 
 } from "@livekit/components-react";
-import { Track } from "livekit-client";
+import { Track, DataPacket_Kind } from "livekit-client";
 import "@livekit/components-styles";
 
 // Interview Service hooks
@@ -36,7 +35,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@repo/ui/components/ui/button";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
 
-function MyCustomConference() {
+function MyCustomConference({ isInCall }: { isInCall?: boolean }) {
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -44,6 +43,42 @@ function MyCustomConference() {
     ],
     { onlySubscribed: false }
   );
+
+  const { localParticipant } = useLocalParticipant();
+
+  React.useEffect(() => {
+    if (!isInCall) return;
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        if (localParticipant) {
+          const payload = JSON.stringify({ type: "MALPRACTICE", reason: "Candidate exited fullscreen" });
+          const encoder = new TextEncoder();
+          localParticipant.publishData(encoder.encode(payload), { reliable: true });
+        }
+        toast.error("Warning: Exiting full screen is considered malpractice.");
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.altKey || e.metaKey || e.key === "OS") {
+        if (localParticipant) {
+          const payload = JSON.stringify({ type: "MALPRACTICE", reason: `Candidate pressed forbidden key: ${e.key}` });
+          const encoder = new TextEncoder();
+          localParticipant.publishData(encoder.encode(payload), { reliable: true });
+        }
+        toast.error("Warning: Unauthorized keystroke detected.");
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [localParticipant, isInCall]);
 
   const localTracks = tracks.filter((t) => t.participant.isLocal && t.source === Track.Source.Camera);
   const remoteTracks = tracks.filter((t) => !t.participant.isLocal);
@@ -70,10 +105,10 @@ function MyCustomConference() {
             gridTemplateRows: remoteTracks.length <= 2 ? '1fr' : '1fr 1fr',
           }}>
             {remoteTracks.map((trackRef) => (
-              <ParticipantTile 
-                key={`${trackRef.participant.identity}_${trackRef.source}`} 
-                trackRef={trackRef} 
-                className="w-full h-full rounded-xl overflow-hidden" 
+              <ParticipantTile
+                key={`${trackRef.participant.identity}_${trackRef.source}`}
+                trackRef={trackRef}
+                className="w-full h-full rounded-xl overflow-hidden"
               />
             ))}
           </div>
@@ -116,19 +151,16 @@ export default function CandidateInterviewRoomPage() {
   const tenantSubdomain = params.tenant as string;
 
   // ADD THESE TWO LINES FOR DEBUGGING:
-  console.log("DEBUG: env url =", process.env.NEXT_PUBLIC_LIVEKIT_URL);
+  console.log("DEBUG: livekit url =", process.env.NEXT_PUBLIC_LIVEKIT_URL);
+  console.log("DEBUG: api url =", process.env.NEXT_PUBLIC_API_URL);
   console.log("DEBUG: window hostname =", typeof window !== "undefined" ? window.location.hostname : "no-window");
 
   const { user } = useAuthStore();
   const currentUserId = user?.sub || "candidate";
 
   // Mock states for call interface
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isInCall, setIsInCall] = useState(true);
-  // Tracks whether LiveKit actually connected successfully.
-  // Prevents onDisconnected from firing the leave-flow on failed initial connections.
-  const hasConnectedRef = React.useRef(false);
+  const [hasJoinedSession, setHasJoinedSession] = useState(false);
+  const [isInCall, setIsInCall] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [errorCountdown, setErrorCountdown] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -229,8 +261,7 @@ export default function CandidateInterviewRoomPage() {
     }
   }, [tokenError]);
 
-  // Attendance mutation — join/leave fired only by handleJoinCall / handleEndCall,
-  // NOT automatically on page mount to avoid duplicate join records.
+  // Record Join Attendance on load
   const recordAttendanceMutation = useRecordAttendanceApiV1InterviewsInterviewIdAttendancePost({
     request: {
       headers: {
@@ -238,6 +269,20 @@ export default function CandidateInterviewRoomPage() {
       },
     },
   } as any);
+
+  React.useEffect(() => {
+    // Only record 'join' when the candidate clicks Join and `hasJoinedSession` is true
+    if (interviewId && currentUserId && tenantId && hasJoinedSession) {
+      recordAttendanceMutation.mutate({
+        interviewId,
+        data: {
+          participant_id: currentUserId,
+          participant_role: "candidate",
+          event: "join",
+        },
+      });
+    }
+  }, [interviewId, currentUserId, tenantId, hasJoinedSession]);
 
   const handleEndCall = () => {
     setIsInCall(false);
@@ -259,23 +304,18 @@ export default function CandidateInterviewRoomPage() {
     );
   };
 
-  const handleJoinCall = () => {
-    setIsInCall(true);
-    recordAttendanceMutation.mutate(
-      {
-        interviewId,
-        data: {
-          participant_id: currentUserId,
-          participant_role: "candidate",
-          event: "join",
-        },
-      },
-      {
-        onSuccess: () => {
-          toast.success("Joined meeting room.");
-        },
+  const handleJoinCall = async () => {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
       }
-    );
+    } catch (err) {
+      toast.error("Full screen mode is required to join the interview.");
+      return;
+    }
+
+    setHasJoinedSession(true);
+    setIsInCall(true);
   };
 
   if (isLoadingInterview) {
@@ -340,14 +380,14 @@ export default function CandidateInterviewRoomPage() {
 
   return (
     <div className="flex-1 w-full max-w-[1200px] mx-auto px-6 py-6 flex flex-col gap-6 h-full overflow-hidden">
-      
+
       {/* Glow elements */}
       <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none z-0" />
 
       {/* Main Row */}
       <div className="flex flex-col gap-6 h-full overflow-y-auto">
         <div className="bg-card/45 border border-border/60 rounded-3xl p-4 flex flex-col gap-4 relative z-10 shadow-premium">
-          
+
           {/* Header info */}
           <div className="flex items-center justify-between pb-3 border-b border-border/40">
             <div>
@@ -360,6 +400,14 @@ export default function CandidateInterviewRoomPage() {
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
                 Round {interviewAny.round_number}
               </span>
+              <Button
+                onClick={() => router.push(`/${tenantSubdomain}/candidate/dashboard`)}
+                variant="outline"
+                className="font-bold text-xs h-8 rounded-xl px-4 transition-all shadow-sm cursor-pointer border-border hover:bg-muted/10"
+                size="sm"
+              >
+                Back to Dashboard
+              </Button>
             </div>
           </div>
 
@@ -389,30 +437,31 @@ export default function CandidateInterviewRoomPage() {
                   </ol>
                 </div>
               </div>
+            ) : !hasJoinedSession ? (
+              <div className="text-center flex flex-col items-center justify-center p-8 max-w-md mx-auto h-full">
+                <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-6 text-primary">
+                  <Video className="size-8" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">Ready to Join?</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-8">
+                  Your interview room is ready. Joining will enable full-screen mode, which is required to prevent malpractice during the interview.
+                </p>
+                <Button onClick={handleJoinCall} className="w-full font-bold h-12 text-base">
+                  Join Secure Interview
+                </Button>
+              </div>
             ) : isInCall ? (
               livekitToken ? (
                 <LiveKitRoom
                   video={true}
                   audio={true}
                   token={livekitToken}
-                  serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+                  serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL || (typeof window !== "undefined" ? `ws://${window.location.hostname}:7880` : "ws://localhost:7880")}
                   connect={true}
-                  onConnected={() => {
-                    // Mark as successfully connected so onDisconnected knows it's a real disconnect.
-                    hasConnectedRef.current = true;
-                  }}
-                  onDisconnected={() => {
-                    // Only trigger the leave flow if we were genuinely connected.
-                    // Ignores failed initial connections and React StrictMode remounts.
-                    if (hasConnectedRef.current) {
-                      hasConnectedRef.current = false;
-                      handleEndCall();
-                    }
-                  }}
+                  onDisconnected={handleEndCall}
                   className="w-full h-full"
                 >
                   <MyCustomConference />
-                  <RoomAudioRenderer />
                 </LiveKitRoom>
               ) : (
                 <div className="flex flex-col items-center gap-2">

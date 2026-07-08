@@ -28,8 +28,7 @@ import {
   LiveKitRoom,
   ParticipantTile,
   ControlBar,
-  useTracks,
-  RoomAudioRenderer
+  useTracks
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import "@livekit/components-styles";
@@ -82,6 +81,21 @@ function MyCustomConference({
   const remoteTracks = tracks.filter((t) => !t.participant.isLocal);
   const screenShareTrack = tracks.find((t) => t.source === Track.Source.ScreenShare);
   const cameraTracks = tracks.filter((t) => t.source === Track.Source.Camera);
+
+  useDataChannel((msg) => {
+    try {
+      const decoder = new TextDecoder();
+      const payload = JSON.parse(decoder.decode(msg.payload));
+      if (payload.type === "MALPRACTICE") {
+        toast.error(`⚠️ MALPRACTICE DETECTED: ${payload.reason}`, {
+          autoClose: 10000,
+          theme: "colored",
+        });
+      }
+    } catch (e) {
+      // ignore non-json messages
+    }
+  });
 
   React.useEffect(() => {
     if (remoteTracks.length > 0) {
@@ -270,9 +284,6 @@ export default function InterviewRoomPage() {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isSharingScreen, setIsSharingScreen] = useState(false);
   const [isInCall, setIsInCall] = useState(true);
-  // Tracks whether LiveKit actually connected successfully.
-  // Prevents onDisconnected from firing the leave-flow on failed initial connections.
-  const hasConnectedRef = React.useRef(false);
   const [isScorecardOpen, setIsScorecardOpen] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [errorCountdown, setErrorCountdown] = useState<number | null>(null);
@@ -284,6 +295,17 @@ export default function InterviewRoomPage() {
   const handleCandidateJoined = React.useCallback(() => {
     setCandidateHasJoined(true);
   }, []);
+
+  // Delay absence check by 15s to allow LiveKit to connect and populate remote tracks
+  const [hasWaitedForConnection, setHasWaitedForConnection] = useState(false);
+  React.useEffect(() => {
+    if (isInCall) {
+      const timer = setTimeout(() => setHasWaitedForConnection(true), 15000);
+      return () => clearTimeout(timer);
+    } else {
+      setHasWaitedForConnection(false);
+    }
+  }, [isInCall]);
 
   React.useEffect(() => {
     if (isInCall) {
@@ -412,8 +434,7 @@ export default function InterviewRoomPage() {
     }
   }, [tokenError]);
 
-  // Attendance mutation — join/leave fired only by handleJoinCall / handleEndCall,
-  // NOT automatically on page mount to avoid duplicate join records.
+  // Record Join Attendance on load
   const recordAttendanceMutation = useRecordAttendanceApiV1InterviewsInterviewIdAttendancePost({
     request: {
       headers: {
@@ -421,6 +442,19 @@ export default function InterviewRoomPage() {
       },
     },
   } as any);
+
+  React.useEffect(() => {
+    if (interviewId && currentUserId) {
+      recordAttendanceMutation.mutate({
+        interviewId,
+        data: {
+          participant_id: currentUserId,
+          participant_role: "interviewer",
+          event: "join",
+        },
+      });
+    }
+  }, [interviewId, currentUserId]);
 
   // Mutations
   const submitEvaluationMutation = useSubmitEvaluationApiV1FeedbackInterviewIdEvaluationsPost();
@@ -436,7 +470,7 @@ export default function InterviewRoomPage() {
   React.useEffect(() => {
     const startVal = interviewAny?.scheduled_start;
     const statusVal = interviewAny?.status;
-    if (!startVal || candidateHasJoined || !isInCall) return;
+    if (!startVal || candidateHasJoined || !isInCall || !hasWaitedForConnection) return;
     if (statusVal === "CANDIDATE_NO_SHOW" || statusVal === "COMPLETED" || statusVal === "EVALUATED") return;
 
     const startTime = new Date(startVal).getTime();
@@ -445,7 +479,7 @@ export default function InterviewRoomPage() {
     const checkAbsence = () => {
       if (Date.now() >= timeoutTime) {
         toast.warning("Candidate has not joined within 15 minutes. Terminating meeting as Candidate Absent.");
-        
+
         updateInterviewMutation.mutate({
           interviewId,
           data: { status: "CANDIDATE_NO_SHOW" }
@@ -467,7 +501,7 @@ export default function InterviewRoomPage() {
 
     const interval = setInterval(checkAbsence, 5000); // Check every 5 seconds
     return () => clearInterval(interval);
-  }, [interviewAny?.scheduled_start, interviewAny?.status, candidateHasJoined, isInCall, interviewId, updateInterviewMutation, refetchInterview]);
+  }, [interviewAny?.scheduled_start, interviewAny?.status, candidateHasJoined, isInCall, hasWaitedForConnection, interviewId, updateInterviewMutation, refetchInterview]);
 
   const handleEndCall = () => {
     setIsInCall(false);
@@ -532,6 +566,16 @@ export default function InterviewRoomPage() {
           toast.success(isDraft ? "Draft saved successfully." : "Scorecard evaluation submitted.");
           refetchEvaluations();
           refetchInterview();
+          // Auto-stop recording when final evaluation is submitted (not a draft)
+          if (!isDraft && slotId && tenantId) {
+            customInstance({
+              url: "/recordings/stop",
+              method: "POST",
+              data: { slot_id: slotId, tenant_id: tenantId },
+            }).catch(() => {
+              // ignore errors, recording might have already been stopped
+            });
+          }
         },
         onError: () => {
           toast.error("Failed to submit scorecard.");
@@ -607,6 +651,14 @@ export default function InterviewRoomPage() {
                 Round {interviewAny.round_number}
               </span>
               <Button
+                onClick={() => router.push(`/${tenantSubdomain}/dashboard`)}
+                variant="outline"
+                className="font-bold text-xs h-8 rounded-xl px-4 transition-all shadow-sm cursor-pointer border-border hover:bg-muted/10"
+                size="sm"
+              >
+                Back to Dashboard
+              </Button>
+              <Button
                 onClick={() => setIsScorecardOpen(!isScorecardOpen)}
                 variant={isScorecardOpen ? "default" : "secondary"}
                 className="font-bold gap-2 text-xs h-8 rounded-xl px-4 transition-all shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
@@ -668,20 +720,9 @@ export default function InterviewRoomPage() {
                   video={true}
                   audio={true}
                   token={livekitToken}
-                  serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+                  serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL || (typeof window !== "undefined" ? `ws://${window.location.hostname}:7880` : "ws://localhost:7880")}
                   connect={true}
-                  onConnected={() => {
-                    // Mark as successfully connected so onDisconnected knows it's a real disconnect.
-                    hasConnectedRef.current = true;
-                  }}
-                  onDisconnected={() => {
-                    // Only trigger the leave flow if we were genuinely connected.
-                    // Ignores failed initial connections and React StrictMode remounts.
-                    if (hasConnectedRef.current) {
-                      hasConnectedRef.current = false;
-                      handleEndCall();
-                    }
-                  }}
+                  onDisconnected={handleEndCall}
                   className="w-full h-full"
                 >
                   <MyCustomConference
@@ -704,7 +745,7 @@ export default function InterviewRoomPage() {
                 <VideoOff className="size-12 text-destructive mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-white mb-2">Interview Terminated</h3>
                 <p className="text-xs text-muted-foreground mb-6 leading-relaxed">
-                  The candidate did not join the room within 15 minutes of the scheduled start time. 
+                  The candidate did not join the room within 15 minutes of the scheduled start time.
                   This interview has been marked as <strong>Candidate Absent</strong>.
                 </p>
                 {countdown !== null && (
@@ -916,7 +957,7 @@ export default function InterviewRoomPage() {
                   <Button
                     onClick={() => handleSubmitEvaluation(false)}
                     disabled={submitEvaluationMutation.isPending}
-                    className="flex-1 font-bold"
+                    className="flex-1 font-bold cursor-pointer"
                   >
                     Submit Scorecard
                   </Button>
@@ -924,7 +965,7 @@ export default function InterviewRoomPage() {
                     variant="outline"
                     onClick={() => handleSubmitEvaluation(true)}
                     disabled={submitEvaluationMutation.isPending}
-                    className="border-border hover:bg-muted/10 font-bold"
+                    className="border-border hover:bg-muted/10 font-bold cursor-pointer"
                   >
                     Save Draft
                   </Button>

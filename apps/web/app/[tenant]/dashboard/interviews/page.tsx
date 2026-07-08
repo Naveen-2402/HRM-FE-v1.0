@@ -10,6 +10,7 @@ import {
   Loader2,
   FileText,
   X,
+  ChevronLeft,
   ChevronRight,
   Play
 } from "lucide-react";
@@ -168,6 +169,8 @@ export default function InterviewsDashboard() {
   const tenantSubdomain = params.tenant as string;
   const [selectedInterviewForScorecard, setSelectedInterviewForScorecard] = useState<number | null>(null);
   const [selectedInterviewForPlayback, setSelectedInterviewForPlayback] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Timer state to update join button disabled status dynamically
   const [now, setNow] = useState(Date.now());
@@ -212,9 +215,31 @@ export default function InterviewsDashboard() {
     } as any
   );
 
-  const interviewsList = useMemo(() => {
-    return Array.isArray(interviewsResponse) ? (interviewsResponse as any[]) : [];
+  const sortedInterviews = useMemo(() => {
+    if (!Array.isArray(interviewsResponse)) return [];
+
+    return [...interviewsResponse].sort((a: any, b: any) => {
+      // Sort descending by date and time
+      const dateA = a.scheduled_start ? new Date(a.scheduled_start).getTime() : 0;
+      const dateB = b.scheduled_start ? new Date(b.scheduled_start).getTime() : 0;
+
+      if (dateA === 0 && dateB === 0) return b.id - a.id;
+      return dateB - dateA;
+    });
   }, [interviewsResponse]);
+
+  const totalPages = Math.ceil(sortedInterviews.length / itemsPerPage);
+
+  const paginatedInterviews = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedInterviews.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedInterviews, currentPage]);
+
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
 
   // Status mapping styles
   const getStatusBadge = (status: string) => {
@@ -259,7 +284,7 @@ export default function InterviewsDashboard() {
               <Loader2 className="size-8 animate-spin text-primary mb-3" />
               <p className="text-muted-foreground text-sm font-medium">Fetching interview schedule...</p>
             </div>
-          ) : interviewsList.length === 0 ? (
+          ) : sortedInterviews.length === 0 ? (
             <div className="text-center py-20 bg-card/25 border border-dashed border-border rounded-2xl flex flex-col items-center max-w-lg mx-auto">
               <Calendar className="size-12 text-primary/45 mb-4" />
               <h3 className="text-lg font-bold text-foreground mb-2">No Interviews Scheduled</h3>
@@ -285,7 +310,7 @@ export default function InterviewsDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/20 text-sm">
-                    {interviewsList.map((iv: any) => {
+                    {paginatedInterviews.map((iv: any) => {
                       const hasStarted = iv.scheduled_start;
                       return (
                         <tr key={iv.id} className="hover:bg-muted/15 transition-all">
@@ -336,7 +361,7 @@ export default function InterviewsDashboard() {
                                 <Button
                                   onClick={() => router.push(`/dashboard/interviews/${iv.id}`)}
                                   disabled={isJoinDisabled(iv.scheduled_start)}
-                                  className="bg-primary text-primary-foreground hover:bg-primary/95 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold disabled:cursor-not-allowed"
+                                  className="bg-primary text-primary-foreground hover:bg-primary/95 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer disabled:cursor-not-allowed"
                                   title={isJoinDisabled(iv.scheduled_start) ? "Room opens 5 minutes before scheduled time" : "Enter Meeting Room"}
                                 >
                                   <Video className="size-3.5" />
@@ -359,6 +384,38 @@ export default function InterviewsDashboard() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between p-4 border-t border-border/40 bg-muted/10">
+                  <div className="text-xs text-muted-foreground">
+                    Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, sortedInterviews.length)} of {sortedInterviews.length} entries
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      className="h-8 text-xs cursor-pointer"
+                    >
+                      <ChevronLeft className="w-3 h-3 mr-1" /> Previous
+                    </Button>
+                    <div className="text-xs font-medium text-foreground mx-2">
+                      Page {currentPage} of {totalPages}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      className="h-8 text-xs cursor-pointer"
+                    >
+                      Next <ChevronRight className="w-3 h-3 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

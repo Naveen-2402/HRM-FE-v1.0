@@ -8,11 +8,11 @@ import { toast } from "react-toastify";
 import { format } from "date-fns";
 import { useParams, useRouter } from "next/navigation";
 import {
-  Copy,
-  Check,
   AlertTriangle,
   ExternalLink,
+  Calendar,
 } from "lucide-react";
+import { InterviewSchedulingModal } from "./InterviewSchedulingModal";
 
 // Job & Employee Hooks
 import {
@@ -34,6 +34,7 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
   const { mutate: updateEvaluation, isPending: isUpdating } = useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch();
   const [selectedDecision, setSelectedDecision] = useState<string>("");
   const [overrideReason, setOverrideReason] = useState<string>("");
+  const [isSchedulingOpen, setIsSchedulingOpen] = useState(false);
 
   if (!evaluation) return null;
 
@@ -63,7 +64,7 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
   const handleOverride = () => {
     if (!selectedDecision) return;
     const isSelect = selectedDecision === "Select";
-    
+
     updateEvaluation(
       {
         jobId: evaluation.job_id,
@@ -114,7 +115,7 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
               Fit score / 100
             </div>
           </div>
-          
+
           <div className={`border rounded-xl p-6 flex flex-col items-center justify-center text-center ${getVerdictStyle(evaluation.selection_status)}`}>
             <div className="text-xl font-bold mb-1">
               {formatStatus(evaluation.selection_status)}
@@ -124,6 +125,18 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
             </div>
           </div>
         </div>
+
+        {/* Reschedule Section */}
+        {(evaluation.interview_status === "INTERVIEW_NO_SHOW" || evaluation.interview_status === "INTERVIEW-NO-SHOW") && (
+          <div className="flex justify-end mt-2">
+            <button
+              onClick={() => setIsSchedulingOpen(true)}
+              className="bg-primary text-primary-foreground px-4 h-10 rounded-md text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
+            >
+              <Calendar className="w-4 h-4" /> Reschedule Interview
+            </button>
+          </div>
+        )}
 
         {/* AI Reasoning Section */}
         <div className="flex flex-col gap-8">
@@ -149,7 +162,7 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
               AI Reasoning
               <div className="h-px bg-primary/10 flex-1"></div>
             </h3>
-            
+
             <div className="flex flex-col gap-3">
               {categories.map((key) => (
                 <div key={key} className="bg-muted/30 border border-border/50 rounded-lg p-4 transition-all hover:border-primary/20">
@@ -180,7 +193,7 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
               <h3 className="text-sm font-bold text-foreground mb-1">HR Override</h3>
               <p className="text-xs text-muted-foreground">Manually override the AI decision for this candidate to advance them to the next round.</p>
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Override Justification (Optional)</label>
               <textarea
@@ -190,7 +203,7 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
                 className="w-full px-3 py-2 bg-card/25 border border-border/50 rounded-xl text-sm focus:outline-none focus:border-primary/50 text-foreground resize-none h-16"
               />
             </div>
-            
+
             <div className="flex gap-3 items-end">
               <Dropdown
                 options={[
@@ -218,6 +231,13 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
           </div>
         )}
       </div>
+
+      <InterviewSchedulingModal
+        isOpen={isSchedulingOpen}
+        onClose={() => setIsSchedulingOpen(false)}
+        evaluation={evaluation}
+        onSuccess={onSuccess}
+      />
     </Modal>
   );
 }

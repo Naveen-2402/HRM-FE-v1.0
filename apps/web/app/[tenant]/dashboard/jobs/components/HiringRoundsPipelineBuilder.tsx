@@ -147,30 +147,30 @@ export default function HiringRoundsPipelineBuilder({
                     {/* Stage Name Dropdown or Input */}
                     <div className="flex gap-2">
                       <>
-                          <div className="w-[350px]">
-                            <Dropdown
-                              options={AVAILABLE_ROUNDS.map(r => ({
-                                label: r.name,
-                                value: r.name,
-                                icon: <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${r.colorClass}`}>{r.type}</span>
-                              }))}
-                              value={AVAILABLE_ROUNDS.some(r => r.name === stageName) ? stageName : "Custom Round"}
-                              onChange={(val) => updateStageField(idx, "name", val === "Custom Round" ? "" : val)}
-                              placeholder="Select Round"
-                              searchable={false}
-                            />
-                          </div>
-                          {!AVAILABLE_ROUNDS.some(r => r.name === stageName) && (
-                            <input
-                              type="text"
-                              value={stageName}
-                              onChange={(e) => updateStageField(idx, "name", e.target.value)}
-                              placeholder="e.g. Technical Round"
-                              autoFocus
-                              className="w-[200px] h-10 px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:ring-1 focus:ring-ring outline-none"
-                            />
-                          )}
-                        </>
+                        <div className="w-[350px]">
+                          <Dropdown
+                            options={AVAILABLE_ROUNDS.map(r => ({
+                              label: r.name,
+                              value: r.name,
+                              icon: <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${r.colorClass}`}>{r.type}</span>
+                            }))}
+                            value={AVAILABLE_ROUNDS.some(r => r.name === stageName) ? stageName : "Custom Round"}
+                            onChange={(val) => updateStageField(idx, "name", val === "Custom Round" ? "" : val)}
+                            placeholder="Select Round"
+                            searchable={false}
+                          />
+                        </div>
+                        {!AVAILABLE_ROUNDS.some(r => r.name === stageName) && (
+                          <input
+                            type="text"
+                            value={stageName}
+                            onChange={(e) => updateStageField(idx, "name", e.target.value)}
+                            placeholder="e.g. Technical Round"
+                            autoFocus
+                            className="w-[200px] h-10 px-3 py-2 text-sm border border-input rounded-md bg-background text-foreground focus:ring-1 focus:ring-ring outline-none"
+                          />
+                        )}
+                      </>
                     </div>
 
 
@@ -210,98 +210,98 @@ export default function HiringRoundsPipelineBuilder({
                   {!isCreationMode && (
                     <AnimatePresence>
                       {isExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="px-4 pb-4 pt-1 border-t border-border/50">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-4 pt-1 border-t border-border/50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
 
-                            {/* Duration */}
-                            <div className="flex flex-col gap-1.5">
-                              <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5" />
-                                Duration
-                              </label>
-                              <Dropdown
-                                options={[
-                                  { label: "15 mins", value: "15 mins" },
-                                  { label: "30 mins", value: "30 mins" },
-                                  { label: "45 mins", value: "45 mins" },
-                                  { label: "1 hour", value: "1 hour" },
-                                  { label: "90 mins", value: "90 mins" }
-                                ]}
-                                value={stageData.duration || ""}
-                                onChange={(val) => updateStageField(idx, "duration", val)}
-                                placeholder="Select duration..."
-                                searchable={false}
-                              />
-                            </div>
-
-                            {/* Time Slots */}
-                            <div className="flex flex-col gap-1.5">
-                              <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5" />
-                                Time Slots
-                              </label>
-                              <input
-                                type="text"
-                                placeholder="e.g. Mon-Wed Afternoons"
-                                value={stageData.time_slots || ""}
-                                onChange={(e) => updateStageField(idx, "time_slots", e.target.value)}
-                                className="bg-background text-sm text-foreground border border-input rounded-md px-3 py-2 w-full outline-none focus:ring-1 focus:ring-ring"
-                              />
-                            </div>
-
-                            {/* Panel Members */}
-                            {showPanelMembers && (
-                              <div className="flex flex-col gap-1.5 md:col-span-2 border border-border/50 rounded-lg p-3 bg-muted/10">
-                                <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 mb-1">
-                                  <Users2 className="w-3.5 h-3.5" />
-                                  Panel Members
+                              {/* Duration */}
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  Duration
                                 </label>
-
-                                <div className="flex flex-wrap gap-2">
-                                  {employeesList.map(emp => {
-                                    const isSelected = (stageData.panel_members || []).includes(String(emp.id));
-                                    return (
-                                      <button
-                                        key={emp.id}
-                                        type="button"
-                                        onClick={() => handlePanelMemberToggle(idx, String(emp.id))}
-                                        className={`text-xs px-2.5 py-1 rounded-full border transition-all ${isSelected
-                                          ? "bg-primary/10 border-primary/30 text-primary font-medium"
-                                          : "bg-background border-border text-muted-foreground hover:bg-muted"
-                                          }`}
-                                      >
-                                        {emp.first_name} {emp.last_name}
-                                      </button>
-                                    );
-                                  })}
-                                  {employeesList.length === 0 && (
-                                    <span className="text-xs text-muted-foreground italic">No employees available</span>
-                                  )}
-                                </div>
+                                <Dropdown
+                                  options={[
+                                    { label: "15 mins", value: "15 mins" },
+                                    { label: "30 mins", value: "30 mins" },
+                                    { label: "45 mins", value: "45 mins" },
+                                    { label: "1 hour", value: "1 hour" },
+                                    { label: "90 mins", value: "90 mins" }
+                                  ]}
+                                  value={stageData.duration || ""}
+                                  onChange={(val) => updateStageField(idx, "duration", val)}
+                                  placeholder="Select duration..."
+                                  searchable={false}
+                                />
                               </div>
-                            )}
-                          </div>
 
-                          <div className="flex justify-end mt-4">
-                            <button
-                              type="button"
-                              onClick={() => handleRemove(idx)}
-                              className="text-xs font-semibold text-destructive hover:bg-destructive/10 px-3 py-1.5 rounded-md transition-colors"
-                            >
-                              Remove Round
-                            </button>
+                              {/* Time Slots */}
+                              <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                                  <Calendar className="w-3.5 h-3.5" />
+                                  Time Slots
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g. Mon-Wed Afternoons"
+                                  value={stageData.time_slots || ""}
+                                  onChange={(e) => updateStageField(idx, "time_slots", e.target.value)}
+                                  className="bg-background text-sm text-foreground border border-input rounded-md px-3 py-2 w-full outline-none focus:ring-1 focus:ring-ring"
+                                />
+                              </div>
+
+                              {/* Panel Members */}
+                              {showPanelMembers && (
+                                <div className="flex flex-col gap-1.5 md:col-span-2 border border-border/50 rounded-lg p-3 bg-muted/10">
+                                  <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 mb-1">
+                                    <Users2 className="w-3.5 h-3.5" />
+                                    Panel Members
+                                  </label>
+
+                                  <div className="flex flex-wrap gap-2">
+                                    {employeesList.map(emp => {
+                                      const isSelected = (stageData.panel_members || []).includes(String(emp.id));
+                                      return (
+                                        <button
+                                          key={emp.id}
+                                          type="button"
+                                          onClick={() => handlePanelMemberToggle(idx, String(emp.id))}
+                                          className={`text-xs px-2.5 py-1 rounded-full border transition-all ${isSelected
+                                            ? "bg-primary/10 border-primary/30 text-primary font-medium"
+                                            : "bg-background border-border text-muted-foreground hover:bg-muted"
+                                            }`}
+                                        >
+                                          {emp.first_name} {emp.last_name}
+                                        </button>
+                                      );
+                                    })}
+                                    {employeesList.length === 0 && (
+                                      <span className="text-xs text-muted-foreground italic">No employees available</span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex justify-end mt-4">
+                              <button
+                                type="button"
+                                onClick={() => handleRemove(idx)}
+                                className="text-xs font-semibold text-destructive hover:bg-destructive/10 px-3 py-1.5 rounded-md transition-colors"
+                              >
+                                Remove Round
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   )}
                 </div>
               </motion.div>
@@ -316,7 +316,7 @@ export default function HiringRoundsPipelineBuilder({
           type="button"
           onClick={handleAdd}
           disabled={stages.length >= 20}
-          className="w-full flex items-center justify-center gap-2 bg-muted/30 hover:bg-muted/60 text-foreground border border-dashed border-border p-3 rounded-xl transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-2 bg-muted/30 hover:bg-muted/60 text-foreground border border-dashed border-border p-3 rounded-xl transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           {stages.length >= 20 ? "Maximum Rounds Reached (20)" : "Add Round"}

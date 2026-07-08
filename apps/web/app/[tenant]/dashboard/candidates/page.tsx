@@ -362,19 +362,19 @@ export default function CandidatesPage() {
                     <div className="flex gap-1 justify-center">
                       <button
                         onClick={() => handleViewFile(c.id, c.resume_blob_url)}
-                        className="bg-warning/10 text-warning border border-warning/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-warning/20"
+                        className="bg-warning/10 text-warning border border-warning/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-warning/20 cursor-pointer"
                       >
                         PDF
                       </button>
                       <button
                         onClick={() => handleViewFile(c.id, c.parsed_md_url)}
-                        className="bg-success/10 text-success border border-success/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-success/20"
+                        className="bg-success/10 text-success border border-success/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-success/20 cursor-pointer"
                       >
                         MD
                       </button>
                       <button
                         onClick={() => handleViewFile(c.id, c.dossier_md_url)}
-                        className="bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-primary/20"
+                        className="bg-primary/10 text-primary border border-primary/30 px-2 py-0.5 rounded text-[10px] font-bold hover:bg-primary/20 cursor-pointer"
                       >
                         AI
                       </button>
@@ -390,14 +390,14 @@ export default function CandidatesPage() {
                       </button> */}
                       <button
                         onClick={() => handleOpenEdit(c)}
-                        className="text-muted-foreground hover:text-primary transition-colors p-2 hover:bg-primary/10 rounded-lg"
+                        className="text-muted-foreground hover:text-primary transition-colors p-2 hover:bg-primary/10 rounded-lg cursor-pointer"
                         title="Edit Candidate"
                       >
                         <Pencil className="size-4 shrink-0" />
                       </button>
                       <button
                         onClick={() => setDeleteId(c.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors p-2 hover:bg-destructive/10 rounded-lg"
+                        className="text-muted-foreground hover:text-destructive transition-colors p-2 hover:bg-destructive/10 rounded-lg cursor-pointer"
                         title="Delete Candidate"
                       >
                         <Trash2 className="size-4 shrink-0" />

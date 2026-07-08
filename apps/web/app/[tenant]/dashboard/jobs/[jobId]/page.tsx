@@ -354,6 +354,12 @@ export default function JobDashboardDetailPage() {
       toast.error("Please select a target start date.");
       return;
     }
+
+    if (new Date(roundDate).getTime() < Date.now()) {
+      toast.error("Incorrect date or time chosen.");
+      return;
+    }
+
     if (stageCandidates.length === 0) {
       toast.error("No candidates in the queue to schedule.");
       return;
@@ -457,6 +463,8 @@ export default function JobDashboardDetailPage() {
               return;
             }
 
+            let hasInvalidSlots = false;
+
             const newSuggestions = stageCandidates.map((cand: any, idx: number) => {
               const candId = cand.candidate_id || cand.id;
 
@@ -470,11 +478,29 @@ export default function JobDashboardDetailPage() {
                   candRecs = found.recommendations || [];
                 }
               }
-
-              const slots = candRecs.map((rec: any) => ({
+              let slots = candRecs.map((rec: any) => ({
                 startTime: rec.start_time,
                 endTime: rec.end_time
               }));
+
+              // Sort ascending
+              slots.sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+              // Filter out duplicates and past times
+              const validSlots = [];
+              const seen = new Set();
+              for (const slot of slots) {
+                if (new Date(slot.startTime).getTime() > Date.now() && !seen.has(slot.startTime)) {
+                  seen.add(slot.startTime);
+                  validSlots.push(slot);
+                }
+              }
+
+              if (validSlots.length === 0 && candRecs.length > 0) {
+                hasInvalidSlots = true;
+              }
+
+              slots = validSlots;
 
               const candPayload = candidatesPayload.find((cp: any) => String(cp.id) === String(candId));
               const panel = candPayload ? candPayload.panel_members : [...assignedPanelMembers];
@@ -487,6 +513,12 @@ export default function JobDashboardDetailPage() {
                 panelMembers: panel,
               };
             });
+
+            if (hasInvalidSlots) {
+              toast.error("Incorrect date or time slot chosen. Please select a valid future date.");
+              setSuggestions([]);
+              return;
+            }
 
             const hasEmptySlots = newSuggestions.some((s: any) => s.slots.length === 0);
             if (hasEmptySlots) {
@@ -514,40 +546,93 @@ export default function JobDashboardDetailPage() {
   const updateSlotDateTime = (candidateIdx: number, slotIdx: number, datetimeStr: string) => {
     if (!datetimeStr) return;
     const start = new Date(datetimeStr);
+
+    if (start.getTime() < Date.now()) {
+      toast.error("Cannot select a time in the past.");
+      return;
+    }
+
     const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+    const newStartStr = format(start, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx");
+
+    // Check for duplicates
+    const candidate = suggestions[candidateIdx];
+    if (candidate) {
+      const isDuplicate = candidate.slots.some((s: any, sIdx: number) => sIdx !== slotIdx && s.startTime === newStartStr);
+      if (isDuplicate) {
+        toast.error("This time slot already exists for this candidate.");
+        return;
+      }
+    }
 
     setSuggestions(prev => prev.map((item, idx) => {
       if (idx !== candidateIdx) return item;
+
+      const updatedSlots = item.slots.map((s: any, sIdx: number) => sIdx === slotIdx ? {
+        startTime: newStartStr,
+        endTime: format(end, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
+      } : s);
+
+      // Sort chronological
+      updatedSlots.sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
       return {
         ...item,
-        slots: item.slots.map((s: any, sIdx: number) => sIdx === slotIdx ? {
-          startTime: format(start, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
-          endTime: format(end, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
-        } : s)
+        slots: updatedSlots
       };
     }));
   };
 
   // Add slot option to a candidate's suggestion
   const addSlotOption = (candidateIdx: number) => {
+    const candidate = suggestions[candidateIdx];
+    if (!candidate) return;
+
+    // Sort to easily find the latest slot
+    const sortedSlots = [...candidate.slots].sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    const lastSlot = sortedSlots[sortedSlots.length - 1];
+
+    let start: Date;
+    if (lastSlot) {
+      // Set to 15 mins after the end of the latest slot
+      start = new Date(new Date(lastSlot.endTime).getTime() + 15 * 60 * 1000);
+    } else {
+      start = new Date(roundDate || Date.now());
+      start = new Date(start.getTime() + 60 * 60 * 1000);
+    }
+
+    // Ensure not in the past
+    if (start.getTime() < Date.now()) {
+      start = new Date(Date.now() + 15 * 60 * 1000); // at least 15 min from now
+    }
+
+    let end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+    let newStartStr = format(start, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx");
+
+    // Check duplicate
+    let isDuplicate = candidate.slots.some((s: any) => s.startTime === newStartStr);
+    if (isDuplicate) {
+      start = new Date(start.getTime() + (durationMinutes + 15) * 60 * 1000);
+      end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+      newStartStr = format(start, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx");
+    }
+
     setSuggestions(prev => prev.map((item, idx) => {
       if (idx !== candidateIdx) return item;
 
-      const lastSlot = item.slots[item.slots.length - 1];
-      const baseStart = lastSlot ? new Date(lastSlot.startTime) : new Date(roundDate || Date.now());
-      // Default to 1 hour after the last slot
-      const start = new Date(baseStart.getTime() + 60 * 60 * 1000);
-      const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+      const updatedSlots = [
+        ...item.slots,
+        {
+          startTime: newStartStr,
+          endTime: format(end, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
+        }
+      ];
+
+      updatedSlots.sort((a: any, b: any) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
 
       return {
         ...item,
-        slots: [
-          ...item.slots,
-          {
-            startTime: format(start, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
-            endTime: format(end, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx")
-          }
-        ]
+        slots: updatedSlots
       };
     }));
   };
@@ -788,8 +873,8 @@ export default function JobDashboardDetailPage() {
             <button
               onClick={() => setActiveTab("details")}
               className={`px-4 rounded-lg text-xs font-bold transition-all cursor-pointer ${activeTab === "details"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
                 }`}
             >
               Job Details
@@ -797,8 +882,8 @@ export default function JobDashboardDetailPage() {
             <button
               onClick={() => setActiveTab("rounds")}
               className={`px-4 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${activeTab === "rounds"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
                 }`}
             >
               Rounds & Scheduling
@@ -1022,14 +1107,14 @@ export default function JobDashboardDetailPage() {
                             setSuggestions([]);
                           }}
                           className={`w-full text-left p-4 rounded-xl border flex items-center justify-between transition-all cursor-pointer group ${isSelected
-                              ? "bg-primary/5 border-primary text-foreground shadow-sm"
-                              : "bg-card/45 border-border/50 text-muted-foreground hover:bg-white/[0.02] hover:border-border"
+                            ? "bg-primary/5 border-primary text-foreground shadow-sm"
+                            : "bg-card/45 border-border/50 text-muted-foreground hover:bg-white/[0.02] hover:border-border"
                             }`}
                         >
                           <div className="flex items-center gap-3">
                             <div className={`size-7 rounded-lg flex items-center justify-center font-bold text-xs ${isSelected
-                                ? "bg-primary/20 text-primary border border-primary/20"
-                                : "bg-muted text-muted-foreground"
+                              ? "bg-primary/20 text-primary border border-primary/20"
+                              : "bg-muted text-muted-foreground"
                               }`}>
                               {idx + 1}
                             </div>
@@ -1049,8 +1134,8 @@ export default function JobDashboardDetailPage() {
 
                           <div className="flex items-center gap-2">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeCount > 0
-                                ? "bg-primary/10 text-primary border border-primary/20"
-                                : "bg-muted text-muted-foreground border border-transparent"
+                              ? "bg-primary/10 text-primary border border-primary/20"
+                              : "bg-muted text-muted-foreground border border-transparent"
                               }`}>
                               {activeCount} active
                             </span>
@@ -1344,7 +1429,7 @@ export default function JobDashboardDetailPage() {
                       <Button
                         onClick={handleGetSuggestions}
                         disabled={recommendMutation.isPending || !roundDate || stageCandidates.length === 0 || (!isCurrentRoundCustom && assignedPanelMembers.length === 0)}
-                        className="font-bold px-6 text-xs h-10 flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all rounded-xl"
+                        className="font-bold px-6 text-xs h-10 flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all rounded-xl cursor-pointer"
                       >
                         {recommendMutation.isPending ? (
                           <>
@@ -1413,12 +1498,12 @@ export default function JobDashboardDetailPage() {
                                       <div className="flex flex-col gap-2.5">
                                         {item.slots?.map((slot: any, sIdx: number) => (
                                           <div key={sIdx} className="flex items-center gap-2 group/slot">
-                                            <input
-                                              type="datetime-local"
-                                              value={toDateTimeLocalString(slot.startTime)}
-                                              onChange={(e) => updateSlotDateTime(idx, sIdx, e.target.value)}
-                                              className="bg-background text-foreground border border-border rounded-xl px-2.5 py-1 text-xs outline-none focus:border-primary/50"
-                                            />
+                                            <div className="w-[220px] shrink-0">
+                                              <DateTimePicker
+                                                value={slot.startTime}
+                                                onChange={(val) => updateSlotDateTime(idx, sIdx, val)}
+                                              />
+                                            </div>
                                             <span className="text-[10px] text-muted-foreground font-mono min-w-[70px]">
                                               to {format(new Date(slot.endTime), "h:mm a")}
                                             </span>
@@ -1426,7 +1511,7 @@ export default function JobDashboardDetailPage() {
                                               <button
                                                 type="button"
                                                 onClick={() => removeSlotOption(idx, sIdx)}
-                                                className="text-muted-foreground hover:text-destructive opacity-0 group-hover/slot:opacity-100 transition-opacity"
+                                                className="text-muted-foreground hover:text-destructive opacity-0 group-hover/slot:opacity-100 transition-opacity cursor-pointer"
                                               >
                                                 <X className="size-3.5" />
                                               </button>
@@ -1436,7 +1521,7 @@ export default function JobDashboardDetailPage() {
                                         <button
                                           type="button"
                                           onClick={() => addSlotOption(idx)}
-                                          className="text-[10px] text-primary hover:text-primary/80 font-bold flex items-center gap-1 mt-1 w-fit"
+                                          className="text-[10px] text-primary hover:text-primary/80 font-bold flex items-center gap-1 mt-1 w-fit cursor-pointer"
                                         >
                                           <Plus className="size-3" /> Add Slot Option
                                         </button>
@@ -1470,7 +1555,7 @@ export default function JobDashboardDetailPage() {
                                         onClick={() => {
                                           setSuggestions(prev => prev.filter((_, i) => i !== idx));
                                         }}
-                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive cursor-pointer"
                                       >
                                         <Trash2 className="size-4" />
                                       </Button>

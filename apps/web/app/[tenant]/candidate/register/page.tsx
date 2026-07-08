@@ -118,7 +118,8 @@ function CandidateRegisterFormContent() {
       const loginUrl = data.login_url;
 
       if (loginUrl) {
-        window.location.href = loginUrl;
+        const separator = loginUrl.includes("?") ? "&" : "?";
+        window.location.href = `${loginUrl}${separator}prompt=login`;
       } else {
         throw new Error("Google Redirect URL was not returned by API Gateway.");
       }
