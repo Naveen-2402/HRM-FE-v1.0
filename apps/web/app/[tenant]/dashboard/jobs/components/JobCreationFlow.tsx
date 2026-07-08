@@ -22,7 +22,14 @@ const employmentTypeSchema = z.string().min(1, "Employment type is required.");
 const roleSummarySchema = z.string().min(10, "Role summary must be at least 10 characters.");
 const citySchema = z.string().min(1, "City is required.");
 const countrySchema = z.string().min(1, "Country is required.");
-const applicationDeadlineSchema = z.string().min(1, "Application deadline is required.");
+const applicationDeadlineSchema = z.string().min(1, "Application deadline is required.").refine(
+  (val) => {
+    const selectedTime = new Date(val).getTime();
+    const currentTime = Date.now();
+    return selectedTime > currentTime;
+  },
+  "Deadline cannot be in the past."
+);
 
 const salarySchema = z
   .string()
