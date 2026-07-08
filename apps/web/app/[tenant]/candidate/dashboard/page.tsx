@@ -23,7 +23,8 @@ import {
   ArrowRight,
   Loader2,
   Video,
-  CalendarClock
+  CalendarClock,
+  RefreshCw
 } from "lucide-react";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
 import {
@@ -196,7 +197,7 @@ function CandidateDashboardContent() {
   };
 
   // Orval Query: Candidate interviews list
-  const { data: interviewsResponse, isLoading: isLoadingInterviews, refetch: refetchInterviews } = useListInterviewsApiV1InterviewsGet(
+  const { data: interviewsResponse, isLoading: isLoadingInterviews, isFetching: isFetchingInterviews, refetch: refetchInterviews } = useListInterviewsApiV1InterviewsGet(
     {},
     {
       query: {
@@ -224,15 +225,15 @@ function CandidateDashboardContent() {
   }, [applications]);
 
   const bookedInterviews = useMemo(() => {
-    return interviewsList.filter(iv => 
-      (iv.status === "BOOKED" && iv.candidate_confirmed) || 
-      iv.status === "ACTIVE" || 
+    return interviewsList.filter(iv =>
+      (iv.status === "BOOKED" && iv.candidate_confirmed) ||
+      iv.status === "ACTIVE" ||
       iv.status === "RESCHEDULED"
     );
   }, [interviewsList]);
 
   const pendingInterviews = useMemo(() => {
-    return interviewsList.filter(iv => 
+    return interviewsList.filter(iv =>
       ((iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW") && iv.magic_link_token) ||
       (iv.status === "BOOKED" && !iv.candidate_confirmed)
     );
@@ -289,153 +290,22 @@ function CandidateDashboardContent() {
         {/* Applications Container (Aligned to 'A' in AgentsFactory) */}
         <div className="w-full space-y-8 md:pl-9">
 
-          {/* Action Required: Slot Booking & Confirmations */}
-          {pendingInterviews.length > 0 && (
-            <div className="space-y-4 mb-8">
-              <h2 className="text-xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-                <CalendarClock className="size-5 text-warning" />
-                Action Required: Interview Schedules
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {pendingInterviews.map((iv) => {
-                  const isAwaitingBooking = iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW";
-                  return (
-                    <div key={iv.id} className="bg-card border-2 border-warning/30 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-warning/5 rounded-full blur-xl pointer-events-none" />
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[10px] font-bold text-warning uppercase tracking-wider bg-warning/10 px-2.5 py-1 rounded-full">
-                            Round {iv.round_number} {
-                              iv.status === "INTERVIEWER_NO_SHOW"
-                                ? "(Rebook Required)"
-                                : isAwaitingBooking 
-                                  ? "(Awaiting Booking)" 
-                                  : "(Awaiting Confirmation)"
-                            }
-                          </span>
-                          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                            <Clock className="size-3.5" />
-                            {iv.duration_minutes}m duration
-                          </span>
-                        </div>
-                        <h3 className="text-base font-bold text-foreground mb-1">{iv.title}</h3>
-                        {jobTitleMap[iv.job_id] && (
-                          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-1">
-                            <Briefcase className="size-3.5 shrink-0" />
-                            {jobTitleMap[iv.job_id]}
-                          </p>
-                        )}
-
-                        {!isAwaitingBooking && iv.scheduled_start && (
-                          <div className="bg-warning/5 border border-warning/20 rounded-xl p-3 my-3">
-                            <p className="text-xs font-bold text-warning uppercase tracking-wider mb-1">Proposed Timing:</p>
-                            <p className="text-sm font-semibold text-foreground">
-                              {format(new Date(iv.scheduled_start), "PPP p")}
-                            </p>
-                          </div>
-                        )}
-
-                        <p className="text-xs text-muted-foreground mb-4">
-                          {iv.status === "INTERVIEWER_NO_SHOW"
-                            ? "We apologize that the interviewer did not join the scheduled meeting. Please rebook your slot timings below."
-                            : isAwaitingBooking 
-                              ? "Please select an available date and time slot to confirm your interview attendance."
-                              : "An interview schedule has been dispatched. Please accept this timing."}
-                        </p>
-                      </div>
-
-                      {isAwaitingBooking ? (
-                        <Button
-                          onClick={() => {
-                            setActiveMagicLinkToken(iv.magic_link_token);
-                            setIsBookingOpen(true);
-                          }}
-                          className="w-full flex items-center justify-center gap-2 font-bold cursor-pointer bg-warning hover:bg-warning/90 text-warning-foreground shadow-sm"
-                        >
-                          <Calendar className="size-4" />
-                          {iv.status === "INTERVIEWER_NO_SHOW" ? "Rebook Interview" : "Select Date & Time"}
-                        </Button>
-                      ) : (
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button
-                            disabled={confirmingId === iv.id}
-                            onClick={() => handleConfirmInterview(iv.id)}
-                            className="w-full flex items-center justify-center gap-2 font-bold cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm text-xs"
-                          >
-                            {confirmingId === iv.id ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <CheckCircle className="size-4" />
-                            )}
-                            Accept & Confirm
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Upcoming Interviews Section */}
-          {bookedInterviews.length > 0 && (
-            <div className="space-y-4 mb-8">
-              <h2 className="text-xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-                <Video className="size-5 text-primary" />
-                Upcoming Interviews
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {bookedInterviews.map((iv) => {
-                  return (
-                    <div key={iv.id} className="bg-card border border-border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-primary/10 text-primary">
-                            Round {iv.round_number}
-                          </span>
-                          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-                            <Clock className="size-3.5" />
-                            {iv.duration_minutes}m duration
-                          </span>
-                        </div>
-                        <h3 className="text-base font-bold text-foreground mb-1">{iv.title}</h3>
-                        {jobTitleMap[iv.job_id] && (
-                          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 mb-1">
-                            <Briefcase className="size-3.5 shrink-0" />
-                            {jobTitleMap[iv.job_id]}
-                          </p>
-                        )}
-                        {iv.scheduled_start && (
-                          <p className="text-sm font-semibold text-muted-foreground mb-4">
-                            {format(new Date(iv.scheduled_start), "PPP p")}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-col sm:flex-row gap-2">
-                        <Button
-                          onClick={() => router.push(`/${tenant}/candidate/interviews/${iv.id}`)}
-                          disabled={isJoinDisabled(iv.scheduled_start)}
-                          title={isJoinDisabled(iv.scheduled_start) ? "Room opens 5 minutes before scheduled time" : "Join Interview Room"}
-                          className="w-full flex items-center justify-center gap-2 font-bold disabled:cursor-not-allowed cursor-pointer"
-                        >
-                          <Video className="size-4" />
-                          Join Interview Room
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-2xl font-extrabold text-foreground tracking-tight">Your Applications</h2>
               <p className="text-sm text-muted-foreground mt-2">Track your job application progress</p>
             </div>
+            <button
+              onClick={() => {
+                appsQuery.refetch();
+                refetchInterviews();
+              }}
+              disabled={appsQuery.isFetching || isFetchingInterviews}
+              className="bg-secondary text-secondary-foreground px-6 py-2.5 rounded-xl text-sm font-bold hover:cursor-pointer transition-all hover:bg-secondary/80 flex items-center gap-2 disabled:opacity-50"
+            >
+              {appsQuery.isFetching || isFetchingInterviews ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Refresh"}
+            </button>
           </div>
 
           {/* Applications Grid */}
@@ -468,7 +338,7 @@ function CandidateDashboardContent() {
                 const stages = rawStages.map((stage: any) =>
                   typeof stage === "string" ? stage : (stage?.name || "Unknown Round")
                 );
-                
+
                 // Estimate progress based on current index
                 const progressPercent = Math.round(((app.current_stage_index + (app.stage_status === "CLEARED" ? 1 : 0)) / stages.length) * 100);
 
@@ -477,13 +347,16 @@ function CandidateDashboardContent() {
                 const stepWidthPercent = 100 / stages.length;
                 const lineOffsetPercent = stepWidthPercent / 2;
 
+                const appPendingInterviews = pendingInterviews.filter(iv => iv.job_id === app.job_id);
+                const appBookedInterviews = bookedInterviews.filter(iv => iv.job_id === app.job_id);
+
                 return (
                   <motion.div
                     key={app.evaluation_id}
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="bg-card border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-6"
+                    className="bg-card border border-border rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row justify-between gap-6"
                   >
                     {/* Left: Job & Status */}
                     <div className="space-y-3.5 flex-1">
@@ -498,12 +371,96 @@ function CandidateDashboardContent() {
                         </span>
                       </div>
 
-                      <div>
-                        <h3 className="text-lg font-black text-foreground tracking-tight leading-tight">{app.job_title}</h3>
-                        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
-                          <Layers className="size-3.5" />
-                          Current Stage: <span className="font-semibold text-foreground">{stages[app.current_stage_index] || "Under Review"}</span>
-                        </p>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-6 justify-between w-full">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-black text-foreground tracking-tight leading-tight">{app.job_title}</h3>
+                          <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                            <Layers className="size-3.5" />
+                            Current Stage: <span className="font-semibold text-foreground">{stages[app.current_stage_index] || "Under Review"}</span>
+                          </p>
+                        </div>
+
+                        <div className="flex flex-col gap-3 shrink-0 sm:max-w-[240px] w-full sm:w-auto">
+                          {appPendingInterviews.length > 0 && (
+                            <div className="space-y-3">
+                              {appPendingInterviews.map((iv) => {
+                                const isAwaitingBooking = iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW";
+                                return (
+                                  <div key={iv.id} className="bg-warning/10 border border-warning/20 rounded-xl p-3 flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[10px] font-bold text-warning uppercase tracking-wider flex items-center gap-1">
+                                        <CalendarClock className="size-3" />
+                                        Round {iv.round_number} {isAwaitingBooking ? "Action Required" : "Confirm Schedule"}
+                                      </span>
+                                    </div>
+                                    {!isAwaitingBooking && iv.scheduled_start && (
+                                      <p className="text-xs font-semibold text-foreground">
+                                        Proposed Timing: {format(new Date(iv.scheduled_start), "PPP p")}
+                                      </p>
+                                    )}
+                                    {isAwaitingBooking ? (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => {
+                                          setActiveMagicLinkToken(iv.magic_link_token);
+                                          setIsBookingOpen(true);
+                                        }}
+                                        className="w-full flex items-center justify-center gap-2 font-bold cursor-pointer bg-warning hover:bg-warning/90 text-warning-foreground shadow-sm text-xs h-8"
+                                      >
+                                        <Calendar className="size-3.5" />
+                                        {iv.status === "INTERVIEWER_NO_SHOW" ? "Rebook Interview" : "Select Date & Time"}
+                                      </Button>
+                                    ) : (
+                                      <Button
+                                        size="sm"
+                                        disabled={confirmingId === iv.id}
+                                        onClick={() => handleConfirmInterview(iv.id)}
+                                        className="w-full flex items-center justify-center gap-2 font-bold cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm text-xs h-8"
+                                      >
+                                        {confirmingId === iv.id ? (
+                                          <Loader2 className="size-3.5 animate-spin" />
+                                        ) : (
+                                          <CheckCircle className="size-3.5" />
+                                        )}
+                                        Accept Timing
+                                      </Button>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {appBookedInterviews.length > 0 && (
+                            <div className="space-y-3">
+                              {appBookedInterviews.map((iv) => (
+                                <div key={iv.id} className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex flex-col gap-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
+                                      <Video className="size-3" />
+                                      Upcoming Interview (Round {iv.round_number})
+                                    </span>
+                                  </div>
+                                  {iv.scheduled_start && (
+                                    <p className="text-xs font-semibold text-muted-foreground">
+                                      {format(new Date(iv.scheduled_start), "PPP p")}
+                                    </p>
+                                  )}
+                                  <Button
+                                    size="sm"
+                                    onClick={() => router.push(`/${tenant}/candidate/interviews/${iv.id}`)}
+                                    disabled={isJoinDisabled(iv.scheduled_start)}
+                                    title={isJoinDisabled(iv.scheduled_start) ? "Room opens 5 minutes before scheduled time" : "Join Interview Room"}
+                                    className="w-full flex items-center justify-center gap-2 font-bold disabled:cursor-not-allowed cursor-pointer text-xs h-8 mt-1"
+                                  >
+                                    <Video className="size-3.5" />
+                                    Join Room
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -523,20 +480,20 @@ function CandidateDashboardContent() {
                           {stages.length > 1 && (
                             <>
                               {/* Background Line */}
-                              <div 
+                              <div
                                 className="absolute top-[16px] h-[2px] bg-secondary"
-                                style={{ 
-                                  left: `${lineOffsetPercent}%`, 
-                                  right: `${lineOffsetPercent}%` 
-                                }} 
+                                style={{
+                                  left: `${lineOffsetPercent}%`,
+                                  right: `${lineOffsetPercent}%`
+                                }}
                               />
                               {/* Filled Progress Line */}
-                              <div 
+                              <div
                                 className="absolute top-[16px] h-[2px] bg-emerald-500 transition-all duration-500"
-                                style={{ 
-                                  left: `${lineOffsetPercent}%`, 
+                                style={{
+                                  left: `${lineOffsetPercent}%`,
                                   width: `${(fillPercent / 100) * (100 - stepWidthPercent)}%`
-                                }} 
+                                }}
                               />
                             </>
                           )}
