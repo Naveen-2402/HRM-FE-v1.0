@@ -133,7 +133,7 @@ function LoginFormContent() {
         const clientId    = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "hrm-frontend";
         const redirectUri = `${window.location.origin}/auth/callback`;
         const idpAlias    = response.idp_alias;
-        window.location.href = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20profile%20email%20organization&kc_idp_hint=${idpAlias}`;
+        window.location.href = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20profile%20email%20organization&kc_idp_hint=${idpAlias}&prompt=login`;
       } else {
         setStep(2);
       }
