@@ -115,7 +115,8 @@ export default function CandidateInterviewRoomPage() {
   const tenantSubdomain = params.tenant as string;
 
   // ADD THESE TWO LINES FOR DEBUGGING:
-  console.log("DEBUG: env url =", process.env.NEXT_PUBLIC_LIVEKIT_URL);
+  console.log("DEBUG: livekit url =", process.env.NEXT_PUBLIC_LIVEKIT_URL);
+  console.log("DEBUG: api url =", process.env.NEXT_PUBLIC_API_URL);
   console.log("DEBUG: window hostname =", typeof window !== "undefined" ? window.location.hostname : "no-window");
 
   const { user } = useAuthStore();
