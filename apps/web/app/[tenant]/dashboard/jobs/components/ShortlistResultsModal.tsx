@@ -1,17 +1,18 @@
 "use client";
 
 import React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Modal } from "@/components/_shared/Modal";
 import {
   useGetJobEvaluationsApiV1JobsJobIdEvaluationsGet,
-  useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch
+  useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch,
+  getGetJobEvaluationsApiV1JobsJobIdEvaluationsGetQueryKey
 } from "@repo/orval-config/src/api/job/jobs/jobs";
 import {
   useGetMyRequestsApiV1ApprovalsMyRequestsGet,
   useGetPendingApprovalsApiV1ApprovalsPendingGet
 } from "@repo/orval-config/src/api/tenant/approvals/approvals";
 import { EvaluationDetailModal } from "./EvaluationDetailModal";
-import { InterviewSchedulingModal } from "./InterviewSchedulingModal";
 import { RefreshCw, Check, X, Calendar } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -32,9 +33,9 @@ interface ShortlistResultsModalProps {
 export default function ShortlistResultsModal({ isOpen, onClose, job }: ShortlistResultsModalProps) {
   const [selectedEvaluation, setSelectedEvaluation] = React.useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = React.useState(false);
-  const [schedulingEvaluation, setSchedulingEvaluation] = React.useState<any>(null);
-  const [isSchedulingOpen, setIsSchedulingOpen] = React.useState(false);
   const [activeTabIndex, setActiveTabIndex] = React.useState(0);
+
+  const queryClient = useQueryClient();
 
   const { mutate: updateEvaluation } = useUpdateEvaluationApiV1JobsJobIdEvaluationsEvaluationIdPatch();
 
@@ -81,6 +82,7 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
   };
 
   const handleRefetch = () => {
+    queryClient.invalidateQueries({ queryKey: getGetJobEvaluationsApiV1JobsJobIdEvaluationsGetQueryKey(job?.id || 0) });
     refetch();
     refetchMyRequests();
     refetchPendingApprovals();
@@ -156,12 +158,14 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
         }
       },
       {
-        onSuccess: () => {
-          toast.success(`Candidate ${isForward ? 'moved forward' : 'rejected'}`);
-          refetch();
+        onSuccess: (res: any) => {
+          const message = res?.message || res?.data?.message || `Candidate ${isForward ? 'moved forward' : 'rejected'}`;
+          toast.success(message);
+          handleRefetch();
         },
-        onError: () => {
-          toast.error("Failed to update candidate status");
+        onError: (err: any) => {
+          const errorMsg = err?.response?.data?.detail || err?.response?.data?.message || "Failed to update candidate status";
+          toast.error(errorMsg);
         }
       }
     );
@@ -194,8 +198,8 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                 key={idx}
                 onClick={() => setActiveTabIndex(idx)}
                 className={`pb-2 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap hover:cursor-pointer ${activeTabIndex === idx
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
                   }`}
               >
                 {stage}
@@ -216,7 +220,6 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                   <th className="px-4 py-3 text-center">SCORE</th>
                   <th className="px-4 py-3 text-center">VERDICT</th>
                   <th className="px-4 py-3 text-center">STATUS</th>
-                  <th className="px-4 py-3 text-center">SCHEDULE</th>
                   <th className="px-4 py-3 text-right">ACTION</th>
                 </tr>
               </thead>
@@ -271,22 +274,6 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                       <td className="px-4 py-4 text-center text-[11px] text-primary/70 font-medium lowercase">
                         {ev.display_status}
                       </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex items-center justify-center">
-                          {activeTabIndex > 0 && ev.selection_status !== "Rejected" && ev.selection_status !== "Not_Selected" && (
-                            <button
-                              onClick={() => {
-                                setSchedulingEvaluation(ev);
-                                setIsSchedulingOpen(true);
-                              }}
-                              className="w-7 h-7 flex items-center justify-center rounded bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors cursor-pointer"
-                              title="Interview Scheduling"
-                            >
-                              <Calendar className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           {activeTabIndex > 0 && activeTabIndex < (job?.pipeline_stages?.length || 1) - 1 && ev.selection_status !== "Rejected" && ev.selection_status !== "Not_Selected" && (
@@ -320,13 +307,6 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         evaluation={selectedEvaluation}
-        onSuccess={handleRefetch}
-      />
-
-      <InterviewSchedulingModal
-        isOpen={isSchedulingOpen}
-        onClose={() => setIsSchedulingOpen(false)}
-        evaluation={schedulingEvaluation}
         onSuccess={handleRefetch}
       />
     </Modal>
