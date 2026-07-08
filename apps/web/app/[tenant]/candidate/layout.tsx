@@ -45,7 +45,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
   );
 
   // Paths that should NOT have the CandidateTopbar
-  const isAuthRoute = pathname.includes("/login") || pathname.includes("/register") || pathname.includes("/callback");
+  const isAuthRoute = pathname.includes("/login") || pathname.includes("/register") || pathname.includes("/callback") || pathname.includes("/interviews/");
 
   if (isAuthRoute) {
     return <>{children}</>;
@@ -74,19 +74,19 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
         onMyApplications={() => router.push(`/${tenant}/candidate/dashboard`)}
         onProfile={() => router.push(`/${tenant}/candidate/profile`)}
       />
-      
+
       {!isProfileModalOpen && (
         <MissingProfileBanner />
       )}
 
       {/* ── Candidate Sidebar ── */}
       <CandidateSidebar tenant={tenant} isProfileMissing={!!isProfileMissing} />
-      
+
       {/* Universal Profile Modal */}
-      <CreateProfileModal 
-        isOpen={!!isProfileModalOpen} 
-        onClose={() => setProfileModalOpen(false)} 
-        tenantDetails={tenantDetails} 
+      <CreateProfileModal
+        isOpen={!!isProfileModalOpen}
+        onClose={() => setProfileModalOpen(false)}
+        tenantDetails={tenantDetails}
         existingProfile={existingProfile}
         refetchProfile={() => profileQuery.refetch()}
       />
