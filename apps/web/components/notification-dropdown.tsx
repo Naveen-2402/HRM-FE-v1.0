@@ -86,6 +86,8 @@ export function NotificationDropdown() {
         destinationUrl = `/${tenant}/dashboard/approvals?id=${notif.reference_entity_id}`;
       } else if (notif.reference_entity_type === "job") {
         destinationUrl = `/${tenant}/dashboard/jobs/${notif.reference_entity_id}`;
+      } else if (notif.reference_entity_type === "interview") {
+        destinationUrl = `/${tenant}/dashboard/interviews/${notif.reference_entity_id}`;
       }
     }
 
