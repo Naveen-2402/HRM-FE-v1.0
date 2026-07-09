@@ -19,7 +19,8 @@ import {
   LiveKitRoom, 
   ParticipantTile, 
   ControlBar, 
-  useTracks 
+  useTracks,
+  useLocalParticipant
 } from "@livekit/components-react";
 import { Track, DataPacket_Kind } from "livekit-client";
 import "@livekit/components-styles";
