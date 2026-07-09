@@ -11,6 +11,9 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Logo } from "./logo";
 import { ModeToggle } from "@/components/theme-toggle";
 import { NotificationDropdown } from "./notification-dropdown";
+import { useGetPendingApprovalsApiV1ApprovalsPendingGet } from "@repo/orval-config/src/api/tenant/approvals/approvals";
+import { customInstance } from "@repo/orval-config/src/axios-setup";
+import { useQuery } from "@tanstack/react-query";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -56,6 +59,22 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+
+  // Fetch pending approvals for the orange dot
+  const { data: standardPending } = useGetPendingApprovalsApiV1ApprovalsPendingGet({
+    query: {
+      enabled: hasPermission("approval:read") && !!user
+    } as any
+  });
+  
+  const { data: evaluationsPending } = useQuery({
+    queryKey: ["pending-evaluations"],
+    queryFn: () => customInstance<any[]>({ url: "/api/v1/jobs/evaluations/pending", method: "GET" }),
+    enabled: hasPermission("approval:read") && !!user,
+  });
+
+  const hasPendingApprovals = (Array.isArray(standardPending) && standardPending.length > 0) || 
+                              (Array.isArray(evaluationsPending) && evaluationsPending.length > 0);
 
   // Handle differences in user object between models/DB
   const userName = user?.name || user?.first_name || "Admin Agentsfactory";
@@ -103,12 +122,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${isActive
+                    className={`relative px-4 py-2 rounded-full text-sm font-semibold transition-all ${isActive
                       ? "bg-primary/10 text-primary shadow-sm"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       }`}
                   >
                     {link.name}
+                    {link.name === "Approvals" && hasPendingApprovals && (
+                      <span className="absolute top-1 right-2 size-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+                    )}
                   </Link>
                 );
               })}
@@ -179,12 +201,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${isActive
+                className={`relative px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${isActive
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-muted text-muted-foreground"
                   }`}
               >
                 {link.name}
+                {link.name === "Approvals" && hasPendingApprovals && (
+                  <span className="absolute top-0 right-1 size-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+                )}
               </Link>
             );
           })}
