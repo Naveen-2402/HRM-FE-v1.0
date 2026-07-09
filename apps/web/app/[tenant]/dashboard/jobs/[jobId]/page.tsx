@@ -56,6 +56,7 @@ import { customInstance } from "@repo/orval-config/src/axios-setup";
 
 // Component imports
 import { Button } from "@repo/ui/components/ui/button";
+import { Checkbox } from "@repo/ui/components/ui/checkbox";
 
 interface Job {
   id: number;
@@ -186,6 +187,7 @@ export default function JobDashboardDetailPage() {
   const [aiDeadline, setAiDeadline] = useState<string>("");
   const [showStandardInfo, setShowStandardInfo] = useState<boolean>(false);
   const [isQueueExpanded, setIsQueueExpanded] = useState<boolean>(true);
+  const [selectedCandidateIds, setSelectedCandidateIds] = useState<number[]>([]);
 
   // 1. Fetch Tenant details
   const { data: tenantDetails } = useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet(
@@ -365,13 +367,20 @@ export default function JobDashboardDetailPage() {
       return;
     }
 
+    if (selectedCandidateIds.length === 0) {
+      toast.error("Please select at least one candidate to schedule.");
+      return;
+    }
+
+    const candidatesToSchedule = stageCandidates.filter((c: any) => selectedCandidateIds.includes(Math.abs(c.candidate_id || c.id)));
+
     if (isCurrentRoundCustom) {
       // Simple client-side slot generator for custom rounds
       const baseDate = new Date(roundDate);
       const startHour = baseDate.getHours() || 9;
       const startMinute = baseDate.getMinutes() || 0;
 
-      const newSuggestions = stageCandidates.map((cand: any, idx: number) => {
+      const newSuggestions = candidatesToSchedule.map((cand: any, idx: number) => {
         const slots: { startTime: string; endTime: string }[] = [];
 
         for (let s = 0; s < suggestedSlotsCount; s++) {
@@ -418,7 +427,7 @@ export default function JobDashboardDetailPage() {
       const endDateStr = new Date(baseDate.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
       // Pre-calculate panel rotation/quorum for each candidate to request specific conflict-free slots
-      const candidatesPayload = stageCandidates.map((cand: any, idx: number) => {
+      const candidatesPayload = candidatesToSchedule.map((cand: any, idx: number) => {
         let panel: string[] = [];
         if (assignedPanelMembers.length <= minQuorum) {
           panel = [...assignedPanelMembers];
@@ -465,7 +474,7 @@ export default function JobDashboardDetailPage() {
 
             let hasInvalidSlots = false;
 
-            const newSuggestions = stageCandidates.map((cand: any, idx: number) => {
+            const newSuggestions = candidatesToSchedule.map((cand: any, idx: number) => {
               const candId = cand.candidate_id || cand.id;
 
               // Find candidate-specific recommendations
@@ -1105,6 +1114,7 @@ export default function JobDashboardDetailPage() {
                             setSelectedRoundIndex(idx);
                             setMockCandidates([]);
                             setSuggestions([]);
+                            setSelectedCandidateIds([]);
                           }}
                           className={`w-full text-left p-4 rounded-xl border flex items-center justify-between transition-all cursor-pointer group ${isSelected
                             ? "bg-primary/5 border-primary text-foreground shadow-sm"
@@ -1227,7 +1237,18 @@ export default function JobDashboardDetailPage() {
                               <table className="w-full text-left text-xs border-collapse">
                                 <thead className="bg-black/20 sticky top-0 z-10 backdrop-blur-md">
                                   <tr>
-                                    <th className="py-3 px-4 font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50">ID</th>
+                                    <th className="py-3 px-4 font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50 w-12 text-center">
+                                      <Checkbox 
+                                        checked={stageCandidates.length > 0 && selectedCandidateIds.length === stageCandidates.length}
+                                        onCheckedChange={(checked) => {
+                                          if (checked) {
+                                            setSelectedCandidateIds(stageCandidates.map(c => Math.abs(c.candidate_id || c.id)));
+                                          } else {
+                                            setSelectedCandidateIds([]);
+                                          }
+                                        }}
+                                      />
+                                    </th>
                                     <th className="py-3 px-4 font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50">Candidate Name</th>
                                     <th className="py-3 px-4 font-bold text-muted-foreground uppercase tracking-wider border-b border-border/50 text-right">Status</th>
                                   </tr>
@@ -1237,13 +1258,25 @@ export default function JobDashboardDetailPage() {
                                     const alreadyScheduled = activeInterviews.find(iv => iv.candidate_id === (cand.candidate_id || cand.id));
                                     const cId = Math.abs(cand.candidate_id || cand.id);
                                     const cName = cand.candidate_name || cand.name || `Candidate ${cId}`;
+                                    const isSelected = selectedCandidateIds.includes(cId);
 
                                     return (
                                       <tr
                                         key={cand.id || idx}
                                         className="border-b border-border/30 hover:bg-white/5 transition-colors last:border-0"
                                       >
-                                        <td className="py-3 px-4 font-mono text-muted-foreground">{cId}</td>
+                                        <td className="py-3 px-4 text-center">
+                                          <Checkbox 
+                                            checked={isSelected}
+                                            onCheckedChange={(checked) => {
+                                              if (checked) {
+                                                setSelectedCandidateIds(prev => Array.from(new Set([...prev, cId])));
+                                              } else {
+                                                setSelectedCandidateIds(prev => prev.filter(id => id !== cId));
+                                              }
+                                            }}
+                                          />
+                                        </td>
                                         <td className="py-3 px-4 font-bold text-foreground">{cName}</td>
                                         <td className="py-3 px-4 text-right">
                                           {alreadyScheduled ? (
