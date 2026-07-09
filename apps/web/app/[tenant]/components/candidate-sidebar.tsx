@@ -3,6 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import { Search, Briefcase } from "lucide-react";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
+import { useListInterviewsApiV1InterviewsGet } from "@repo/orval-config/src/api/interview/interviews/interviews";
 
 interface CandidateSidebarProps {
   tenant: string;
@@ -20,6 +22,40 @@ export function CandidateSidebar({ tenant, isProfileMissing = false }: Candidate
     return null;
   }
 
+  // Orval Query: Tenant details by subdomain to get tenantId
+  const tenantQuery = useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet(
+    tenant,
+    {
+      query: {
+        enabled: !!tenant && isAuthenticated && !!isCandidate,
+      }
+    } as any
+  );
+
+  const tenantDetails = tenantQuery.data as any;
+
+  // Orval Query: Candidate interviews list to check for pending actions
+  const { data: interviewsResponse } = useListInterviewsApiV1InterviewsGet(
+    {},
+    {
+      query: {
+        enabled: !!tenantDetails?.id && isAuthenticated && !!isCandidate,
+      },
+      request: {
+        headers: {
+          "X-Tenant-Id": tenantDetails?.id || "",
+        },
+      },
+    } as any
+  );
+
+  const hasPendingAction = Array.isArray(interviewsResponse) 
+    ? interviewsResponse.some(iv => 
+        ((iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW") && iv.magic_link_token) ||
+        (iv.status === "BOOKED" && !iv.candidate_confirmed)
+      )
+    : false;
+
   const sidebarItems = [
     {
       icon: Search,
@@ -32,6 +68,7 @@ export function CandidateSidebar({ tenant, isProfileMissing = false }: Candidate
       label: "My Applications",
       href: `/${tenant}/candidate/dashboard`,
       isActive: pathname.includes('/candidate/dashboard'),
+      hasDot: hasPendingAction,
     }
   ];
 
@@ -50,7 +87,12 @@ export function CandidateSidebar({ tenant, isProfileMissing = false }: Candidate
                 }`}
               title={item.label}
             >
-              <Icon className="size-5 shrink-0" />
+              <div className="relative">
+                <Icon className="size-5 shrink-0" />
+                {item.hasDot && (
+                  <span className="absolute -top-1 -right-1 size-2 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+                )}
+              </div>
               <span className="font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                 {item.label}
               </span>
