@@ -28,7 +28,9 @@ import {
   LiveKitRoom,
   ParticipantTile,
   ControlBar,
-  useTracks
+  useTracks,
+  RoomAudioRenderer,
+  useDataChannel
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import "@livekit/components-styles";
