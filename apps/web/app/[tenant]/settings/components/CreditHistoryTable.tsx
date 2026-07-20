@@ -109,7 +109,21 @@ export function CreditHistoryTable() {
                                 <div>
                                     <div className="divide-y divide-border/50 bg-white/5">
                                         {history.map((tx) => {
-                                            const isUsage = tx.transaction_type === "usage" || tx.amount < 0;
+                                            const isUsage = tx.transaction_type === "usage" || tx.amount < 0 || tx.transaction_type === "resume_parsing" || tx.transaction_type === "shortlisting";
+                                            
+                                            // Determine service label
+                                            let serviceLabel = "Transaction";
+                                            if (tx.service_type) {
+                                                serviceLabel = tx.service_type.replace(/_/g, " ");
+                                            } else if (tx.transaction_type === "resume_parsing") {
+                                                serviceLabel = "Resume Parsing";
+                                            } else if (tx.transaction_type === "shortlisting") {
+                                                serviceLabel = "Candidate Shortlisting";
+                                            } else if (tx.transaction_type === "purchase") {
+                                                serviceLabel = "Credit Purchase";
+                                            } else if (tx.transaction_type === "interview") {
+                                                serviceLabel = "Interview Processing";
+                                            }
 
                                             return (
                                                 <div
@@ -121,16 +135,33 @@ export function CreditHistoryTable() {
                                                             {isUsage ? <ArrowUpRight className="size-5" /> : <ArrowDownLeft className="size-5" />}
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-bold text-foreground capitalize">
-                                                                {tx.transaction_type.replace("_", " ")}
-                                                            </p>
-                                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                            <div className="flex items-center gap-2">
+                                                                <p className="text-sm font-bold text-foreground capitalize">
+                                                                    {tx.transaction_type.replace(/_/g, " ")}
+                                                                </p>
+                                                                <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
+                                                                    {serviceLabel}
+                                                                </span>
+                                                            </div>
+                                                            {tx.description && (
+                                                                <p className="text-xs text-muted-foreground mt-0.5 max-w-md truncate">
+                                                                    {tx.description}
+                                                                </p>
+                                                            )}
+                                                            <p className="text-xs text-muted-foreground/60 mt-0.5">
                                                                 {formatDate(tx.created_at)}
                                                             </p>
                                                         </div>
                                                     </div>
-                                                    <div className={`text-base font-black tracking-tight ${isUsage ? "text-foreground" : "text-success"}`}>
-                                                        {isUsage ? "-" : "+"}{Math.abs(tx.amount).toLocaleString()}
+                                                    <div className="flex flex-col items-end">
+                                                        <div className={`text-base font-black tracking-tight ${isUsage ? "text-foreground" : "text-success"}`}>
+                                                            {isUsage ? "−" : "+"}{Math.abs(tx.amount).toLocaleString()} credits
+                                                        </div>
+                                                        {tx.balance_after !== undefined && (
+                                                            <div className="text-[10px] text-muted-foreground font-medium mt-1">
+                                                                Balance: {tx.balance_after.toLocaleString()}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
