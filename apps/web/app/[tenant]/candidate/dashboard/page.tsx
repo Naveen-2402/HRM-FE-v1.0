@@ -38,6 +38,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "react-toastify";
 import { SlotBookingModal } from "../components/SlotBookingModal";
 import { customInstance } from "@repo/orval-config/src/axios-setup";
+import { getClientAuthToken, isCandidateToken } from "@repo/utils";
 
 interface CandidateProfile {
   id: number;
@@ -80,8 +81,10 @@ function CandidateDashboardContent() {
   // Redirect to login if unauthenticated
   useEffect(() => {
     if (isAuthenticated && !user) return; // Wait for rehydration
-    if (!isAuthenticated || !user?.realm_access?.roles?.includes("candidate")) {
-      router.push(`/${tenant}/candidate/login`);
+    const token = getClientAuthToken();
+    const isCandidate = (token && isCandidateToken(token)) || user?.realm_access?.roles?.includes("candidate") || (user as any)?.iss?.includes("hrm-candidates");
+    if (!isAuthenticated || !isCandidate) {
+      router.push(`/${tenant}/candidate/login?redirect=${window.location.pathname}`);
     }
   }, [isAuthenticated, user, tenant, router]);
 
@@ -92,9 +95,10 @@ function CandidateDashboardContent() {
     return () => clearInterval(timer);
   }, []);
 
-  const isJoinDisabled = (scheduledStart: string | undefined | null) => {
-    if (!scheduledStart) return true;
-    const startTime = new Date(scheduledStart).getTime();
+  const isJoinDisabled = (iv: any) => {
+    if (iv.title?.toLowerCase().includes("ai interview")) return false;
+    if (!iv.scheduled_start) return true;
+    const startTime = new Date(iv.scheduled_start).getTime();
     return now < startTime - 5 * 60 * 1000;
   };
 
@@ -226,16 +230,17 @@ function CandidateDashboardContent() {
 
   const bookedInterviews = useMemo(() => {
     return interviewsList.filter(iv =>
-      (iv.status === "BOOKED" && iv.candidate_confirmed) ||
+      iv.status === "BOOKED" ||
       iv.status === "ACTIVE" ||
-      iv.status === "RESCHEDULED"
+      iv.status === "RESCHEDULED" ||
+      (iv.title?.toLowerCase().includes("ai interview") && (iv.status === "AWAITING_BOOKING" || iv.status === "SCHEDULED" || !iv.status))
     );
   }, [interviewsList]);
 
   const pendingInterviews = useMemo(() => {
     return interviewsList.filter(iv =>
-      ((iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW") && iv.magic_link_token) ||
-      (iv.status === "BOOKED" && !iv.candidate_confirmed)
+      ((iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW") && iv.magic_link_token) &&
+      !iv.title?.toLowerCase().includes("ai interview")
     );
   }, [interviewsList]);
 
@@ -390,7 +395,7 @@ function CandidateDashboardContent() {
                                     <div className="flex items-center justify-between">
                                       <span className="text-[10px] font-bold text-warning uppercase tracking-wider flex items-center gap-1">
                                         <CalendarClock className="size-3" />
-                                        Round {iv.round_number} {isAwaitingBooking ? "Action Required" : "Confirm Schedule"}
+                                        Round {iv.round_number + 1} {isAwaitingBooking ? "Action Required" : "Confirm Schedule"}
                                       </span>
                                     </div>
                                     {!isAwaitingBooking && iv.scheduled_start && (
@@ -438,23 +443,28 @@ function CandidateDashboardContent() {
                                   <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
                                       <Video className="size-3" />
-                                      Upcoming Interview (Round {iv.round_number})
+                                      {iv.title?.toLowerCase().includes("ai interview") ? "AI Interview Pending" : `Upcoming Interview (Round ${iv.round_number + 1})`}
                                     </span>
                                   </div>
-                                  {iv.scheduled_start && (
+                                  {iv.scheduled_start && !iv.title?.toLowerCase().includes("ai interview") && (
                                     <p className="text-xs font-semibold text-muted-foreground">
                                       {format(new Date(iv.scheduled_start), "PPP p")}
+                                    </p>
+                                  )}
+                                  {iv.title?.toLowerCase().includes("ai interview") && (
+                                    <p className="text-[11px] font-medium text-muted-foreground">
+                                      You can start this interview at any time before the deadline.
                                     </p>
                                   )}
                                   <Button
                                     size="sm"
                                     onClick={() => router.push(`/${tenant}/candidate/interviews/${iv.id}`)}
-                                    disabled={isJoinDisabled(iv.scheduled_start)}
-                                    title={isJoinDisabled(iv.scheduled_start) ? "Room opens 5 minutes before scheduled time" : "Join Interview Room"}
+                                    disabled={isJoinDisabled(iv)}
+                                    title={isJoinDisabled(iv) ? "Room opens 5 minutes before scheduled time" : "Join Interview Room"}
                                     className="w-full flex items-center justify-center gap-2 font-bold disabled:cursor-not-allowed cursor-pointer text-xs h-8 mt-1"
                                   >
                                     <Video className="size-3.5" />
-                                    Join Room
+                                    {iv.title?.toLowerCase().includes("ai interview") ? "Start AI Interview" : "Join Room"}
                                   </Button>
                                 </div>
                               ))}
