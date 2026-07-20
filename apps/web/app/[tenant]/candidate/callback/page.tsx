@@ -42,9 +42,15 @@ function CandidateCallbackContent() {
       try {
         setStatusText("Exchanging Google authorization code...");
         
+        const redirectUrl = searchParams.get("redirect");
+        let callbackUri = `${window.location.origin}/${tenant}/candidate/callback`;
+        if (redirectUrl) {
+          callbackUri += `?redirect=${encodeURIComponent(redirectUrl)}`;
+        }
+
         const response = (await candidateGoogleCallbackApiV1CandidateAuthGoogleCallbackPost({
           code,
-          redirect_uri: `${window.location.origin}/candidate/callback`
+          redirect_uri: callbackUri
         })) as any;
 
         const data = response.data || response;
@@ -83,13 +89,18 @@ function CandidateCallbackContent() {
           });
           
           toast.success("Welcome back!");
-          router.push(`/${tenant}`);
+          
+          if (redirectUrl) {
+            router.push(redirectUrl);
+          } else {
+            router.push(`/${tenant}`);
+          }
         } catch (profileErr: any) {
           if (profileErr?.response?.status === 404) {
             // Setup profile wizard is required for new candidates
             toast.info("Successfully authenticated! Let's setup your candidate profile.");
             setProfileModalOpen(true);
-            router.push(`/${tenant}`);
+            router.push(`/${tenant}${redirectUrl ? `?redirect=${redirectUrl}` : ""}`);
           } else {
             // Profile failed to load for another reason, fallback to tenant page
             router.push(`/${tenant}`);
