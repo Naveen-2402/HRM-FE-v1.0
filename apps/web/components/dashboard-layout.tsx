@@ -63,11 +63,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { data: evaluationsPending } = useQuery({
     queryKey: ["pending-evaluations"],
     queryFn: () => customInstance<any[]>({ url: "/api/v1/jobs/evaluations/pending", method: "GET" }),
-    enabled: !isLoading && hasPermission("approval:read") && !!user,
+    enabled: hasPermission("approval:read") && !!user,
   });
 
-  const hasPendingApprovals = (Array.isArray(standardPending) && standardPending.length > 0) || 
-                              (Array.isArray(evaluationsPending) && evaluationsPending.length > 0);
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const hasPendingApprovals = (Array.isArray(standardPending) && standardPending.length > 0) ||
+    (Array.isArray(evaluationsPending) && evaluationsPending.length > 0);
 
   if (isLoading) {
     return (
