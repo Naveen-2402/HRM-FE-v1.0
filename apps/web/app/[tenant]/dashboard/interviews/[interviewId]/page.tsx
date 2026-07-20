@@ -17,7 +17,9 @@ import {
   Send,
   CheckCircle,
   CircleDot,
-  StopCircle
+  StopCircle,
+  LogOut,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { Dropdown } from "@/components/_shared/Dropdown";
@@ -54,16 +56,22 @@ import {
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@repo/ui/components/ui/button";
+import { ConfirmModal } from "@/components/_shared/ConfirmModal";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
 
 function MyCustomConference({
   onCandidateJoined,
+  onInterviewEnded,
+  onBroadcastReady,
   slotId,
   tenantId,
   interviewId,
   roomName,
 }: {
   onCandidateJoined: () => void;
+  onInterviewEnded?: () => void;
+  /** Called once with a function the parent can invoke to broadcast INTERVIEW_ENDED to all participants */
+  onBroadcastReady?: (broadcast: () => void) => void;
   slotId?: number;
   tenantId?: string;
   interviewId?: number;
@@ -84,7 +92,8 @@ function MyCustomConference({
   const screenShareTrack = tracks.find((t) => t.source === Track.Source.ScreenShare);
   const cameraTracks = tracks.filter((t) => t.source === Track.Source.Camera);
 
-  useDataChannel((msg) => {
+  // useDataChannel returns a `send` function we use to broadcast to the candidate
+  const { send: sendDataMessage } = useDataChannel((msg) => {
     try {
       const decoder = new TextDecoder();
       const payload = JSON.parse(decoder.decode(msg.payload));
@@ -94,10 +103,31 @@ function MyCustomConference({
           theme: "colored",
         });
       }
+      if (payload.type === "INTERVIEW_ENDED") {
+        onInterviewEnded?.();
+      }
     } catch (e) {
       // ignore non-json messages
     }
   });
+
+  // Expose broadcast function to parent so the Finish button can trigger it
+  React.useEffect(() => {
+    if (!onBroadcastReady) return;
+    const broadcast = () => {
+      try {
+        const encoder = new TextEncoder();
+        sendDataMessage(
+          encoder.encode(JSON.stringify({ type: "INTERVIEW_ENDED" })),
+          { reliable: true }
+        );
+      } catch (e) {
+        // Room may already be disconnecting — safe to ignore
+      }
+    };
+    onBroadcastReady(broadcast);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onBroadcastReady]);
 
   React.useEffect(() => {
     if (remoteTracks.length > 0) {
@@ -290,6 +320,15 @@ export default function InterviewRoomPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [errorCountdown, setErrorCountdown] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isFinishConfirmOpen, setIsFinishConfirmOpen] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
+  const [interviewEnded, setInterviewEnded] = useState(false);
+
+  // Ref to the broadcast function exposed by MyCustomConference
+  const broadcastInterviewEndedRef = React.useRef<(() => void) | null>(null);
+  const handleBroadcastReady = React.useCallback((fn: () => void) => {
+    broadcastInterviewEndedRef.current = fn;
+  }, []);
 
   // Absence Tracking
   const [candidateHasJoined, setCandidateHasJoined] = useState(false);
@@ -430,11 +469,16 @@ export default function InterviewRoomPage() {
   React.useEffect(() => {
     const axiosError = tokenError as any;
     if (axiosError?.response) {
-      const detail = axiosError?.response?.data?.detail || "Access denied to this interview room.";
-      setErrorMessage(detail);
-      setErrorCountdown(10);
+      // If the interview is already completed/evaluated, show a friendly "Interview Ended" instead of "Access Denied"
+      if (interviewAny?.status === "COMPLETED" || interviewAny?.status === "EVALUATED") {
+        setInterviewEnded(true);
+      } else {
+        const detail = axiosError?.response?.data?.detail || "Access denied to this interview room.";
+        setErrorMessage(detail);
+        setErrorCountdown(10);
+      }
     }
-  }, [tokenError]);
+  }, [tokenError, interviewAny?.status]);
 
   // Record Join Attendance on load
   const recordAttendanceMutation = useRecordAttendanceApiV1InterviewsInterviewIdAttendancePost({
@@ -525,6 +569,58 @@ export default function InterviewRoomPage() {
     );
   };
 
+  // Handle candidate receiving INTERVIEW_ENDED signal
+  const handleInterviewEnded = React.useCallback(() => {
+    setIsInCall(false);
+    setInterviewEnded(true);
+  }, []);
+
+  // Finish Interview handler — broadcasts INTERVIEW_ENDED to the candidate first,
+  // then updates status to COMPLETED and disconnects the interviewer.
+  const handleFinishInterview = () => {
+    setIsFinishing(true);
+
+    // Step 1: Send INTERVIEW_ENDED signal to ALL participants in the room.
+    // The candidate's useDataChannel listener will catch this and show the
+    // "meeting ended" screen. The interviewer stays connected until the
+    // status update succeeds.
+    broadcastInterviewEndedRef.current?.();
+
+    // Step 2: Small delay so the message is delivered before we disconnect
+    setTimeout(() => {
+      updateInterviewMutation.mutate(
+        {
+          interviewId,
+          data: { status: "COMPLETED" }
+        },
+        {
+          onSuccess: () => {
+            toast.success("Interview ended successfully. Please fill in the scorecard.");
+            // Now disconnect the interviewer (candidate already left via the signal)
+            setIsInCall(false);
+            setIsScorecardOpen(true);
+            setIsFinishConfirmOpen(false);
+            setIsFinishing(false);
+            refetchInterview();
+            // Auto-stop recording
+            if (slotId && tenantId) {
+              customInstance({
+                url: "/recordings/stop",
+                method: "POST",
+                data: { slot_id: slotId, tenant_id: tenantId },
+              }).catch(() => { });
+            }
+          },
+          onError: () => {
+            toast.error("Failed to end interview.");
+            setIsFinishing(false);
+            setIsFinishConfirmOpen(false);
+          }
+        }
+      );
+    }, 800); // 800 ms — enough for LiveKit to reliably deliver the data message
+  };
+
   const handleJoinCall = () => {
     setIsInCall(true);
     recordAttendanceMutation.mutate(
@@ -595,6 +691,25 @@ export default function InterviewRoomPage() {
     );
   }
 
+  if (interviewEnded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="text-center p-8 bg-card border border-border rounded-3xl max-w-md shadow-premium relative z-10">
+          <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5 text-primary">
+            <CheckCircle className="size-8" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground mb-2">Interview Ended</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+            Thank you for joining. Your interview results will be mailed shortly.
+          </p>
+          <Button onClick={() => router.replace(`/${tenantSubdomain}/dashboard`)} className="w-full font-bold cursor-pointer">
+            Back to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (errorMessage) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -652,6 +767,17 @@ export default function InterviewRoomPage() {
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
                 Round {interviewAny.round_number}
               </span>
+              {isInCall && interviewAny.status !== "COMPLETED" && interviewAny.status !== "EVALUATED" && (
+                <Button
+                  onClick={() => setIsFinishConfirmOpen(true)}
+                  variant="destructive"
+                  className="font-bold gap-2 text-xs h-8 rounded-xl px-4 transition-all shadow-sm cursor-pointer"
+                  size="sm"
+                >
+                  <LogOut className="size-3.5" />
+                  Finish Interview
+                </Button>
+              )}
               <Button
                 onClick={() => router.push(`/${tenantSubdomain}/dashboard`)}
                 variant="outline"
@@ -729,6 +855,8 @@ export default function InterviewRoomPage() {
                 >
                   <MyCustomConference
                     onCandidateJoined={handleCandidateJoined}
+                    onInterviewEnded={handleInterviewEnded}
+                    onBroadcastReady={handleBroadcastReady}
                     slotId={slotId}
                     tenantId={tenantId}
                     interviewId={interviewId}
@@ -979,6 +1107,16 @@ export default function InterviewRoomPage() {
         )}
       </AnimatePresence>
 
+      <ConfirmModal
+        isOpen={isFinishConfirmOpen}
+        onClose={() => setIsFinishConfirmOpen(false)}
+        onConfirm={handleFinishInterview}
+        title="Finish Interview"
+        description="Are you sure you want to finish this interview? This will end the call for all participants and cannot be undone."
+        confirmText={isFinishing ? "Finishing..." : "Finish Interview"}
+        isDestructive={true}
+        isLoading={isFinishing}
+      />
     </div>
   );
 }
