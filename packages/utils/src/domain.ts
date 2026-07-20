@@ -11,4 +11,9 @@ export const getRootHostname = (): string => getDomainUrl().hostname;
 export const getRootOrigin = (): string => getDomainUrl().origin;
 
 // e.g. ".hrm.test" or ".hrm-fe-1-0.vercel.app"
-export const getCookieRootDomain = (): string => `.${getRootHostname()}`;
+export const getCookieRootDomain = (): string => {
+  if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+    return "localhost";
+  }
+  return `.${getRootHostname()}`;
+};
