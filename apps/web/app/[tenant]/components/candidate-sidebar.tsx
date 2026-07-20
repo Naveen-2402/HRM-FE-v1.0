@@ -18,10 +18,6 @@ export function CandidateSidebar({ tenant, isProfileMissing = false }: Candidate
   const { isAuthenticated, user } = useAuthStore();
   const isCandidate = user?.realm_access?.roles?.includes("candidate");
 
-  if (!isAuthenticated || !isCandidate) {
-    return null;
-  }
-
   // Orval Query: Tenant details by subdomain to get tenantId
   const tenantQuery = useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet(
     tenant,
@@ -51,10 +47,13 @@ export function CandidateSidebar({ tenant, isProfileMissing = false }: Candidate
 
   const hasPendingAction = Array.isArray(interviewsResponse) 
     ? interviewsResponse.some(iv => 
-        ((iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW") && iv.magic_link_token) ||
-        (iv.status === "BOOKED" && !iv.candidate_confirmed)
+        ((iv.status === "AWAITING_BOOKING" || iv.status === "RESCHEDULE_APPROVED" || iv.status === "INTERVIEWER_NO_SHOW") && iv.magic_link_token)
       )
     : false;
+
+  if (!isAuthenticated || !isCandidate) {
+    return null;
+  }
 
   const sidebarItems = [
     {
