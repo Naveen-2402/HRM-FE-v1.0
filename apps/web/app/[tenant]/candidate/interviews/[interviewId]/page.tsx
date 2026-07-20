@@ -15,12 +15,13 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 
-import { 
-  LiveKitRoom, 
-  ParticipantTile, 
-  ControlBar, 
+import {
+  LiveKitRoom,
+  ParticipantTile,
+  ControlBar,
   useTracks,
-  useLocalParticipant
+  useLocalParticipant,
+  useDataChannel
 } from "@livekit/components-react";
 import { Track, DataPacket_Kind } from "livekit-client";
 import "@livekit/components-styles";
@@ -31,12 +32,14 @@ import {
   useRecordAttendanceApiV1InterviewsInterviewIdAttendancePost,
   useGetLivekitTokenApiV1InterviewsInterviewIdLivekitTokenGet
 } from "@repo/orval-config/src/api/interview/interviews/interviews";
+import { useGetJoinTokenApiV1SchedulingInterviewsInterviewIdAiJoinTokenGet } from "@repo/orval-config/src/api/scheduling/ai-interviews/ai-interviews";
 
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@repo/ui/components/ui/button";
 import { useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet } from "@repo/orval-config/src/api/tenant/tenants/tenants";
+import { getClientAuthToken } from "@repo/utils";
 
-function MyCustomConference({ isInCall }: { isInCall?: boolean }) {
+function MyCustomConference({ isInCall, onInterviewEnded }: { isInCall?: boolean, onInterviewEnded?: () => void }) {
   const tracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -46,6 +49,18 @@ function MyCustomConference({ isInCall }: { isInCall?: boolean }) {
   );
 
   const { localParticipant } = useLocalParticipant();
+
+  useDataChannel((msg) => {
+    try {
+      const decoder = new TextDecoder();
+      const payload = JSON.parse(decoder.decode(msg.payload));
+      if (payload.type === "INTERVIEW_ENDED") {
+        onInterviewEnded?.();
+      }
+    } catch (e) {
+      // ignore non-json messages
+    }
+  });
 
   React.useEffect(() => {
     if (!isInCall) return;
@@ -165,6 +180,7 @@ export default function CandidateInterviewRoomPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [errorCountdown, setErrorCountdown] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [interviewEnded, setInterviewEnded] = useState(false);
 
   React.useEffect(() => {
     if (isInCall) {
@@ -232,15 +248,14 @@ export default function CandidateInterviewRoomPage() {
   } as any);
 
   const interviewAny = interview as any;
+  const isAiRound = interviewAny?.interview_type?.toLowerCase() === "ai" || interviewAny?.title?.toLowerCase().includes("ai interview") || interviewAny?.title?.toLowerCase().includes("ai-interview") || interviewAny?.title?.toLowerCase().includes("ai_interview");
 
-
-
-  // 5. Fetch Livekit token
-  const { data: tokenData, error: tokenError } = useGetLivekitTokenApiV1InterviewsInterviewIdLivekitTokenGet(
+  // 5a. Fetch Human Livekit token
+  const { data: humanTokenData, error: humanTokenError } = useGetLivekitTokenApiV1InterviewsInterviewIdLivekitTokenGet(
     interviewId,
     {
       query: {
-        enabled: !!interviewId && !!tenantId && interviewAny?.status !== "COMPLETED" && interviewAny?.status !== "EVALUATED" && isInCall,
+        enabled: !!interviewId && !!tenantId && interviewAny?.status !== "COMPLETED" && interviewAny?.status !== "EVALUATED" && isInCall && !isAiRound,
         retry: false,
       },
       request: {
@@ -250,17 +265,41 @@ export default function CandidateInterviewRoomPage() {
       },
     } as any
   );
+
+  // 5b. Fetch AI Livekit token
+  const { data: aiTokenData, error: aiTokenError } = useGetJoinTokenApiV1SchedulingInterviewsInterviewIdAiJoinTokenGet(
+    interviewId,
+    {
+      query: {
+        enabled: !!interviewId && !!tenantId && interviewAny?.status !== "COMPLETED" && interviewAny?.status !== "EVALUATED" && isInCall && isAiRound,
+        retry: false,
+      },
+      request: {
+        headers: {
+          "Authorization": `Bearer ${getClientAuthToken() || ''}`,
+          "X-Tenant-Id": tenantId,
+        },
+      }
+    } as any
+  );
+
+  const tokenData = isAiRound ? aiTokenData : humanTokenData;
+  const tokenError = isAiRound ? aiTokenError : humanTokenError;
   const livekitToken = (tokenData as any)?.token;
-  console.log(livekitToken);
+  const aiLivekitUrl = (aiTokenData as any)?.livekit_url;
 
   React.useEffect(() => {
     const axiosError = tokenError as any;
     if (axiosError?.response) {
-      const detail = axiosError?.response?.data?.detail || "Access denied to this interview room.";
-      setErrorMessage(detail);
-      setErrorCountdown(10);
+      if (interviewAny?.status === "COMPLETED" || interviewAny?.status === "EVALUATED") {
+        setInterviewEnded(true);
+      } else {
+        const detail = axiosError?.response?.data?.detail || "Access denied to this interview room.";
+        setErrorMessage(detail);
+        setErrorCountdown(10);
+      }
     }
-  }, [tokenError]);
+  }, [tokenError, interviewAny?.status]);
 
   // Record Join Attendance on load
   const recordAttendanceMutation = useRecordAttendanceApiV1InterviewsInterviewIdAttendancePost({
@@ -319,11 +358,46 @@ export default function CandidateInterviewRoomPage() {
     setIsInCall(true);
   };
 
+  const handleInterviewEnded = React.useCallback(() => {
+    setIsInCall(false);
+    setInterviewEnded(true);
+    toast.info("The interviewer has ended the meeting. Results will be announced shortly.");
+  }, []);
+
   if (isLoadingInterview) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground">
         <Loader2 className="size-10 animate-spin text-primary mb-4" />
         <p className="text-muted-foreground font-medium">Entering Room...</p>
+      </div>
+    );
+  }
+
+  if (!interview) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center p-6 bg-card border border-border rounded-xl">
+          <p className="text-muted-foreground">Interview session not found.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (interviewEnded || interviewAny.status === "COMPLETED" || interviewAny.status === "EVALUATED") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="text-center p-8 bg-card border border-border rounded-3xl max-w-md shadow-premium relative z-10">
+          <div className="size-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 text-emerald-500">
+            <CheckCircle className="size-8" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground mb-2">Interview Session Ended</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-6">
+            The interviewer has ended the meeting. Your results will be announced shortly.
+          </p>
+          <Button onClick={() => router.replace(`/${tenantSubdomain}/candidate/dashboard`)} className="w-full font-bold">
+            Back to Dashboard
+          </Button>
+        </div>
       </div>
     );
   }
@@ -343,35 +417,6 @@ export default function CandidateInterviewRoomPage() {
             Redirecting to dashboard in <span className="font-bold text-foreground">{errorCountdown}</span> seconds...
           </p>
           <Button onClick={() => router.replace(`/${tenantSubdomain}/candidate/dashboard`)} className="w-full font-bold" variant="destructive">
-            Back to Dashboard
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!interview) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center p-6 bg-card border border-border rounded-xl">
-          <p className="text-muted-foreground">Interview session not found.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (interviewAny.status === "COMPLETED" || interviewAny.status === "EVALUATED") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="text-center p-8 bg-card border border-border rounded-3xl max-w-md shadow-premium relative z-10">
-          <div className="size-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 text-emerald-500">
-            <CheckCircle className="size-8" />
-          </div>
-          <h3 className="text-xl font-bold text-foreground mb-2">Interview Session Ended</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-6">
-            This interview session is now complete. The panel members are reviewing your feedback, and the recruiting team will notify you regarding the next steps.
-          </p>
-          <Button onClick={() => router.replace(`/${tenantSubdomain}/candidate/dashboard`)} className="w-full font-bold">
             Back to Dashboard
           </Button>
         </div>
@@ -399,7 +444,7 @@ export default function CandidateInterviewRoomPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
-                Round {interviewAny.round_number}
+                Round {interviewAny.round_number + 1}
               </span>
               <Button
                 onClick={() => router.push(`/${tenantSubdomain}/candidate/dashboard`)}
@@ -457,12 +502,12 @@ export default function CandidateInterviewRoomPage() {
                   video={true}
                   audio={true}
                   token={livekitToken}
-                  serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL || (typeof window !== "undefined" ? `ws://${window.location.hostname}:7880` : "ws://localhost:7880")}
+                  serverUrl={aiLivekitUrl || process.env.NEXT_PUBLIC_LIVEKIT_URL || (typeof window !== "undefined" ? `ws://${window.location.hostname}:7880` : "ws://localhost:7880")}
                   connect={true}
                   onDisconnected={handleEndCall}
                   className="w-full h-full"
                 >
-                  <MyCustomConference />
+                  <MyCustomConference isInCall={isInCall} onInterviewEnded={handleInterviewEnded} />
                 </LiveKitRoom>
               ) : (
                 <div className="flex flex-col items-center gap-2">
