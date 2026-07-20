@@ -17,7 +17,7 @@ AXIOS_INSTANCE.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  // Optional: Fix the double /api/v1/ bug if your baseURL already includes it
+  // Strip /api/v1/ prefix from request paths since baseURL already includes it
   if (config.url && config.url.startsWith('/api/v1/')) {
     config.url = config.url.replace('/api/v1/', '/');
   }
