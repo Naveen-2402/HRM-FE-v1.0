@@ -126,14 +126,24 @@ export function EvaluationDetailModal({ isOpen, onClose, evaluation, onSuccess }
           </div>
         </div>
 
-        {/* Reschedule Section */}
-        {(evaluation.interview_status === "INTERVIEW_NO_SHOW" || evaluation.interview_status === "INTERVIEW-NO-SHOW") && (
+        {/* Schedule / Reschedule Section */}
+        {(evaluation.current_stage_index || 0) > 0 && (
+          !evaluation.interview_status ||
+          evaluation.interview_status === "INTERVIEW_NO_SHOW" ||
+          evaluation.interview_status === "INTERVIEW-NO-SHOW" ||
+          evaluation.interview_status === "CANDIDATE_NO_SHOW" ||
+          evaluation.interview_status === "INTERVIEWER_NO_SHOW" ||
+          evaluation.interview_status === "RESCHEDULE_REQUESTED" ||
+          evaluation.interview_status === "RESCHEDULE_APPROVED" ||
+          evaluation.interview_status === "AWAITING_BOOKING"
+        ) && (
           <div className="flex justify-end mt-2">
             <button
               onClick={() => setIsSchedulingOpen(true)}
               className="bg-primary text-primary-foreground px-4 h-10 rounded-md text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
             >
-              <Calendar className="w-4 h-4" /> Reschedule Interview
+              <Calendar className="w-4 h-4" />
+              {!evaluation.interview_status ? "Schedule Interview" : "Reschedule Interview"}
             </button>
           </div>
         )}
