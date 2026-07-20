@@ -285,6 +285,15 @@ export default function ShortlistResultsModal({ isOpen, onClose, job }: Shortlis
                               <Check className="w-4 h-4" />
                             </button>
                           )}
+                          {activeTabIndex > 0 && ev.selection_status !== "Rejected" && ev.selection_status !== "Not_Selected" && (
+                            <button
+                              onClick={() => handleQuickAction(ev, "reject")}
+                              className="w-7 h-7 flex items-center justify-center rounded bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors"
+                              title="Reject Candidate"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDetailsClick(ev)}
                             className="text-primary text-xs font-bold hover:underline hover:cursor-pointer ml-2"
