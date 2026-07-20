@@ -52,6 +52,23 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const visibleNavItems = allNavItems.filter((item) => hasPermission(item.permission));
 
+  // Fetch pending approvals for the orange dot
+  // These hooks MUST be above the early return to satisfy React's Rules of Hooks
+  const { data: standardPending } = useGetPendingApprovalsApiV1ApprovalsPendingGet({
+    query: {
+      enabled: !isLoading && hasPermission("approval:read") && !!user
+    } as any
+  });
+
+  const { data: evaluationsPending } = useQuery({
+    queryKey: ["pending-evaluations"],
+    queryFn: () => customInstance<any[]>({ url: "/api/v1/jobs/evaluations/pending", method: "GET" }),
+    enabled: !isLoading && hasPermission("approval:read") && !!user,
+  });
+
+  const hasPendingApprovals = (Array.isArray(standardPending) && standardPending.length > 0) || 
+                              (Array.isArray(evaluationsPending) && evaluationsPending.length > 0);
+
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -59,22 +76,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
-  // Fetch pending approvals for the orange dot
-  const { data: standardPending } = useGetPendingApprovalsApiV1ApprovalsPendingGet({
-    query: {
-      enabled: hasPermission("approval:read") && !!user
-    } as any
-  });
-  
-  const { data: evaluationsPending } = useQuery({
-    queryKey: ["pending-evaluations"],
-    queryFn: () => customInstance<any[]>({ url: "/api/v1/jobs/evaluations/pending", method: "GET" }),
-    enabled: hasPermission("approval:read") && !!user,
-  });
-
-  const hasPendingApprovals = (Array.isArray(standardPending) && standardPending.length > 0) || 
-                              (Array.isArray(evaluationsPending) && evaluationsPending.length > 0);
 
   // Handle differences in user object between models/DB
   const userName = user?.name || user?.first_name || "Admin Agentsfactory";
