@@ -28,6 +28,13 @@ export function SlotBookingModal({
   onSuccess
 }: SlotBookingModalProps) {
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+
+  React.useEffect(() => {
+    setCurrentTime(new Date());
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Fetch slots by magic link
   const { data: slotsData, isLoading } = useGetSlotsByMagicLinkApiV1InterviewsMagicLinkTokenGet(
@@ -169,28 +176,45 @@ export function SlotBookingModal({
                       </h4>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                         {daySlots.map((slot) => {
+                          const startDate = new Date(slot.start_time || slot.start);
+                          const isExpired = currentTime ? startDate < currentTime : false;
                           const isSelected = selectedSlotId === slot.id;
-                          const startTime = format(new Date(slot.start_time), "p");
-                          const endTime = format(new Date(slot.end_time), "p");
+                          const startTime = format(startDate, "p");
+                          const endTime = format(new Date(slot.end_time || slot.end), "p");
 
                           return (
                             <button
                               key={slot.id}
-                              onClick={() => setSelectedSlotId(slot.id)}
+                              onClick={() => !isExpired && setSelectedSlotId(slot.id)}
+                              disabled={isExpired}
                               type="button"
-                              className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-center cursor-pointer gap-1.5 ${
-                                isSelected
-                                  ? "bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02]"
-                                  : "bg-secondary/40 hover:bg-secondary/80 border-border text-foreground hover:scale-[1.01]"
+                              title={isExpired ? "This slot has already passed" : ""}
+                              className={`p-3 rounded-xl border text-center transition-all flex flex-col items-center justify-center gap-1.5 ${
+                                isExpired
+                                  ? "bg-secondary/20 border-border opacity-70 cursor-not-allowed"
+                                  : isSelected
+                                  ? "bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20 scale-[1.02] cursor-pointer"
+                                  : "bg-secondary/40 hover:bg-secondary/80 border-border text-foreground hover:scale-[1.01] cursor-pointer"
                               }`}
                             >
-                              <Clock className={`size-3.5 ${isSelected ? "text-primary-foreground" : "text-primary"}`} />
-                              <span className="text-xs font-bold font-mono">
+                              <Clock className={`size-3.5 ${
+                                isExpired ? "text-muted-foreground/50" : isSelected ? "text-primary-foreground" : "text-primary"
+                              }`} />
+                              <span className={`text-xs font-bold font-mono ${
+                                isExpired ? "line-through text-muted-foreground" : ""
+                              }`}>
                                 {startTime}
                               </span>
-                              <span className={`text-[10px] uppercase font-semibold ${isSelected ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                              <span className={`text-[10px] uppercase font-semibold ${
+                                isExpired ? "line-through text-muted-foreground/70" : isSelected ? "text-primary-foreground/70" : "text-muted-foreground"
+                              }`}>
                                 to {endTime}
                               </span>
+                              {isExpired && (
+                                <span className="text-[10px] text-destructive/90 font-bold mt-0.5 flex items-center gap-1">
+                                  Slot expired
+                                </span>
+                              )}
                             </button>
                           );
                         })}
