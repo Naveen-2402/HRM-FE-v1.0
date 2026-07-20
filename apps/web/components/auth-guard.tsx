@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
-import { getClientAuthToken } from "@repo/utils";
+import { getClientAuthToken, isCandidateToken } from "@repo/utils";
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
 
@@ -90,9 +90,15 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     const isPublicPath = publicPaths.some((path) => cleanPath.startsWith(path)) || cleanPath === "/";
 
     if (!isAuthenticated && !isPublicPath) {
-      // SCENARIO 1: Not logged in + trying to access a private page -> Kick to login on root domain
-      const rawDomain = process.env.NEXT_PUBLIC_DOMAIN || "http://localhost:3000";
-      window.location.href = `${rawDomain}/login`;
+      // SCENARIO 1: Not logged in + trying to access a private page
+      if (cleanPath.startsWith("/candidate/")) {
+        const parts = pathname?.split("/").filter(Boolean) || [];
+        const tenant = parts[0] || "tenant";
+        window.location.href = `/${tenant}/candidate/login?redirect=${pathname}`;
+      } else {
+        const rawDomain = process.env.NEXT_PUBLIC_DOMAIN || "http://localhost:3000";
+        window.location.href = `${rawDomain}/login`;
+      }
     } else if (
       isAuthenticated && 
       isPublicPath && 
@@ -102,9 +108,25 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     ) {
       // SCENARIO 2: Logged in + trying to access login/signup -> Push to dashboard with tenant subdomain
       // Note: We intentionally let them access /auth/callback so the SSO flow can finish!
-      const isCandidate = user?.realm_access?.roles?.includes("candidate");
+      const token = getClientAuthToken();
+      const isCandidate = (token && isCandidateToken(token)) || user?.realm_access?.roles?.includes("candidate") || (user as any)?.iss?.includes("hrm-candidates");
       if (!isCandidate) {
         redirectToTenantDashboard();
+      } else {
+        // Logged-in candidates shouldn't be on login/register pages
+        if (cleanPath === "/candidate/login" || cleanPath === "/candidate/register") {
+          const parts = pathname?.split("/").filter(Boolean) || [];
+          const tenant = parts[0] || "tenant";
+          
+          const searchParams = new URLSearchParams(window.location.search);
+          const redirect = searchParams.get("redirect");
+          
+          if (redirect) {
+            router.push(redirect);
+          } else {
+            router.push(`/${tenant}/candidate/dashboard`);
+          }
+        }
       }
     }
   }, [isAuthenticated, isMounted, isRehydrating, pathname, router, user]);
