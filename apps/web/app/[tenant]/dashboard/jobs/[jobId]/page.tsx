@@ -38,6 +38,7 @@ import {
   useGetJobEvaluationsApiV1JobsJobIdEvaluationsGet,
   useUpdatePipelineApiV1JobsJobIdPipelinePut
 } from "@repo/orval-config/src/api/job/jobs/jobs";
+import { useScheduleAiInterviewApiV1SchedulingInterviewsInterviewIdAiSchedulePost } from "@repo/orval-config/src/api/scheduling/ai-interviews/ai-interviews";
 import { useListEmployeesApiV1EmployeesGet } from "@repo/orval-config/src/api/employees/employees";
 import { Dropdown } from "@/components/_shared/Dropdown";
 import { DateTimePicker } from "@/components/_shared/DateTimePicker";
@@ -296,6 +297,7 @@ export default function JobDashboardDetailPage() {
   const updatePipelineMutation = useUpdatePipelineApiV1JobsJobIdPipelinePut();
   const createInterviewSlotsMutation = useCreateInterviewSlotsApiV1InterviewsInterviewIdSlotsPost();
   const generateMagicLinkMutation = useGenerateMagicLinkApiV1InterviewsMagicLinkPost();
+  const scheduleAiInterviewMutation = useScheduleAiInterviewApiV1SchedulingInterviewsInterviewIdAiSchedulePost();
 
   // Pipeline Stages definition (extract string names for display)
   const pipelineStages = useMemo(() => {
@@ -1281,9 +1283,15 @@ export default function JobDashboardDetailPage() {
                                         <td className="py-3 px-4 text-right">
                                           {alreadyScheduled ? (
                                             alreadyScheduled.status === "AWAITING_BOOKING" ? (
-                                              <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-500 font-bold text-[9px] uppercase tracking-wider">
-                                                Awaiting Booking
-                                              </span>
+                                              isAIInterviewRound ? (
+                                                <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-500 font-bold text-[9px] uppercase tracking-wider">
+                                                  Pending Completion
+                                                </span>
+                                              ) : (
+                                                <span className="px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-500 font-bold text-[9px] uppercase tracking-wider">
+                                                  Slot Expired
+                                                </span>
+                                              )
                                             ) : (
                                               <span className="inline-flex px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 font-bold text-[9px] uppercase tracking-wider">
                                                 Scheduled
@@ -1675,6 +1683,101 @@ export default function JobDashboardDetailPage() {
                       >
                         {updatePipelineMutation.isPending ? "Saving..." : "Save Deadline"}
                       </Button>
+                    </div>
+
+                    <div className="bg-card/45 border border-border/60 rounded-2xl p-6 shadow-premium flex flex-col gap-5">
+                      <div className="flex justify-between items-center pb-3 border-b border-border/40">
+                        <div>
+                          <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                            <Sparkles className="size-4 text-sky-400" />
+                            Dispatch AI Interviews
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            Schedule the selected candidates in the queue for an AI interview. They will receive magic links.
+                          </p>
+                        </div>
+                        <Button
+                          disabled={!aiDeadline || selectedCandidateIds.length === 0 || isSchedulingInProgress || scheduleAiInterviewMutation.isPending}
+                          onClick={async () => {
+                            if (!aiDeadline) {
+                              toast.error("Please set a deadline first.");
+                              return;
+                            }
+                            setIsSchedulingInProgress(true);
+                            let successCount = 0;
+                            try {
+                              const candidatesToSchedule = stageCandidates.filter((c: any) => selectedCandidateIds.includes(Math.abs(c.candidate_id || c.id)));
+                              for (const cand of candidatesToSchedule) {
+                                const candId = Math.abs(cand.candidate_id || cand.id);
+                                const candName = cand.candidate_name || cand.name || `Candidate ${candId}`;
+
+                                // 1. Create Base Interview
+                                const createdInterview = await new Promise<any>((resolve, reject) => {
+                                  createInterviewMutation.mutate(
+                                    {
+                                      data: {
+                                        job_id: jobId,
+                                        candidate_id: candId,
+                                        title: `${currentStageName} - ${candName}`,
+                                        round_number: selectedRoundIndex,
+                                        duration_minutes: durationMinutes,
+                                        panel_members: [] // AI interview has no panel members
+                                      }
+                                    },
+                                    { onSuccess: resolve, onError: reject }
+                                  );
+                                });
+
+                                // 2. Call AI Schedule Endpoint
+                                await new Promise((resolve, reject) => {
+                                  scheduleAiInterviewMutation.mutate(
+                                    {
+                                      interviewId: createdInterview.id,
+                                      data: {
+                                        candidate_id: candId,
+                                        job_id: jobId,
+                                        duration_minutes: durationMinutes,
+                                        start_date: new Date().toISOString() as any,
+                                        expiry_date: new Date(aiDeadline).toISOString() as any,
+                                      }
+                                    },
+                                    { onSuccess: resolve, onError: reject }
+                                  );
+                                });
+                                successCount++;
+                              }
+                              toast.success(`Successfully scheduled AI interviews for ${successCount} candidates!`);
+                              setSelectedCandidateIds([]);
+                              refetchInterviews();
+                            } catch (error: any) {
+                              console.error(error);
+                              const detail = error?.response?.data?.detail || "An error occurred during AI scheduling.";
+                              toast.error(detail);
+                            } finally {
+                              setIsSchedulingInProgress(false);
+                            }
+                          }}
+                          className="font-bold px-6 text-xs h-9 cursor-pointer"
+                        >
+                          {isSchedulingInProgress || scheduleAiInterviewMutation.isPending ? (
+                            <>
+                              <Loader2 className="size-3.5 animate-spin mr-2" />
+                              Dispatching...
+                            </>
+                          ) : (
+                            "Schedule & Dispatch"
+                          )}
+                        </Button>
+                      </div>
+                      
+                      {selectedCandidateIds.length > 0 && (
+                        <div className="bg-sky-400/5 border border-sky-400/20 rounded-xl p-4 flex flex-col gap-2">
+                           <p className="text-xs text-muted-foreground font-medium flex items-center justify-between">
+                              <span><strong className="text-sky-400">{selectedCandidateIds.length}</strong> candidates selected</span>
+                              <span>Duration: {durationMinutes} mins</span>
+                           </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : null}
