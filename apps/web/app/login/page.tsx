@@ -17,10 +17,10 @@ import { Label } from "@repo/ui/components/ui/label";
 import { Checkbox } from "@repo/ui/components/ui/checkbox";
 
 import { useAuthStore, UserProfile } from "@/store/useAuthStore";
-import { useLoginAuthLoginPost } from "@repo/orval-config/src/api/default/default";
+import { useLoginForAccessTokenApiV1AuthLoginPost } from "@repo/orval-config/src/api/auth/auth/auth";
 import { useActivateCurrentEmployeeApiV1EmployeesActivatePost } from "@repo/orval-config/src/api/employees/employees";
 import { getSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
-import { useForgotPasswordApiV1AuthForgotPasswordPost } from "@repo/orval-config/src/api/authentication/authentication"; 
+import { useForgotPasswordApiV1AuthForgotPasswordPost } from "@repo/orval-config/src/api/authentication/authentication";
 import { checkDomainApiV1AuthCheckDomainGet } from "@repo/orval-config/src/api/auth/auth/auth";
 import { emailSchema, ssoPasswordSchema, validateWith } from "@repo/ui/lib/validators";
 import { useTenantRedirect } from "@/hooks/useTenantRedirect";
@@ -35,18 +35,18 @@ function LoginFormContent() {
   const { redirectToTenantDashboard } = useTenantRedirect();
   const isLocalLogin = searchParams.get("local") === "true";
 
-  const [step, setStep]                           = useState<1 | 2 | 3>(1);
-  const [isChecking, setIsChecking]               = useState(false);
-  const [showPassword, setShowPassword]           = useState(false);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [isChecking, setIsChecking] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
-  const [actionUrl, setActionUrl]                 = useState<string | null>(null);
+  const [actionUrl, setActionUrl] = useState<string | null>(null);
   const [isSubscriptionStatusPending, setIsSubscriptionStatusPending] = useState(false);
 
-  const login                  = useAuthStore((s) => s.login);
-  const loginMutation          = useLoginAuthLoginPost();
-  const activateMutation       = useActivateCurrentEmployeeApiV1EmployeesActivatePost();
+  const login = useAuthStore((s) => s.login);
+  const loginMutation = useLoginForAccessTokenApiV1AuthLoginPost();
+  const activateMutation = useActivateCurrentEmployeeApiV1EmployeesActivatePost();
   const forgotPasswordMutation = useForgotPasswordApiV1AuthForgotPasswordPost();
-  const router                 = useRouter();
+  const router = useRouter();
 
   const form = useForm({
     defaultValues: { email: "", password: "", rememberMe: false },
@@ -56,8 +56,8 @@ function LoginFormContent() {
           data: { email: value.email, password: value.password },
         });
 
-        const { access_token, refresh_token, id_token, session_state } = response.data as any;
-        
+        const { access_token, refresh_token, id_token, session_state } = response as any;
+
         setAuthTokens(access_token, refresh_token, id_token, session_state, value.rememberMe);
 
         const decodedUser = jwtDecode<UserProfile>(access_token);
@@ -65,14 +65,14 @@ function LoginFormContent() {
 
         if (isSuperAdmin) {
           toast.success("Welcome, Superadmin");
-          const origin = getRootOrigin(); 
+          const origin = getRootOrigin();
           window.location.href = `${origin}/superadmin/dashboard`;
           setTimeout(() => login(decodedUser), 500);
           return;
         }
 
-        try { await activateMutation.mutateAsync(); } catch {}
-        
+        try { await activateMutation.mutateAsync(); } catch { }
+
         setIsSubscriptionStatusPending(true);
         let billingStatus = "inactive";
         try {
@@ -129,10 +129,10 @@ function LoginFormContent() {
       const response = await checkDomainApiV1AuthCheckDomainGet({ email }) as any;
       if (response.sso_enabled) {
         const keycloakUrl = process.env.NEXT_PUBLIC_KEYCLOAK_URL || "http://localhost:8082";
-        const realm       = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
-        const clientId    = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "hrm-frontend";
+        const realm = process.env.NEXT_PUBLIC_KEYCLOAK_REALM;
+        const clientId = process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "hrm-frontend";
         const redirectUri = `${window.location.origin}/auth/callback`;
-        const idpAlias    = response.idp_alias;
+        const idpAlias = response.idp_alias;
         window.location.href = `${keycloakUrl}/realms/${realm}/protocol/openid-connect/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20profile%20email%20organization&kc_idp_hint=${idpAlias}&prompt=login`;
       } else {
         setStep(2);
@@ -148,7 +148,7 @@ function LoginFormContent() {
   const handleForgotPassword = async () => {
     const email = form.getFieldValue("email");
     if (!email) return;
-    
+
     try {
       await forgotPasswordMutation.mutateAsync({
         data: { email }
@@ -200,17 +200,17 @@ function LoginFormContent() {
           </button>
         )}
         <h2 className="text-2xl font-bold text-foreground tracking-tight">
-          {step === 1 ? (isLocalLogin ? "Admin Login" : "Welcome back") 
-           : step === 2 ? "Enter your password" 
-           : "Check your inbox"}
+          {step === 1 ? (isLocalLogin ? "Admin Login" : "Welcome back")
+            : step === 2 ? "Enter your password"
+              : "Check your inbox"}
         </h2>
-        
+
         <form.Subscribe selector={(s) => s.values.email}>
           {(email) => (
             <p className="text-base text-muted-foreground">
               {step === 1 ? "Enter your work email to continue"
-               : step === 2 ? <span>Signing in as <span className="font-semibold text-foreground/90">{email}</span></span>
-               : "Password reset link sent"}
+                : step === 2 ? <span>Signing in as <span className="font-semibold text-foreground/90">{email}</span></span>
+                  : "Password reset link sent"}
             </p>
           )}
         </form.Subscribe>
@@ -289,7 +289,7 @@ function LoginFormContent() {
                       <Label htmlFor={field.name} className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
                         Password
                       </Label>
-                      
+
                       <button
                         type="button"
                         onClick={handleForgotPassword}
@@ -399,7 +399,7 @@ export default function LoginPage() {
   useWarmup();
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden z-0">
-      
+
       {/* ── Ambient Background Orbs ── */}
       <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-primary/10 blur-[120px] rounded-full pointer-events-none -z-10" />
       <div className="absolute bottom-1/4 right-1/4 w-[30vw] h-[30vw] bg-secondary/20 blur-[100px] rounded-full pointer-events-none -z-10" />
@@ -417,7 +417,7 @@ export default function LoginPage() {
       {/* Glassmorphic Card */}
       <div className="w-full max-w-xl rounded-[2.5rem] border border-border/30 bg-background/20 backdrop-blur-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] relative overflow-hidden
                       animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150 fill-mode-both">
-        
+
         {/* Subtle glass reflection edge */}
         <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-50" />
 
