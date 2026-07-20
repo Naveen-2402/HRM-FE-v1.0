@@ -10,6 +10,7 @@ import type { EmailConfigurationResponseMicrosoftTenantId } from './emailConfigu
 import type { EmailConfigurationResponseSmtpHost } from './emailConfigurationResponseSmtpHost';
 import type { EmailConfigurationResponseSmtpPort } from './emailConfigurationResponseSmtpPort';
 import type { EmailConfigurationResponseSmtpUsername } from './emailConfigurationResponseSmtpUsername';
+import type { EmailConfigurationResponseFromEmail } from './emailConfigurationResponseFromEmail';
 
 export interface EmailConfigurationResponse {
   provider_type: ProviderType;
@@ -18,7 +19,7 @@ export interface EmailConfigurationResponse {
   smtp_host?: EmailConfigurationResponseSmtpHost;
   smtp_port?: EmailConfigurationResponseSmtpPort;
   smtp_username?: EmailConfigurationResponseSmtpUsername;
-  from_email?: string | null;
+  from_email?: EmailConfigurationResponseFromEmail;
   has_refresh_token?: boolean;
   has_password?: boolean;
 }

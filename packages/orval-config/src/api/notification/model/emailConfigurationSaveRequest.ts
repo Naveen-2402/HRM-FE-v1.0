@@ -11,6 +11,7 @@ import type { EmailConfigurationSaveRequestRefreshToken } from './emailConfigura
 import type { EmailConfigurationSaveRequestSmtpHost } from './emailConfigurationSaveRequestSmtpHost';
 import type { EmailConfigurationSaveRequestSmtpPort } from './emailConfigurationSaveRequestSmtpPort';
 import type { EmailConfigurationSaveRequestSmtpUsername } from './emailConfigurationSaveRequestSmtpUsername';
+import type { EmailConfigurationSaveRequestFromEmail } from './emailConfigurationSaveRequestFromEmail';
 import type { EmailConfigurationSaveRequestPassword } from './emailConfigurationSaveRequestPassword';
 
 export interface EmailConfigurationSaveRequest {
@@ -21,6 +22,6 @@ export interface EmailConfigurationSaveRequest {
   smtp_host?: EmailConfigurationSaveRequestSmtpHost;
   smtp_port?: EmailConfigurationSaveRequestSmtpPort;
   smtp_username?: EmailConfigurationSaveRequestSmtpUsername;
-  from_email?: string | null;
+  from_email?: EmailConfigurationSaveRequestFromEmail;
   password?: EmailConfigurationSaveRequestPassword;
 }

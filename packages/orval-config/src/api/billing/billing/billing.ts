@@ -21,6 +21,8 @@ import type {
 import type {
   CheckoutRequest,
   CreditCheckoutRequest,
+  CreditLedgerPaginatedResponse,
+  GetCreditHistoryApiV1BillingCreditsHistoryGetParams,
   HTTPValidationError
 } from '.././model';
 
@@ -545,4 +547,71 @@ export const useReconcileSubscriptionApiV1BillingReconcilePost = <TError = unkno
 
       return useMutation(mutationOptions);
     }
+    /**
+ * @summary Get Credit History
+ */
+export const getCreditHistoryApiV1BillingCreditsHistoryGet = (
+    params?: GetCreditHistoryApiV1BillingCreditsHistoryGetParams,
+ options?: SecondParameter<typeof customInstance>,signal?: AbortSignal
+) => {
+      
+      
+      return customInstance<CreditLedgerPaginatedResponse>(
+      {url: `/api/v1/billing/credits/history`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetCreditHistoryApiV1BillingCreditsHistoryGetQueryKey = (params?: GetCreditHistoryApiV1BillingCreditsHistoryGetParams,) => {
+    return [
+    `/api/v1/billing/credits/history`, ...(params ? [params]: [])
+    ] as const;
+    }
+
     
+export const getGetCreditHistoryApiV1BillingCreditsHistoryGetQueryOptions = <TData = Awaited<ReturnType<typeof getCreditHistoryApiV1BillingCreditsHistoryGet>>, TError = HTTPValidationError>(params?: GetCreditHistoryApiV1BillingCreditsHistoryGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreditHistoryApiV1BillingCreditsHistoryGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCreditHistoryApiV1BillingCreditsHistoryGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCreditHistoryApiV1BillingCreditsHistoryGet>>> = ({ signal }) => getCreditHistoryApiV1BillingCreditsHistoryGet(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCreditHistoryApiV1BillingCreditsHistoryGet>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCreditHistoryApiV1BillingCreditsHistoryGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCreditHistoryApiV1BillingCreditsHistoryGet>>>
+export type GetCreditHistoryApiV1BillingCreditsHistoryGetQueryError = HTTPValidationError
+
+
+/**
+ * @summary Get Credit History
+ */
+
+export function useGetCreditHistoryApiV1BillingCreditsHistoryGet<TData = Awaited<ReturnType<typeof getCreditHistoryApiV1BillingCreditsHistoryGet>>, TError = HTTPValidationError>(
+ params?: GetCreditHistoryApiV1BillingCreditsHistoryGetParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCreditHistoryApiV1BillingCreditsHistoryGet>>, TError, TData>, request?: SecondParameter<typeof customInstance>}
+  
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCreditHistoryApiV1BillingCreditsHistoryGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
