@@ -110,8 +110,13 @@ function CandidateRegisterFormContent() {
   const handleGoogleLogin = async () => {
     try {
       setGoogleLoading(true);
+      let callbackUri = `${window.location.origin}/${tenant}/candidate/callback`;
+      if (redirectUrl) {
+        callbackUri += `?redirect=${encodeURIComponent(redirectUrl)}`;
+      }
+
       const response = (await candidateGoogleLoginUrlApiV1CandidateAuthGoogleLoginUrlGet({
-        redirect_uri: `${window.location.origin}/candidate/callback`
+        redirect_uri: callbackUri
       })) as any;
 
       const data = response.data || response;
