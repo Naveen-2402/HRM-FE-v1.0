@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { Calendar, Clock, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
@@ -21,6 +21,14 @@ export default function CandidateBookingPage() {
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
   const [isBooked, setIsBooked] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
+
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setCurrentTime(new Date());
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   // 1. Fetch Tenant details
   const { data: tenantDetails } = useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet(
@@ -171,25 +179,39 @@ export default function CandidateBookingPage() {
 
             {interviewSlots.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-1">
-                {interviewSlots.map((slot) => {
-                  const startDate = new Date(slot.start_time);
+                {interviewSlots.map((slot: any) => {
+                  const startDate = new Date(slot.start_time || slot.start);
+                  const isExpired = currentTime ? startDate < currentTime : false;
                   const isSelected = selectedSlotId === slot.id;
                   return (
                     <button
                       key={slot.id}
-                      onClick={() => setSelectedSlotId(slot.id)}
-                      className={`p-4 rounded-2xl border text-left flex flex-col transition-all cursor-pointer ${
-                        isSelected
-                          ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.01]"
-                          : "bg-white/5 border-white/5 hover:border-white/20"
+                      onClick={() => !isExpired && setSelectedSlotId(slot.id)}
+                      disabled={isExpired}
+                      title={isExpired ? "This slot has already passed" : ""}
+                      className={`p-4 rounded-2xl border text-left flex flex-col transition-all ${
+                        isExpired
+                          ? "bg-white/5 border-white/10 opacity-70 cursor-not-allowed"
+                          : isSelected
+                          ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.01] cursor-pointer"
+                          : "bg-white/5 border-white/5 hover:border-white/20 cursor-pointer"
                       }`}
                     >
-                      <span className="text-xs font-bold text-muted-foreground">
+                      <span className={`text-xs font-bold ${
+                        isExpired ? "line-through text-muted-foreground" : "text-muted-foreground"
+                      }`}>
                         {format(startDate, "EEEE, MMMM d")}
                       </span>
-                      <span className="text-sm font-bold text-white mt-1">
+                      <span className={`text-sm font-bold mt-1 ${
+                        isExpired ? "line-through text-white/50" : "text-white"
+                      }`}>
                         {format(startDate, "p")}
                       </span>
+                      {isExpired && (
+                        <span className="text-[11px] text-destructive/90 font-bold mt-1.5 flex items-center gap-1">
+                          <AlertCircle className="size-3" /> Slot expired
+                        </span>
+                      )}
                     </button>
                   );
                 })}
