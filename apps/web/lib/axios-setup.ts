@@ -35,14 +35,14 @@ export function setupAxiosInterceptors() {
   const requestInterceptor = (config: any) => {
     const token = getClientAuthToken();
 
-    // Your existing URL rewrite logic
+    // Strip /api/v1/ prefix from request paths since baseURL already includes it
     if (config.url && config.url.startsWith('/api/v1/')) {
       config.url = config.url.replace('/api/v1/', '/');
     }
 
     const isAzure = config.url && (
-      config.url.includes("blob.core.windows.net") || 
-      config.url.includes("127.0.0.1:10000") || 
+      config.url.includes("blob.core.windows.net") ||
+      config.url.includes("127.0.0.1:10000") ||
       config.url.includes("localhost:10000")
     );
 
