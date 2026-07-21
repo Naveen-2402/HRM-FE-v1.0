@@ -4,7 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Loader2, CreditCard, Calendar, AlertTriangle, ArrowRight, ShieldCheck,
-  CircleDollarSign, Github, ChevronLeft, Mail, Sliders
+  CircleDollarSign, Github, ChevronLeft, Mail, Sliders, FileText
 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 import Link from "next/link";
@@ -38,6 +38,14 @@ const WorkflowTab = dynamic(() => import("./components/workflowTab"), {
   loading: () => <TabSkeleton text="Loading workflow settings…" icon={Sliders} />,
   ssr: false,
 });
+
+const AiContextTab = dynamic(
+  () => import("../dashboard/settings/components/aiContextTab"),
+  {
+    loading: () => <TabSkeleton text="Loading AI context settings…" icon={FileText} />,
+    ssr: false,
+  }
+);
 
 function TabSkeleton({ text, icon: Icon }: { text: string, icon: any }) {
   return (
@@ -84,6 +92,7 @@ export default function SettingsPage() {
     { id: "Email", label: "Email Config", icon: Mail, permission: "tenant:access" },
     { id: "Workflow", label: "Workflow Rules", icon: Sliders, permission: "approval:configure" },
     { id: "Github", label: "Github Config", icon: Github, permission: "github:manage" },
+    { id: "AiContext", label: "AI Context", icon: FileText, permission: "candidate:manage" },
   ] as const;
 
   const visibleTabs = allTabs.filter(tab => hasPermission(tab.permission));
@@ -232,6 +241,11 @@ export default function SettingsPage() {
           {activeTab === "Github" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <GithubTab />
+            </div>
+          )}
+          {activeTab === "AiContext" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <AiContextTab />
             </div>
           )}
         </main>
