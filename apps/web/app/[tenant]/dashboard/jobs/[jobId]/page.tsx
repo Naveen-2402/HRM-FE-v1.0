@@ -58,6 +58,8 @@ import { customInstance } from "@repo/orval-config/src/axios-setup";
 // Component imports
 import { Button } from "@repo/ui/components/ui/button";
 import { Checkbox } from "@repo/ui/components/ui/checkbox";
+import { Modal } from "@/components/_shared/Modal";
+import AiContextTab from "../../settings/components/aiContextTab";
 
 interface Job {
   id: number;
@@ -186,9 +188,11 @@ export default function JobDashboardDetailPage() {
   const [isSchedulingInProgress, setIsSchedulingInProgress] = useState<boolean>(false);
   const [mockCandidates, setMockCandidates] = useState<any[]>([]);
   const [aiDeadline, setAiDeadline] = useState<string>("");
+  const [aiStartDate, setAiStartDate] = useState<string>("");
   const [showStandardInfo, setShowStandardInfo] = useState<boolean>(false);
   const [isQueueExpanded, setIsQueueExpanded] = useState<boolean>(true);
   const [selectedCandidateIds, setSelectedCandidateIds] = useState<number[]>([]);
+  const [isContextModalOpen, setIsContextModalOpen] = useState<boolean>(false);
 
   // 1. Fetch Tenant details
   const { data: tenantDetails } = useGetTenantBySubdomainApiV1TenantsBySubdomainSubdomainGet(
@@ -212,16 +216,16 @@ export default function JobDashboardDetailPage() {
   );
   const job = jobResponse as Job | undefined;
 
-  // Sync aiDeadline from raw stage object whenever the selected round changes
+  // Sync AI Interview schedule from raw stage object whenever the selected round changes
   useEffect(() => {
     if (!job?.pipeline_stages) return;
     const rawStage = (job.pipeline_stages as any[])[selectedRoundIndex];
-    if (rawStage && typeof rawStage === "object" && (rawStage as any).ai_deadline) {
-      const d = new Date((rawStage as any).ai_deadline);
-      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-      setAiDeadline(local);
+    if (rawStage && typeof rawStage === "object") {
+      setAiDeadline((rawStage as any).ai_deadline || "");
+      setAiStartDate((rawStage as any).ai_start_date || "");
     } else {
       setAiDeadline("");
+      setAiStartDate("");
     }
   }, [selectedRoundIndex, job]);
 
@@ -1624,43 +1628,72 @@ export default function JobDashboardDetailPage() {
                   <div className="flex flex-col gap-6 animate-in fade-in duration-200">
                     <div className="bg-card/45 border border-border/60 rounded-2xl p-6 shadow-premium flex flex-col gap-5">
                       <h4 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
-                        <Calendar className="size-3.5 text-sky-400" /> AI Interview Deadline
+                        <Calendar className="size-3.5 text-sky-400" /> AI Interview Schedule
                       </h4>
                       <p className="text-xs text-muted-foreground leading-relaxed -mt-2">
-                        Set a deadline before which candidates must complete their AI-powered interview. The AI bot will be available to candidates until this date.
+                        Set a start date and a deadline for candidates to complete their AI-powered interview. The AI bot will be available to candidates during this window.
                       </p>
 
-                      <div className="space-y-1 max-w-sm mt-2">
-                        <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Completion Deadline</label>
-                        <input
-                          type="datetime-local"
-                          value={aiDeadline}
-                          onChange={(e) => setAiDeadline(e.target.value)}
-                          className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs outline-none focus:border-sky-400/50 text-foreground"
-                        />
+                      {/* Company Context Indicator */}
+                      <div className="bg-success/5 border border-success/20 rounded-xl p-3 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <CheckCircle2 className="size-4 text-success" />
+                          <div>
+                            <p className="text-sm font-bold text-foreground">Company Context Active</p>
+                            <p className="text-[10px] text-muted-foreground">The AI Interview Agent will use your global tenant context.</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          onClick={() => setIsContextModalOpen(true)}
+                          className="h-7 text-[10px] hover:bg-success/10 text-success cursor-pointer font-bold"
+                        >
+                          Manage Context
+                        </Button>
                       </div>
 
-                      {aiDeadline && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Start Time</label>
+                          <DateTimePicker
+                            value={aiStartDate}
+                            onChange={(val) => setAiStartDate(val)}
+                            placeholder="Select start date & time"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Completion Deadline</label>
+                          <DateTimePicker
+                            value={aiDeadline}
+                            onChange={(val) => setAiDeadline(val)}
+                            placeholder="Select deadline"
+                          />
+                        </div>
+                      </div>
+
+                      {(aiStartDate || aiDeadline) && (
                         <div className="bg-sky-400/5 border border-sky-400/20 rounded-xl p-4 flex items-start gap-3 animate-in fade-in duration-200 mt-2">
                           <Info className="size-4 text-sky-400 shrink-0 mt-0.5" />
                           <div>
-                            <p className="text-sm font-bold text-foreground">Deadline set</p>
+                            <p className="text-sm font-bold text-foreground">Schedule set</p>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              All {stageCandidates.length} candidate(s) in this round must complete their AI interview before{" "}
-                              <span className="font-bold text-sky-400">{new Date(aiDeadline).toLocaleString()}</span>.
+                              All {stageCandidates.length} candidate(s) in this round must complete their AI interview 
+                              {aiStartDate && <span> starting from <span className="font-bold text-sky-400">{new Date(aiStartDate).toLocaleString()}</span></span>}
+                              {aiDeadline && <span> before <span className="font-bold text-sky-400">{new Date(aiDeadline).toLocaleString()}</span></span>}.
                             </p>
                           </div>
                         </div>
                       )}
 
                       <Button
-                        disabled={!aiDeadline || updatePipelineMutation.isPending}
+                        disabled={(!aiStartDate || !aiDeadline) || updatePipelineMutation.isPending}
                         onClick={() => {
                           if (!job?.pipeline_stages) return;
-                          // Build updated stages array with the deadline embedded in the selected stage
+                          // Build updated stages array with the dates embedded in the selected stage
                           const updatedStages = job.pipeline_stages.map((stage: any, idx: number) => {
                             if (idx === selectedRoundIndex) {
                               const stageObj = typeof stage === "string" ? { name: stage } : { ...stage };
+                              stageObj.ai_start_date = new Date(aiStartDate).toISOString();
                               stageObj.ai_deadline = new Date(aiDeadline).toISOString();
                               return stageObj;
                             }
@@ -1670,18 +1703,18 @@ export default function JobDashboardDetailPage() {
                             { jobId: jobId, data: { pipeline_stages: updatedStages } },
                             {
                               onSuccess: () => {
-                                toast.success("AI interview deadline saved successfully.");
+                                toast.success("AI interview schedule saved successfully.");
                                 refetchJob();
                               },
                               onError: () => {
-                                toast.error("Failed to save AI interview deadline.");
+                                toast.error("Failed to save AI interview schedule.");
                               }
                             }
                           );
                         }}
                         className="w-fit font-bold px-6 text-xs h-9 cursor-pointer mt-2"
                       >
-                        {updatePipelineMutation.isPending ? "Saving..." : "Save Deadline"}
+                        {updatePipelineMutation.isPending ? "Saving..." : "Save Schedule"}
                       </Button>
                     </div>
 
@@ -1697,10 +1730,10 @@ export default function JobDashboardDetailPage() {
                           </p>
                         </div>
                         <Button
-                          disabled={!aiDeadline || selectedCandidateIds.length === 0 || isSchedulingInProgress || scheduleAiInterviewMutation.isPending}
+                          disabled={!aiStartDate || !aiDeadline || selectedCandidateIds.length === 0 || isSchedulingInProgress || scheduleAiInterviewMutation.isPending}
                           onClick={async () => {
-                            if (!aiDeadline) {
-                              toast.error("Please set a deadline first.");
+                            if (!aiStartDate || !aiDeadline) {
+                              toast.error("Please set both start time and deadline first.");
                               return;
                             }
                             setIsSchedulingInProgress(true);
@@ -1737,7 +1770,7 @@ export default function JobDashboardDetailPage() {
                                         candidate_id: candId,
                                         job_id: jobId,
                                         duration_minutes: durationMinutes,
-                                        start_date: new Date().toISOString() as any,
+                                        start_date: new Date(aiStartDate).toISOString() as any,
                                         expiry_date: new Date(aiDeadline).toISOString() as any,
                                       }
                                     },
@@ -1788,6 +1821,14 @@ export default function JobDashboardDetailPage() {
 
         </AnimatePresence>
       </div>
+
+      <Modal
+        isOpen={isContextModalOpen}
+        onClose={() => setIsContextModalOpen(false)}
+        title="Manage Tenant Context"
+      >
+        <AiContextTab />
+      </Modal>
 
     </div>
   );
