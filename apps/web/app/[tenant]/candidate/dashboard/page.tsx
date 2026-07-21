@@ -352,8 +352,18 @@ function CandidateDashboardContent() {
                 const stepWidthPercent = 100 / stages.length;
                 const lineOffsetPercent = stepWidthPercent / 2;
 
-                const appPendingInterviews = pendingInterviews.filter(iv => iv.job_id === app.job_id);
-                const appBookedInterviews = bookedInterviews.filter(iv => iv.job_id === app.job_id);
+                const appPendingInterviews = pendingInterviews.filter(iv => {
+                  if (iv.job_id !== app.job_id) return false;
+                  if (iv.round_number < app.current_stage_index) return false;
+                  if (iv.round_number === app.current_stage_index && app.stage_status === "CLEARED") return false;
+                  return true;
+                });
+                const appBookedInterviews = bookedInterviews.filter(iv => {
+                  if (iv.job_id !== app.job_id) return false;
+                  if (iv.round_number < app.current_stage_index) return false;
+                  if (iv.round_number === app.current_stage_index && app.stage_status === "CLEARED") return false;
+                  return true;
+                });
 
                 return (
                   <motion.div
@@ -438,36 +448,78 @@ function CandidateDashboardContent() {
 
                           {appBookedInterviews.length > 0 && (
                             <div className="space-y-3">
-                              {appBookedInterviews.map((iv) => (
+                              {appBookedInterviews.map((iv) => {
+                                const isAiInterview = iv.title?.toLowerCase().includes("ai interview");
+                                const aiStage = isAiInterview ? app.pipeline_stages?.[iv.round_number] : null;
+                                const aiStartDate = aiStage && typeof aiStage === 'object' ? (aiStage as any).ai_start_date : null;
+                                const aiDeadline = aiStage && typeof aiStage === 'object' ? (aiStage as any).ai_deadline : null;
+                                
+                                let isAiActive = false;
+                                let isAiEnded = false;
+                                let isAiYetToStart = false;
+                                
+                                if (isAiInterview && aiStartDate && aiDeadline) {
+                                  const start = new Date(aiStartDate).getTime();
+                                  const end = new Date(aiDeadline).getTime();
+                                  if (now >= start && now <= end) {
+                                    isAiActive = true;
+                                  } else if (now < start) {
+                                    isAiYetToStart = true;
+                                  } else if (now > end) {
+                                    isAiEnded = true;
+                                  }
+                                } else if (isAiInterview) {
+                                   isAiActive = true;
+                                }
+
+                                return (
                                 <div key={iv.id} className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex flex-col gap-2">
                                   <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
                                       <Video className="size-3" />
-                                      {iv.title?.toLowerCase().includes("ai interview") ? "AI Interview Pending" : `Upcoming Interview (Round ${iv.round_number + 1})`}
+                                      {isAiInterview ? "AI Interview Pending" : `Upcoming Interview (Round ${iv.round_number + 1})`}
                                     </span>
                                   </div>
-                                  {iv.scheduled_start && !iv.title?.toLowerCase().includes("ai interview") && (
+                                  {iv.scheduled_start && !isAiInterview && (
                                     <p className="text-xs font-semibold text-muted-foreground">
                                       {format(new Date(iv.scheduled_start), "PPP p")}
                                     </p>
                                   )}
-                                  {iv.title?.toLowerCase().includes("ai interview") && (
+                                  {isAiInterview && aiStartDate && aiDeadline && (
+                                    <div className="flex flex-col gap-0.5 border-l-2 border-primary/30 pl-2 my-1">
+                                      <p className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                                        <Clock className="size-3 text-primary/70" /> Starts: {format(new Date(aiStartDate), "PPP p")}
+                                      </p>
+                                      <p className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                                        <AlertCircle className="size-3 text-destructive/70" /> Deadline: {format(new Date(aiDeadline), "PPP p")}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {isAiInterview && (
                                     <p className="text-[11px] font-medium text-muted-foreground">
-                                      You can start this interview at any time before the deadline.
+                                      {isAiActive 
+                                        ? "You can start this interview at any time before the deadline." 
+                                        : isAiYetToStart 
+                                        ? "This AI interview has not started yet." 
+                                        : isAiEnded 
+                                        ? "This AI interview deadline has passed." 
+                                        : "You can start this interview at any time before the deadline."}
                                     </p>
                                   )}
-                                  <Button
-                                    size="sm"
-                                    onClick={() => router.push(`/${tenant}/candidate/interviews/${iv.id}`)}
-                                    disabled={isJoinDisabled(iv)}
-                                    title={isJoinDisabled(iv) ? "Room opens 5 minutes before scheduled time" : "Join Interview Room"}
-                                    className="w-full flex items-center justify-center gap-2 font-bold disabled:cursor-not-allowed cursor-pointer text-xs h-8 mt-1"
-                                  >
-                                    <Video className="size-3.5" />
-                                    {iv.title?.toLowerCase().includes("ai interview") ? "Start AI Interview" : "Join Room"}
-                                  </Button>
+                                  {(!isAiInterview || isAiActive) && (
+                                    <Button
+                                      size="sm"
+                                      onClick={() => router.push(`/${tenant}/candidate/interviews/${iv.id}`)}
+                                      disabled={isJoinDisabled(iv)}
+                                      title={isJoinDisabled(iv) ? "Room opens 5 minutes before scheduled time" : "Join Interview Room"}
+                                      className="w-full flex items-center justify-center gap-2 font-bold disabled:cursor-not-allowed cursor-pointer text-xs h-8 mt-1"
+                                    >
+                                      <Video className="size-3.5" />
+                                      {isAiInterview ? "Start AI Interview" : "Join Room"}
+                                    </Button>
+                                  )}
                                 </div>
-                              ))}
+                              )})}
                             </div>
                           )}
                         </div>
