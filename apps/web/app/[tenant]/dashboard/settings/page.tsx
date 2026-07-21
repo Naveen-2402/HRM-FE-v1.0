@@ -5,12 +5,12 @@ import dynamic from "next/dynamic";
 import {
   Loader2, CreditCard, Calendar, Clock,
   AlertTriangle, ArrowRight, ShieldCheck, Zap, Sparkles, CheckCircle2, CircleDollarSign,
-  Github, Sliders, Mail
+  Github, Sliders, Mail, FileText
 } from "lucide-react";
 import { Button } from "@repo/ui/components/ui/button";
 
 import { useGetSubscriptionStatusApiV1BillingSubscriptionGet } from "@repo/orval-config/src/api/billing/billing";
-import { 
+import {
   useGetCreditBalanceApiV1BillingCreditsGet
 } from "@repo/orval-config/src/api/billing/billing";
 import { AccentBar, SectionCard } from "@/components/_shared";
@@ -83,16 +83,29 @@ const WorkflowTab = dynamic(() => import("./components/workflowTab"), {
   ssr: false,
 });
 
+const AiContextTab = dynamic(() => import("./components/aiContextTab"), {
+  loading: () => (
+    <div className="rounded-2xl border border-border bg-card shadow-sm">
+      <div className="h-[3px] w-full rounded-t-2xl bg-primary animate-pulse" />
+      <div className="flex items-center justify-center gap-3 py-20">
+        <Loader2 className="size-6 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Loading AI context settings…</p>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 function getStatusConfig(status?: string) {
   const s = status?.toLowerCase() ?? "";
   if (s === "active")
-    return { dot: "bg-success",          pill: "bg-success-subtle text-success border border-success/30" };
+    return { dot: "bg-success", pill: "bg-success-subtle text-success border border-success/30" };
   if (s === "trialing")
-    return { dot: "bg-warning",          pill: "bg-warning-subtle text-warning-foreground border border-warning/30" };
+    return { dot: "bg-warning", pill: "bg-warning-subtle text-warning-foreground border border-warning/30" };
   if (["past_due", "unpaid", "canceled"].includes(s))
-    return { dot: "bg-destructive",      pill: "bg-destructive/10 text-destructive border border-destructive/20" };
-  return   { dot: "bg-muted-foreground", pill: "bg-muted text-muted-foreground border border-border" };
+    return { dot: "bg-destructive", pill: "bg-destructive/10 text-destructive border border-destructive/20" };
+  return { dot: "bg-muted-foreground", pill: "bg-muted text-muted-foreground border border-border" };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -102,30 +115,31 @@ export default function SettingsPage() {
 
   const { data: subscription, isLoading, isError } =
     useGetSubscriptionStatusApiV1BillingSubscriptionGet();
-  
+
   const { data: balanceData, isLoading: isLoadingBalance } = useGetCreditBalanceApiV1BillingCreditsGet();
   // Safely extract the balance (available = balance - consumed - reserved)
-  const currentBalance = balanceData 
+  const currentBalance = balanceData
     ? (balanceData as any).credit_balance - (balanceData as any).consumed_credits - (balanceData as any).reserved_credits
     : 0;
 
   const formatDate = (d?: string) =>
     d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "N/A";
 
-  const isActive   = subscription?.status === "active";
+  const isActive = subscription?.status === "active";
   const isTrialing = subscription?.status === "trialing";
-  const statusCfg  = getStatusConfig(subscription?.status);
+  const statusCfg = getStatusConfig(subscription?.status);
   const periodEnded = !!subscription?.current_period_end &&
     new Date(subscription.current_period_end) < new Date();
 
   // ── Permission-based Tab Visibility ──
   const allTabs = [
-    { id: "Subscription", label: "Subscription", icon: CreditCard,       permission: "billing:read" },
-    { id: "Credits",      label: "Credits",      icon: CircleDollarSign, permission: "credits:read" },
-    { id: "Security",     label: "Security",     icon: ShieldCheck,      permission: "tenant:access" },
-    { id: "Email",        label: "Email Config", icon: Mail,             permission: "tenant:access" },
-    { id: "Workflow",     label: "Workflow Rules", icon: Sliders,        permission: "approval:configure" },
-    { id: "Github",       label: "Github Config", icon: Github,          permission: "github:manage" },
+    { id: "Subscription", label: "Subscription", icon: CreditCard, permission: "billing:read" },
+    { id: "Credits", label: "Credits", icon: CircleDollarSign, permission: "credits:read" },
+    { id: "Security", label: "Security", icon: ShieldCheck, permission: "tenant:access" },
+    { id: "Email", label: "Email Config", icon: Mail, permission: "tenant:access" },
+    { id: "Workflow", label: "Workflow Rules", icon: Sliders, permission: "approval:configure" },
+    { id: "Github", label: "Github Config", icon: Github, permission: "github:manage" },
+    { id: "AiContext", label: "AI Context", icon: FileText, permission: "job:read" },
   ] as const;
 
   const visibleTabs = allTabs.filter(tab => hasPermission(tab.permission));
@@ -239,7 +253,7 @@ export default function SettingsPage() {
                     )}
                   </div>
                   {/* Right */}
-                  
+
                   <div className="sm:col-span-2 rounded-xl border border-border bg-muted/40 p-4 space-y-4">
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg border border-border bg-card">
@@ -268,9 +282,9 @@ export default function SettingsPage() {
                                 <Loader2 className="size-5 animate-spin text-muted-foreground" />
                                 <span className="text-sm text-muted-foreground font-medium">Loading balance...</span>
                               </div>
-                              ): (
-                                <p className="text-sm font-medium text-card-foreground">₹{currentBalance.toLocaleString()}</p>
-                              )
+                            ) : (
+                              <p className="text-sm font-medium text-card-foreground">₹{currentBalance.toLocaleString()}</p>
+                            )
                             }
                           </div>
                         </div>
@@ -329,6 +343,11 @@ export default function SettingsPage() {
             TAB: WORKFLOW RULES (lazy-loaded)
         ══════════════════════════════════════════════════════════════════ */}
         {activeTab === "Workflow" && <WorkflowTab />}
+
+        {/* ══════════════════════════════════════════════════════════════════
+            TAB: AI CONTEXT (lazy-loaded)
+        ══════════════════════════════════════════════════════════════════ */}
+        {activeTab === "AiContext" && <AiContextTab />}
 
       </div>
     </div>
